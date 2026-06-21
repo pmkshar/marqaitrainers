@@ -14,24 +14,22 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CodeTutor AI — Software Training Platform with AI Tutor",
-  description: "Learn AI/ML, Full Stack Java, .NET, Mobile App Development, and Flutter through step-wise lessons, video walkthroughs, graded tests, and a 24/7 AI tutor.",
-  keywords: ["AI tutor", "software training", "coding courses", "React Native", "Flutter", "Spring Boot", "ASP.NET", "Machine Learning", "LLM"],
-  authors: [{ name: "CodeTutor AI" }],
-  icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
-  },
+  title: "MarqAI — Software Tutor Platform (AI + Human Tutors, RBAC Admin)",
+  description: "MarqAI Software Tutor — learn AI/ML, Full Stack Java, .NET, Mobile, and Flutter with step-wise lessons, video walkthroughs, graded tests, a 24/7 AI tutor, and vetted human tutors. Super Admin portal with full RBAC.",
+  keywords: ["MarqAI", "software tutor", "AI tutor", "human tutors", "RBAC", "Super Admin", "subscriptions", "React Native", "Flutter", "Spring Boot", "ASP.NET", "Machine Learning"],
+  authors: [{ name: "MarqAI" }],
+  icons: { icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg" },
   openGraph: {
-    title: "CodeTutor AI — Software Training Platform",
-    description: "Master software engineering with your personal AI tutor. Step-wise lessons, video walkthroughs, graded tests.",
+    title: "MarqAI — Software Tutor Platform",
+    description: "AI + Human tutors · step-wise lessons · video walkthroughs · graded tests · Super Admin portal with RBAC.",
     url: "https://chat.z.ai",
-    siteName: "CodeTutor AI",
+    siteName: "MarqAI",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "CodeTutor AI — Software Training Platform",
-    description: "Master software engineering with your personal AI tutor.",
+    title: "MarqAI — Software Tutor Platform",
+    description: "AI + Human tutors · step-wise lessons · graded tests · Super Admin portal.",
   },
 };
 

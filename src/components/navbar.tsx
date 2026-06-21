@@ -1,13 +1,20 @@
 'use client';
 
-import { GraduationCap, Menu, X, Sparkles, MessageCircle } from 'lucide-react';
+import { GraduationCap, Menu, X, Sparkles, MessageCircle, LogIn, User as UserIcon, ShieldCheck, LayoutDashboard, BookOpen, LogOut, ChevronDown, BadgeCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAppStore } from '@/lib/store';
 import { COURSES } from '@/lib/courses';
 
 export function Navbar() {
-  const { view, isMenuOpen, toggleMenu, setMenuOpen, goHome, openCourse, setTutorOpen } = useAppStore();
+  const {
+    view, isMenuOpen, toggleMenu, goHome, openCourse,
+    setTutorOpen, openPricing, openTutors, openAdmin, openTutorPortal, openMyLearning,
+    currentUser, logout, setAuthOpen,
+  } = useAppStore();
+  const user = currentUser();
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70">
@@ -21,8 +28,10 @@ export function Navbar() {
             <GraduationCap className="h-5 w-5" />
           </span>
           <span className="flex flex-col leading-none">
-            <span className="text-base font-bold tracking-tight">CodeTutor AI</span>
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Software Training Platform</span>
+            <span className="text-base font-bold tracking-tight">
+              Marq<span className="text-emerald-600 dark:text-emerald-400">AI</span>
+            </span>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Software Tutor</span>
           </span>
         </button>
 
@@ -59,6 +68,18 @@ export function Navbar() {
             </div>
           </div>
           <button
+            onClick={openTutors}
+            className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${view.name === 'tutors' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+          >
+            Human Tutors
+          </button>
+          <button
+            onClick={openPricing}
+            className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${view.name === 'pricing' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+          >
+            Pricing
+          </button>
+          <button
             onClick={() => setTutorOpen(true)}
             className="ml-2 inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
@@ -68,13 +89,71 @@ export function Navbar() {
         </nav>
 
         <div className="flex items-center gap-2">
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 rounded-full border bg-card pl-1 pr-2 py-1 text-sm transition-colors hover:bg-accent">
+                  <Avatar className="h-7 w-7">
+                    <AvatarFallback className={`bg-gradient-to-br ${user.avatarColor} text-white text-xs font-bold`}>
+                      {user.name.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="hidden max-w-[100px] truncate font-medium sm:inline">{user.name.split(' ')[0]}</span>
+                  <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-60">
+                <DropdownMenuLabel>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold">{user.name}</span>
+                    <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+                    <Badge variant="secondary" className="mt-1 w-fit text-[10px] capitalize">
+                      {user.role === 'super_admin' ? 'Super Admin' : user.role === 'tutor' ? 'Human Tutor' : user.role}
+                    </Badge>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {user.role === 'candidate' && (
+                  <DropdownMenuItem onClick={openMyLearning}>
+                    <BookOpen className="mr-2 h-4 w-4" /> My Learning
+                  </DropdownMenuItem>
+                )}
+                {user.role === 'tutor' && (
+                  <DropdownMenuItem onClick={openTutorPortal}>
+                    <LayoutDashboard className="mr-2 h-4 w-4" /> Tutor Dashboard
+                  </DropdownMenuItem>
+                )}
+                {user.role === 'super_admin' && (
+                  <DropdownMenuItem onClick={() => openAdmin('dashboard')}>
+                    <ShieldCheck className="mr-2 h-4 w-4" /> Admin Portal
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onClick={() => setTutorOpen(true)}>
+                  <Sparkles className="mr-2 h-4 w-4" /> Ask AI Tutor
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={logout} className="text-rose-600 dark:text-rose-400">
+                  <LogOut className="mr-2 h-4 w-4" /> Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button
+              onClick={() => setAuthOpen(true, 'login')}
+              variant="outline"
+              size="sm"
+              className="hidden sm:inline-flex"
+            >
+              <LogIn className="mr-1.5 h-4 w-4" /> Sign in
+            </Button>
+          )}
           <Button
             onClick={() => setTutorOpen(true)}
             className="hidden bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-sm hover:from-emerald-600 hover:to-teal-700 sm:inline-flex"
             size="sm"
           >
             <Sparkles className="mr-1.5 h-4 w-4" />
-            Ask AI Tutor
+            Ask AI
           </Button>
           <button
             onClick={toggleMenu}
@@ -90,19 +169,10 @@ export function Navbar() {
       {isMenuOpen && (
         <div className="border-t bg-background md:hidden">
           <nav className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-3">
-            <button
-              onClick={goHome}
-              className="rounded-md px-3 py-2 text-left text-sm font-medium hover:bg-accent"
-            >
-              Home
-            </button>
+            <button onClick={goHome} className="rounded-md px-3 py-2 text-left text-sm font-medium hover:bg-accent">Home</button>
             <p className="px-3 pt-2 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Courses</p>
             {COURSES.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => openCourse(c.id)}
-                className="flex items-center gap-3 rounded-md px-3 py-2 text-left hover:bg-accent"
-              >
+              <button key={c.id} onClick={() => openCourse(c.id)} className="flex items-center gap-3 rounded-md px-3 py-2 text-left hover:bg-accent">
                 <span className={`grid h-7 w-7 place-items-center rounded-md bg-gradient-to-br ${c.gradient} text-white`}>
                   <CourseIcon name={c.icon} />
                 </span>
@@ -110,12 +180,32 @@ export function Navbar() {
                 <Badge variant="secondary" className="ml-auto text-xs">{c.level}</Badge>
               </button>
             ))}
-            <button
-              onClick={() => setTutorOpen(true)}
-              className="mt-2 flex items-center gap-2 rounded-md bg-gradient-to-r from-emerald-500 to-teal-600 px-3 py-2 text-left text-sm font-medium text-white"
-            >
-              <Sparkles className="h-4 w-4" /> Ask AI Tutor
-            </button>
+            <button onClick={openTutors} className="mt-1 rounded-md px-3 py-2 text-left text-sm font-medium hover:bg-accent">Human Tutors</button>
+            <button onClick={openPricing} className="rounded-md px-3 py-2 text-left text-sm font-medium hover:bg-accent">Pricing</button>
+            <button onClick={() => setTutorOpen(true)} className="rounded-md px-3 py-2 text-left text-sm font-medium hover:bg-accent">AI Tutor</button>
+            <div className="mt-2 border-t pt-3">
+              {user ? (
+                <>
+                  <div className="flex items-center gap-2 px-3 py-2">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback className={`bg-gradient-to-br ${user.avatarColor} text-white text-xs font-bold`}>{user.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-sm font-medium">{user.name}</p>
+                      <p className="text-xs text-muted-foreground capitalize">{user.role}</p>
+                    </div>
+                  </div>
+                  {user.role === 'candidate' && <button onClick={openMyLearning} className="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-accent">My Learning</button>}
+                  {user.role === 'tutor' && <button onClick={openTutorPortal} className="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-accent">Tutor Dashboard</button>}
+                  {user.role === 'super_admin' && <button onClick={() => openAdmin('dashboard')} className="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-accent">Admin Portal</button>}
+                  <button onClick={logout} className="w-full rounded-md px-3 py-2 text-left text-sm text-rose-600 hover:bg-accent">Sign out</button>
+                </>
+              ) : (
+                <Button onClick={() => setAuthOpen(true, 'login')} className="w-full">
+                  <LogIn className="mr-1.5 h-4 w-4" /> Sign in / Register
+                </Button>
+              )}
+            </div>
           </nav>
         </div>
       )}

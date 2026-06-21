@@ -435,6 +435,10 @@ export const COURSES: Course[] = [
         ],
       },
     ],
+    oneTimePrice: 199,
+    monthlyPrice: 29,
+    annualPrice: 290,
+    onDemand: true,
   },
 
   // ============================================================
@@ -815,6 +819,10 @@ export const COURSES: Course[] = [
         ],
       },
     ],
+    oneTimePrice: 179,
+    monthlyPrice: 25,
+    annualPrice: 249,
+    onDemand: true,
   },
 
   // ============================================================
@@ -1067,6 +1075,10 @@ export const COURSES: Course[] = [
         ],
       },
     ],
+    oneTimePrice: 179,
+    monthlyPrice: 25,
+    annualPrice: 249,
+    onDemand: true,
   },
 
   // ============================================================
@@ -1393,6 +1405,10 @@ export const COURSES: Course[] = [
         ],
       },
     ],
+    oneTimePrice: 169,
+    monthlyPrice: 23,
+    annualPrice: 229,
+    onDemand: true,
   },
 
   // ============================================================
@@ -1719,6 +1735,10 @@ export const COURSES: Course[] = [
         ],
       },
     ],
+    oneTimePrice: 159,
+    monthlyPrice: 22,
+    annualPrice: 219,
+    onDemand: true,
   },
 ];
 

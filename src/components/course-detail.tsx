@@ -74,6 +74,26 @@ export function CourseDetail({ courseId }: { courseId: string }) {
                   <Progress value={progressPct} className="mt-2 bg-white/20 [&>div]:bg-white" />
                   <p className="mt-2 text-xs text-white/80">{completedCount} of {allLessons.length} lessons complete</p>
                 </div>
+
+                {/* Pricing options */}
+                <div className="rounded-lg bg-white/10 p-3">
+                  <p className="text-xs uppercase tracking-wider text-white/80">Pricing for this course</p>
+                  <div className="mt-2 space-y-1.5 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-white/90">One-time (lifetime)</span>
+                      <span className="font-bold">${course.oneTimePrice}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-white/90">Monthly</span>
+                      <span className="font-medium">${course.monthlyPrice}/mo</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-white/90">Annual (save ~20%)</span>
+                      <span className="font-medium">${course.annualPrice}/yr</span>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="rounded-lg bg-white/10 p-3 text-sm">
                   <p className="font-semibold">Instructor</p>
                   <p className="mt-0.5">{course.instructor}</p>
@@ -88,13 +108,22 @@ export function CourseDetail({ courseId }: { courseId: string }) {
                 >
                   {completedCount > 0 ? 'Continue learning' : 'Start first lesson'} <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
-                <Button
-                  onClick={() => setTutorOpen(true)}
-                  variant="outline"
-                  className="w-full border-white/40 bg-transparent text-white hover:bg-white/10"
-                >
-                  <Sparkles className="mr-2 h-4 w-4" /> Ask AI Tutor
-                </Button>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    onClick={() => useAppStore.getState().openPricing()}
+                    variant="outline"
+                    className="border-white/40 bg-transparent text-white hover:bg-white/10"
+                  >
+                    Subscribe
+                  </Button>
+                  <Button
+                    onClick={() => setTutorOpen(true)}
+                    variant="outline"
+                    className="border-white/40 bg-transparent text-white hover:bg-white/10"
+                  >
+                    <Sparkles className="mr-1 h-4 w-4" /> AI Tutor
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>
