@@ -1,0 +1,927 @@
+     1→'use client';
+     2→
+     3→import { useState } from 'react';
+     4→import {
+     5→  ArrowLeft, ArrowRight, BookOpen, Clock, Award, Sparkles, Calendar, Video,
+     6→  TrendingUp, Users, MessageSquare, Bell, CheckCircle2, PlayCircle, FileQuestion,
+     7→  Trophy, Target, Flame, ChevronRight, Settings, ShieldCheck, DollarSign,
+     8→  GraduationCap, BarChart3, Star, Zap, BookMarked, Activity as ActivityIcon,
+     9→} from 'lucide-react';
+    10→import { Button } from '@/components/ui/button';
+    11→import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+    12→import { Badge } from '@/components/ui/badge';
+    13→import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+    14→import { Progress } from '@/components/ui/progress';
+    15→import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+    16→import { ScrollArea } from '@/components/ui/scroll-area';
+    17→import { useAppStore } from '@/lib/store';
+    18→import { COURSES, findCourse, getAllLessons } from '@/lib/courses';
+    19→import { CourseIcon } from './navbar';
+    20→
+    21→// ============================================================
+    22→// Helpers
+    23→// ============================================================
+    24→
+    25→function timeAgo(ts: number) {
+    26→  const diff = Date.now() - ts;
+    27→  const min = Math.floor(diff / 60000);
+    28→  if (min < 1) return 'just now';
+    29→  if (min < 60) return `${min}m ago`;
+    30→  const hr = Math.floor(min / 60);
+    31→  if (hr < 24) return `${hr}h ago`;
+    32→  const day = Math.floor(hr / 24);
+    33→  if (day < 30) return `${day}d ago`;
+    34→  const mo = Math.floor(day / 30);
+    35→  return `${mo}mo ago`;
+    36→}
+    37→
+    38→function formatDateTime(ts: number) {
+    39→  return new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    40→}
+    41→
+    42→// ============================================================
+    43→// Main dashboard entry
+    44→// ============================================================
+    45→
+    46→export function Dashboard() {
+    47→  const user = useAppStore((s) => s.currentUser());
+    48→  const goHome = useAppStore((s) => s.goHome);
+    49→
+    50→  if (!user) {
+    51→    return (
+    52→      <div className="grid min-h-[60vh] place-items-center px-4">
+    53→        <Card className="max-w-md text-center">
+    54→          <CardContent className="p-8">
+    55→            <BookOpen className="mx-auto h-12 w-12 text-muted-foreground" />
+    56→            <h2 className="mt-4 text-xl font-semibold">Sign in to view your dashboard</h2>
+    57→            <p className="mt-2 text-sm text-muted-foreground">Sign in or create an account to access your personalized dashboard.</p>
+    58→            <Button onClick={() => useAppStore.getState().setAuthOpen(true, 'login')} className="mt-4 bg-emerald-600 text-white hover:bg-emerald-700">Sign in</Button>
+    59→          </CardContent>
+    60→        </Card>
+    61→      </div>
+    62→    );
+    63→  }
+    64→
+    65→  return (
+    66→    <div className="bg-background">
+    67→      <DashboardHeader />
+    68→      <div className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
+    69→        <button onClick={goHome} className="mb-3 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
+    70→          <ArrowLeft className="h-4 w-4" /> Home
+    71→        </button>
+    72→
+    73→        {user.role === 'candidate' && <CandidateDashboard />}
+    74→        {user.role === 'tutor' && <TutorDashboard />}
+    75→        {user.role === 'super_admin' && <AdminDashboard />}
+    76→      </div>
+    77→    </div>
+    78→  );
+    79→}
+    80→
+    81→// ============================================================
+    82→// Header (shared)
+    83→// ============================================================
+    84→
+    85→function DashboardHeader() {
+    86→  const user = useAppStore((s) => s.currentUser());
+    87→  const completedLessons = useAppStore((s) => s.completedLessons);
+    88→  if (!user) return null;
+    89→
+    90→  const roleLabel = user.role === 'super_admin' ? 'Super Admin' : user.role === 'tutor' ? 'Human Tutor' : 'Candidate';
+    91→  const roleGradient =
+    92→    user.role === 'super_admin' ? 'from-rose-500 to-pink-600'
+    93→    : user.role === 'tutor' ? 'from-sky-500 to-cyan-600'
+    94→    : 'from-emerald-500 to-teal-600';
+    95→
+    96→  return (
+    97→    <section className={`bg-gradient-to-br ${roleGradient} text-white`}>
+    98→      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+    99→        <div className="flex flex-wrap items-center gap-5">
+   100→          <Avatar className="h-20 w-20 ring-4 ring-white/20">
+   101→            <AvatarFallback className="bg-white/15 text-3xl font-bold text-white backdrop-blur">
+   102→              {user.name.charAt(0)}
+   103→            </AvatarFallback>
+   104→          </Avatar>
+   105→          <div className="min-w-0 flex-1">
+   106→            <div className="flex flex-wrap items-center gap-2">
+   107→              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{user.name}</h1>
+   108→              <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-semibold backdrop-blur">
+   109→                {user.role === 'super_admin' && <ShieldCheck className="h-3 w-3" />}
+   110→                {user.role === 'tutor' && <Users className="h-3 w-3" />}
+   111→                {user.role === 'candidate' && <GraduationCap className="h-3 w-3" />}
+   112→                {roleLabel}
+   113→              </span>
+   114→              {user.status === 'pending' && (
+   115→                <span className="inline-flex items-center gap-1 rounded-full bg-amber-400/30 px-2.5 py-0.5 text-xs font-semibold">
+   116→                  <Clock className="h-3 w-3" /> Pending approval
+   117→                </span>
+   118→              )}
+   119→            </div>
+   120→            <p className="mt-1 text-sm text-white/85">{user.email}</p>
+   121→            <p className="mt-0.5 text-xs text-white/70">
+   122→              Joined {new Date(user.createdAt).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
+   123→              {user.role === 'candidate' && ` · ${completedLessons.length} lessons completed · ${user.enrolledCourseIds.length} courses enrolled`}
+   124→              {user.role === 'tutor' && user.tutorProfile && ` · ${user.tutorProfile.sessionsCompleted} sessions · ★ ${user.tutorProfile.rating}`}
+   125→              {user.role === 'super_admin' && ' · Full platform access'}
+   126→            </p>
+   127→          </div>
+   128→          <div className="flex gap-2">
+   129→            {user.role === 'candidate' && (
+   130→              <Button onClick={() => useAppStore.getState().setTutorOpen(true)} className="bg-white/15 text-white hover:bg-white/25 backdrop-blur">
+   131→                <Sparkles className="mr-1.5 h-4 w-4" /> Ask AI Tutor
+   132→              </Button>
+   133→            )}
+   134→            {user.role === 'tutor' && (
+   135→              <Button onClick={() => useAppStore.getState().openTutorPortal()} className="bg-white/15 text-white hover:bg-white/25 backdrop-blur">
+   136→                <BarChart3 className="mr-1.5 h-4 w-4" /> Tutor Portal
+   137→              </Button>
+   138→            )}
+   139→            {user.role === 'super_admin' && (
+   140→              <Button onClick={() => useAppStore.getState().openAdmin('dashboard')} className="bg-white/15 text-white hover:bg-white/25 backdrop-blur">
+   141→                <ShieldCheck className="mr-1.5 h-4 w-4" /> Admin Portal
+   142→              </Button>
+   143→            )}
+   144→          </div>
+   145→        </div>
+   146→
+   147→        {/* Quick stats strip */}
+   148→        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+   149→          {user.role === 'candidate' && <CandidateQuickStats />}
+   150→          {user.role === 'tutor' && <TutorQuickStats />}
+   151→          {user.role === 'super_admin' && <AdminQuickStats />}
+   152→        </div>
+   153→      </div>
+   154→    </section>
+   155→  );
+   156→}
+   157→
+   158→// ============================================================
+   159→// Candidate dashboard
+   160→// ============================================================
+   161→
+   162→function CandidateDashboard() {
+   163→  return (
+   164→    <div className="space-y-6 pt-6">
+   165→      {/* Quick actions row */}
+   166→      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+   167→        <QuickAction icon={PlayCircle} label="Continue learning" desc="Pick up where you left off" color="from-emerald-500 to-teal-600" onClick={() => useAppStore.getState().openMyLearning()} />
+   168→        <QuickAction icon={Calendar} label="My calendar" desc="Sessions, deadlines, live classes" color="from-sky-500 to-cyan-600" onClick={() => useAppStore.getState().openCalendar()} />
+   169→        <QuickAction icon={Trophy} label="Achievements" desc="Badges & certificates" color="from-amber-500 to-orange-600" onClick={() => useAppStore.getState().openAchievements()} />
+   170→        <QuickAction icon={Users} label="Community" desc="Members, groups, messages" color="from-violet-500 to-purple-600" onClick={() => useAppStore.getState().openMembers()} />
+   171→      </div>
+   172→
+   173→      <div className="grid gap-6 lg:grid-cols-3">
+   174→        {/* Left column: courses in progress + upcoming sessions */}
+   175→        <div className="space-y-6 lg:col-span-2">
+   176→          <CoursesInProgressPanel />
+   177→          <UpcomingSessionsPanel />
+   178→          <AssignmentsPanel />
+   179→        </div>
+   180→
+   181→        {/* Right column: activity + achievements + recommendations */}
+   182→        <div className="space-y-6">
+   183→          <ActivityPanel />
+   184→          <MiniAchievementsPanel />
+   185→          <RecommendationsPanel />
+   186→        </div>
+   187→      </div>
+   188→    </div>
+   189→  );
+   190→}
+   191→
+   192→function CandidateQuickStats() {
+   193→  const user = useAppStore((s) => s.currentUser())!;
+   194→  const completedLessons = useAppStore((s) => s.completedLessons);
+   195→  const myBadges = useAppStore((s) => s.myBadges());
+   196→  const myCerts = useAppStore((s) => s.myCertificates());
+   197→  const upcoming = useAppStore((s) => s.bookings).filter((b) => b.candidateId === user.id && b.status === 'upcoming');
+   198→
+   199→  // compute total lessons across enrolled courses
+   200→  const totalLessons = user.enrolledCourseIds.reduce((sum, cid) => sum + getAllLessons(cid).length, 0);
+   201→  const completionPct = totalLessons ? Math.round((completedLessons.length / totalLessons) * 100) : 0;
+   202→
+   203→  const stats = [
+   204→    { label: 'Courses', value: user.enrolledCourseIds.length, icon: BookOpen },
+   205→    { label: 'Lessons done', value: completedLessons.length, icon: CheckCircle2 },
+   206→    { label: 'Badges', value: myBadges.length, icon: Trophy },
+   207→    { label: 'Certificates', value: myCerts.length, icon: Award },
+   208→  ];
+   209→  return (
+   210→    <>
+   211→      {stats.map((s) => (
+   212→        <div key={s.label} className="rounded-xl bg-white/10 p-3 backdrop-blur">
+   213→          <div className="flex items-center gap-2">
+   214→            <s.icon className="h-4 w-4 text-white/70" />
+   215→            <span className="text-xs font-medium text-white/70">{s.label}</span>
+   216→          </div>
+   217→          <p className="mt-1 text-2xl font-bold">{s.value}</p>
+   218→        </div>
+   219→      ))}
+   220→    </>
+   221→  );
+   222→}
+   223→
+   224→function QuickAction({ icon: Icon, label, desc, color, onClick }: {
+   225→  icon: React.ComponentType<{ className?: string }>;
+   226→  label: string;
+   227→  desc: string;
+   228→  color: string;
+   229→  onClick: () => void;
+   230→}) {
+   231→  return (
+   232→    <button onClick={onClick} className="group relative overflow-hidden rounded-xl border bg-card p-4 text-left transition-all hover:shadow-md hover:border-foreground/20">
+   233→      <span className={`absolute -right-6 -top-6 h-20 w-20 rounded-full bg-gradient-to-br ${color} opacity-10 transition-opacity group-hover:opacity-20`} />
+   234→      <span className={`grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br ${color} text-white`}>
+   235→        <Icon className="h-4 w-4" />
+   236→      </span>
+   237→      <p className="mt-2 font-semibold text-sm">{label}</p>
+   238→      <p className="text-xs text-muted-foreground">{desc}</p>
+   239→    </button>
+   240→  );
+   241→}
+   242→
+   243→function CoursesInProgressPanel() {
+   244→  const user = useAppStore((s) => s.currentUser())!;
+   245→  const completedLessons = useAppStore((s) => s.completedLessons);
+   246→  const openLesson = useAppStore((s) => s.openLesson);
+   247→  const openCourse = useAppStore((s) => s.openCourse);
+   248→
+   249→  const enrolled = COURSES.filter((c) => user.enrolledCourseIds.includes(c.id));
+   250→
+   251→  if (enrolled.length === 0) {
+   252→    return (
+   253→      <Card>
+   254→        <CardHeader className="pb-3">
+   255→          <CardTitle className="flex items-center gap-2 text-base"><BookOpen className="h-4 w-4 text-emerald-600" /> My courses</CardTitle>
+   256→        </CardHeader>
+   257→        <CardContent className="py-8 text-center">
+   258→          <BookOpen className="mx-auto h-10 w-10 text-muted-foreground" />
+   259→          <p className="mt-2 font-medium">No courses enrolled yet</p>
+   260→          <p className="text-sm text-muted-foreground">Browse the catalog and pick your first course.</p>
+   261→          <Button onClick={() => useAppStore.getState().goHome()} className="mt-3 bg-emerald-600 text-white hover:bg-emerald-700">Browse catalog</Button>
+   262→        </CardContent>
+   263→      </Card>
+   264→    );
+   265→  }
+   266→
+   267→  return (
+   268→    <Card>
+   269→      <CardHeader className="pb-3">
+   270→        <div className="flex items-center justify-between">
+   271→          <CardTitle className="flex items-center gap-2 text-base"><BookOpen className="h-4 w-4 text-emerald-600" /> Continue learning</CardTitle>
+   272→          <Button variant="ghost" size="sm" onClick={() => useAppStore.getState().openMyLearning()} className="text-xs">View all <ChevronRight className="h-3 w-3" /></Button>
+   273→        </div>
+   274→      </CardHeader>
+   275→      <CardContent className="space-y-3">
+   276→        {enrolled.map((c) => {
+   277→          const lessons = getAllLessons(c.id);
+   278→          const done = lessons.filter((l) => completedLessons.includes(l.lessonId)).length;
+   279→          const pct = lessons.length ? Math.round((done / lessons.length) * 100) : 0;
+   280→          const next = lessons.find((l) => !completedLessons.includes(l.lessonId));
+   281→          return (
+   282→            <div key={c.id} className="rounded-lg border bg-card p-4">
+   283→              <div className="flex items-start gap-3">
+   284→                <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-gradient-to-br ${c.gradient} text-white`}>
+   285→                  <CourseIcon name={c.icon} className="h-5 w-5" />
+   286→                </span>
+   287→                <div className="min-w-0 flex-1">
+   288→                  <div className="flex items-center justify-between gap-2">
+   289→                    <p className="truncate text-sm font-semibold">{c.title}</p>
+   290→                    <span className="text-xs font-medium text-muted-foreground">{pct}%</span>
+   291→                  </div>
+   292→                  <p className="text-xs text-muted-foreground">{done}/{lessons.length} lessons · {c.duration}</p>
+   293→                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
+   294→                    <div className={`h-full bg-gradient-to-r ${c.gradient}`} style={{ width: `${pct}%` }} />
+   295→                  </div>
+   296→                  <div className="mt-3 flex items-center gap-2">
+   297→                    <Button
+   298→                      size="sm"
+   299→                      className="bg-emerald-600 text-white hover:bg-emerald-700"
+   300→                      onClick={() => next ? openLesson(next.courseId, next.moduleId, next.lessonId) : openCourse(c.id)}
+   301→                    >
+   302→                      {next ? <><PlayCircle className="mr-1.5 h-3.5 w-3.5" /> Continue</> : <><CheckCircle2 className="mr-1.5 h-3.5 w-3.5" /> Review</>}
+   303→                    </Button>
+   304→                    <Button size="sm" variant="outline" onClick={() => openCourse(c.id)}>Course page</Button>
+   305→                  </div>
+   306→                </div>
+   307→              </div>
+   308→            </div>
+   309→          );
+   310→        })}
+   311→      </CardContent>
+   312→    </Card>
+   313→  );
+   314→}
+   315→
+   316→function UpcomingSessionsPanel() {
+   317→  const user = useAppStore((s) => s.currentUser())!;
+   318→  const bookings = useAppStore((s) => s.bookings);
+   319→  const users = useAppStore((s) => s.users);
+   320→  const myBookings = bookings.filter((b) => b.candidateId === user.id && b.status === 'upcoming');
+   321→
+   322→  return (
+   323→    <Card>
+   324→      <CardHeader className="pb-3">
+   325→        <div className="flex items-center justify-between">
+   326→          <CardTitle className="flex items-center gap-2 text-base"><Video className="h-4 w-4 text-sky-600" /> Upcoming tutor sessions</CardTitle>
+   327→          <Button variant="ghost" size="sm" onClick={() => useAppStore.getState().openCalendar()} className="text-xs">Calendar <ChevronRight className="h-3 w-3" /></Button>
+   328→        </div>
+   329→      </CardHeader>
+   330→      <CardContent className="space-y-2">
+   331→        {myBookings.length === 0 ? (
+   332→          <div className="py-6 text-center">
+   333→            <Calendar className="mx-auto h-8 w-8 text-muted-foreground" />
+   334→            <p className="mt-2 text-sm text-muted-foreground">No upcoming sessions. Book a 1:1 with a human tutor.</p>
+   335→            <Button onClick={() => useAppStore.getState().openTutors()} variant="outline" size="sm" className="mt-2">Browse tutors</Button>
+   336→          </div>
+   337→        ) : (
+   338→          myBookings.map((b) => {
+   339→            const tutor = users.find((u) => u.id === b.tutorId);
+   340→            return (
+   341→              <div key={b.id} className="flex items-center gap-3 rounded-lg border p-3">
+   342→                <Avatar className="h-9 w-9">
+   343→                  <AvatarFallback className={`bg-gradient-to-br ${tutor?.avatarColor ?? 'from-slate-500 to-slate-700'} text-white text-xs font-bold`}>
+   344→                    {tutor?.name.charAt(0) ?? '?'}
+   345→                  </AvatarFallback>
+   346→                </Avatar>
+   347→                <div className="min-w-0 flex-1">
+   348→                  <p className="truncate text-sm font-medium">{b.topic}</p>
+   349→                  <p className="text-xs text-muted-foreground">{tutor?.name} · {formatDateTime(b.scheduledAt)} · {b.durationMinutes}min</p>
+   350→                </div>
+   351→                <Badge variant="secondary" className="bg-sky-500/15 text-sky-700 dark:text-sky-300">${b.price}</Badge>
+   352→                <Button size="sm" className="bg-sky-600 text-white hover:bg-sky-700"><Video className="mr-1 h-3.5 w-3.5" /> Join</Button>
+   353→              </div>
+   354→            );
+   355→          })
+   356→        )}
+   357→      </CardContent>
+   358→    </Card>
+   359→  );
+   360→}
+   361→
+   362→function AssignmentsPanel() {
+   363→  const user = useAppStore((s) => s.currentUser())!;
+   364→  const assignments = useAppStore((s) => s.assignments);
+   365→
+   366→  const myAssignments = assignments.filter((a) => {
+   367→    // show assignments for courses the user is enrolled in
+   368→    return user.enrolledCourseIds.includes(a.courseId);
+   369→  }).slice(0, 3);
+   370→
+   371→  if (myAssignments.length === 0) return null;
+   372→
+   373→  return (
+   374→    <Card>
+   375→      <CardHeader className="pb-3">
+   376→        <CardTitle className="flex items-center gap-2 text-base"><FileQuestion className="h-4 w-4 text-violet-600" /> Assignments</CardTitle>
+   377→      </CardHeader>
+   378→      <CardContent className="space-y-2">
+   379→        {myAssignments.map((a) => {
+   380→          const c = findCourse(a.courseId);
+   381→          const sub = a.submissions[user.id];
+   382→          const status = sub?.status ?? 'pending';
+   383→          const statusColor =
+   384→            status === 'graded' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+   385→            : status === 'submitted' ? 'bg-sky-500/15 text-sky-700 dark:text-sky-300'
+   386→            : 'bg-amber-500/15 text-amber-700 dark:text-amber-300';
+   387→          const overdue = status === 'pending' && a.dueAt < Date.now();
+   388→          return (
+   389→            <div key={a.id} className="flex items-center gap-3 rounded-lg border p-3">
+   390→              <span className="grid h-9 w-9 place-items-center rounded-lg bg-violet-500/15 text-violet-700 dark:text-violet-300">
+   391→                <FileQuestion className="h-4 w-4" />
+   392→              </span>
+   393→              <div className="min-w-0 flex-1">
+   394→                <p className="truncate text-sm font-medium">{a.title}</p>
+   395→                <p className="text-xs text-muted-foreground">
+   396→                  {c?.title} · Due {formatDateTime(a.dueAt)} · /{a.maxMarks}
+   397→                </p>
+   398→              </div>
+   399→              <Badge variant="secondary" className={statusColor}>{status}{overdue ? ' · overdue' : ''}</Badge>
+   400→              {status === 'graded' && <span className="text-sm font-bold">{sub?.marks}/100</span>}
+   401→            </div>
+   402→          );
+   403→        })}
+   404→      </CardContent>
+   405→    </Card>
+   406→  );
+   407→}
+   408→
+   409→function ActivityPanel() {
+   410→  const activities = useAppStore((s) => s.myActivities(8));
+   411→
+   412→  return (
+   413→    <Card>
+   414→      <CardHeader className="pb-3">
+   415→        <CardTitle className="flex items-center gap-2 text-base"><ActivityIcon className="h-4 w-4 text-emerald-600" /> Recent activity</CardTitle>
+   416→      </CardHeader>
+   417→      <CardContent>
+   418→        <ScrollArea className="h-[260px] pr-3">
+   419→          {activities.length === 0 ? (
+   420→            <p className="py-6 text-center text-sm text-muted-foreground">No activity yet. Start learning to see your timeline here.</p>
+   421→          ) : (
+   422→            <ol className="relative space-y-3 border-l border-border pl-4">
+   423→              {activities.map((a) => (
+   424→                <li key={a.id} className="relative">
+   425→                  <span className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-background" />
+   426→                  <p className="text-sm">{a.text}</p>
+   427→                  <p className="text-[11px] text-muted-foreground">{timeAgo(a.createdAt)}</p>
+   428→                </li>
+   429→              ))}
+   430→            </ol>
+   431→          )}
+   432→        </ScrollArea>
+   433→      </CardContent>
+   434→    </Card>
+   435→  );
+   436→}
+   437→
+   438→function MiniAchievementsPanel() {
+   439→  const myBadges = useAppStore((s) => s.myBadges());
+   440→  const myCerts = useAppStore((s) => s.myCertificates());
+   441→
+   442→  return (
+   443→    <Card>
+   444→      <CardHeader className="pb-3">
+   445→        <div className="flex items-center justify-between">
+   446→          <CardTitle className="flex items-center gap-2 text-base"><Trophy className="h-4 w-4 text-amber-500" /> Achievements</CardTitle>
+   447→          <Button variant="ghost" size="sm" onClick={() => useAppStore.getState().openAchievements()} className="text-xs">All <ChevronRight className="h-3 w-3" /></Button>
+   448→        </div>
+   449→      </CardHeader>
+   450→      <CardContent className="space-y-3">
+   451→        <div>
+   452→          <p className="mb-2 text-xs font-medium text-muted-foreground">Badges ({myBadges.length})</p>
+   453→          {myBadges.length === 0 ? (
+   454→            <p className="text-xs text-muted-foreground">No badges yet — complete lessons to earn them!</p>
+   455→          ) : (
+   456→            <div className="flex flex-wrap gap-2">
+   457→              {myBadges.slice(0, 6).map((ub) => (
+   458→                <span key={ub.badgeSlug} className="inline-flex items-center gap-1.5 rounded-full border bg-card px-2.5 py-1 text-xs" title={ub.badge.description}>
+   459→                  <span>{ub.badge.icon}</span>
+   460→                  <span className="font-medium">{ub.badge.title}</span>
+   461→                </span>
+   462→              ))}
+   463→            </div>
+   464→          )}
+   465→        </div>
+   466→        <div>
+   467→          <p className="mb-2 text-xs font-medium text-muted-foreground">Certificates ({myCerts.length})</p>
+   468→          {myCerts.length === 0 ? (
+   469→            <p className="text-xs text-muted-foreground">Complete a course to earn your first certificate.</p>
+   470→          ) : (
+   471→            <div className="space-y-1.5">
+   472→              {myCerts.slice(0, 3).map((c) => {
+   473→                const course = findCourse(c.courseId);
+   474→                return (
+   475→                  <div key={c.id} className="flex items-center gap-2 rounded-md border bg-amber-500/5 p-2">
+   476→                    <Award className="h-4 w-4 text-amber-600" />
+   477→                    <div className="min-w-0 flex-1">
+   478→                      <p className="truncate text-xs font-medium">{course?.title}</p>
+   479→                      <p className="text-[10px] text-muted-foreground">{c.code} · {c.scorePct}%</p>
+   480→                    </div>
+   481→                  </div>
+   482→                );
+   483→              })}
+   484→            </div>
+   485→          )}
+   486→        </div>
+   487→      </CardContent>
+   488→    </Card>
+   489→  );
+   490→}
+   491→
+   492→function RecommendationsPanel() {
+   493→  const user = useAppStore((s) => s.currentUser())!;
+   494→  const openCourse = useAppStore((s) => s.openCourse);
+   495→  const recommended = COURSES.filter((c) => !user.enrolledCourseIds.includes(c.id)).slice(0, 3);
+   496→
+   497→  return (
+   498→    <Card>
+   499→      <CardHeader className="pb-3">
+   500→        <CardTitle className="flex items-center gap-2 text-base"><Sparkles className="h-4 w-4 text-emerald-600" /> Recommended for you</CardTitle>
+   501→      </CardHeader>
+   502→      <CardContent className="space-y-2">
+   503→        {recommended.map((c) => (
+   504→          <button key={c.id} onClick={() => openCourse(c.id)} className="flex w-full items-center gap-3 rounded-lg border p-2.5 text-left transition-colors hover:bg-accent">
+   505→            <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-md bg-gradient-to-br ${c.gradient} text-white`}>
+   506→              <CourseIcon name={c.icon} className="h-4 w-4" />
+   507→            </span>
+   508→            <div className="min-w-0 flex-1">
+   509→              <p className="truncate text-sm font-medium">{c.title}</p>
+   510→              <p className="text-xs text-muted-foreground">★ {c.rating} · ${c.oneTimePrice} or ${c.monthlyPrice}/mo</p>
+   511→            </div>
+   512→            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+   513→          </button>
+   514→        ))}
+   515→      </CardContent>
+   516→    </Card>
+   517→  );
+   518→}
+   519→
+   520→// ============================================================
+   521→// Tutor dashboard
+   522→// ============================================================
+   523→
+   524→function TutorDashboard() {
+   525→  return (
+   526→    <div className="space-y-6 pt-6">
+   527→      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+   528→        <QuickAction icon={Video} label="My sessions" desc="Upcoming & past bookings" color="from-sky-500 to-cyan-600" onClick={() => useAppStore.getState().openTutorPortal()} />
+   529→        <QuickAction icon={Users} label="My students" desc="Track their progress" color="from-violet-500 to-purple-600" onClick={() => useAppStore.getState().openTutorPortal()} />
+   530→        <QuickAction icon={DollarSign} label="Earnings" desc="Payouts & commission" color="from-emerald-500 to-teal-600" onClick={() => useAppStore.getState().openTutorPortal()} />
+   531→        <QuickAction icon={Settings} label="Profile & rates" desc="Edit headline, bio, hourly rate" color="from-amber-500 to-orange-600" onClick={() => useAppStore.getState().openTutorPortal()} />
+   532→      </div>
+   533→
+   534→      <div className="grid gap-6 lg:grid-cols-3">
+   535→        <div className="space-y-6 lg:col-span-2">
+   536→          <TutorSessionsPanel />
+   537→          <TutorStudentsPanel />
+   538→        </div>
+   539→        <div className="space-y-6">
+   540→          <TutorEarningsPanel />
+   541→          <TutorProfilePanel />
+   542→        </div>
+   543→      </div>
+   544→    </div>
+   545→  );
+   546→}
+   547→
+   548→function TutorQuickStats() {
+   549→  const user = useAppStore((s) => s.currentUser())!;
+   550→  const bookings = useAppStore((s) => s.bookings);
+   551→  const myUpcoming = bookings.filter((b) => b.tutorId === user.id && b.status === 'upcoming');
+   552→  const myCompleted = bookings.filter((b) => b.tutorId === user.id && b.status === 'completed');
+   553→  const myStudents = new Set(bookings.filter((b) => b.tutorId === user.id).map((b) => b.candidateId));
+   554→  const tp = user.tutorProfile;
+   555→  const earnings = myCompleted.reduce((sum, b) => sum + (b.price * (1 - (tp?.paymentTerms.platformFeePct ?? 20) / 100)), 0);
+   556→
+   557→  const stats = [
+   558→    { label: 'Upcoming', value: myUpcoming.length, icon: Video },
+   559→    { label: 'Completed', value: tp?.sessionsCompleted ?? myCompleted.length, icon: CheckCircle2 },
+   560→    { label: 'Students', value: myStudents.size, icon: Users },
+   561→    { label: 'Earnings', value: `$${Math.round(earnings)}`, icon: DollarSign },
+   562→  ];
+   563→  return (
+   564→    <>
+   565→      {stats.map((s) => (
+   566→        <div key={s.label} className="rounded-xl bg-white/10 p-3 backdrop-blur">
+   567→          <div className="flex items-center gap-2">
+   568→            <s.icon className="h-4 w-4 text-white/70" />
+   569→            <span className="text-xs font-medium text-white/70">{s.label}</span>
+   570→          </div>
+   571→          <p className="mt-1 text-2xl font-bold">{s.value}</p>
+   572→        </div>
+   573→      ))}
+   574→    </>
+   575→  );
+   576→}
+   577→
+   578→function TutorSessionsPanel() {
+   579→  const user = useAppStore((s) => s.currentUser())!;
+   580→  const bookings = useAppStore((s) => s.bookings);
+   581→  const users = useAppStore((s) => s.users);
+   582→  const myUpcoming = bookings.filter((b) => b.tutorId === user.id && b.status === 'upcoming').slice(0, 5);
+   583→
+   584→  return (
+   585→    <Card>
+   586→      <CardHeader className="pb-3">
+   587→        <CardTitle className="flex items-center gap-2 text-base"><Video className="h-4 w-4 text-sky-600" /> Upcoming sessions</CardTitle>
+   588→      </CardHeader>
+   589→      <CardContent className="space-y-2">
+   590→        {myUpcoming.length === 0 ? (
+   591→          <div className="py-6 text-center">
+   592→            <Video className="mx-auto h-8 w-8 text-muted-foreground" />
+   593→            <p className="mt-2 text-sm text-muted-foreground">No upcoming sessions. Candidates can book you from the marketplace.</p>
+   594→          </div>
+   595→        ) : (
+   596→          myUpcoming.map((b) => {
+   597→            const cand = users.find((u) => u.id === b.candidateId);
+   598→            return (
+   599→              <div key={b.id} className="flex items-center gap-3 rounded-lg border p-3">
+   600→                <Avatar className="h-9 w-9">
+   601→                  <AvatarFallback className={`bg-gradient-to-br ${cand?.avatarColor ?? 'from-slate-500 to-slate-700'} text-white text-xs font-bold`}>
+   602→                    {cand?.name.charAt(0) ?? '?'}
+   603→                  </AvatarFallback>
+   604→                </Avatar>
+   605→                <div className="min-w-0 flex-1">
+   606→                  <p className="truncate text-sm font-medium">{b.topic}</p>
+   607→                  <p className="text-xs text-muted-foreground">{cand?.name} · {formatDateTime(b.scheduledAt)} · {b.durationMinutes}min</p>
+   608→                </div>
+   609→                <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">+${Math.round(b.price * (1 - (user.tutorProfile?.paymentTerms.platformFeePct ?? 20) / 100))}</span>
+   610→                <Button size="sm" className="bg-sky-600 text-white hover:bg-sky-700"><Video className="mr-1 h-3.5 w-3.5" /> Start</Button>
+   611→              </div>
+   612→            );
+   613→          })
+   614→        )}
+   615→      </CardContent>
+   616→    </Card>
+   617→  );
+   618→}
+   619→
+   620→function TutorStudentsPanel() {
+   621→  const user = useAppStore((s) => s.currentUser())!;
+   622→  const bookings = useAppStore((s) => s.bookings);
+   623→  const users = useAppStore((s) => s.users);
+   624→  const myBookings = bookings.filter((b) => b.tutorId === user.id);
+   625→  const studentIds = Array.from(new Set(myBookings.map((b) => b.candidateId)));
+   626→  const students = users.filter((u) => studentIds.includes(u.id)).slice(0, 6);
+   627→
+   628→  return (
+   629→    <Card>
+   630→      <CardHeader className="pb-3">
+   631→        <CardTitle className="flex items-center gap-2 text-base"><Users className="h-4 w-4 text-violet-600" /> My students</CardTitle>
+   632→      </CardHeader>
+   633→      <CardContent>
+   634→        {students.length === 0 ? (
+   635→          <p className="py-6 text-center text-sm text-muted-foreground">No students yet.</p>
+   636→        ) : (
+   637→          <div className="grid gap-2 sm:grid-cols-2">
+   638→            {students.map((s) => {
+   639→              const sessions = myBookings.filter((b) => b.candidateId === s.id).length;
+   640→              return (
+   641→                <button key={s.id} onClick={() => useAppStore.getState().openMessages(undefined)} className="flex items-center gap-3 rounded-lg border p-2.5 text-left transition-colors hover:bg-accent">
+   642→                  <Avatar className="h-8 w-8">
+   643→                    <AvatarFallback className={`bg-gradient-to-br ${s.avatarColor} text-white text-xs font-bold`}>{s.name.charAt(0)}</AvatarFallback>
+   644→                  </Avatar>
+   645→                  <div className="min-w-0 flex-1">
+   646→                    <p className="truncate text-sm font-medium">{s.name}</p>
+   647→                    <p className="text-xs text-muted-foreground">{sessions} session{sessions !== 1 ? 's' : ''}</p>
+   648→                  </div>
+   649→                  <MessageSquare className="h-4 w-4 text-muted-foreground" />
+   650→                </button>
+   651→              );
+   652→            })}
+   653→          </div>
+   654→        )}
+   655→      </CardContent>
+   656→    </Card>
+   657→  );
+   658→}
+   659→
+   660→function TutorEarningsPanel() {
+   661→  const user = useAppStore((s) => s.currentUser())!;
+   662→  const bookings = useAppStore((s) => s.bookings);
+   663→  const completed = bookings.filter((b) => b.tutorId === user.id && b.status === 'completed');
+   664→  const tp = user.tutorProfile;
+   665→  const feePct = tp?.paymentTerms.platformFeePct ?? 20;
+   666→  const gross = completed.reduce((sum, b) => sum + b.price, 0);
+   667→  const net = gross * (1 - feePct / 100);
+   668→
+   669→  return (
+   670→    <Card>
+   671→      <CardHeader className="pb-3">
+   672→        <CardTitle className="flex items-center gap-2 text-base"><DollarSign className="h-4 w-4 text-emerald-600" /> Earnings</CardTitle>
+   673→      </CardHeader>
+   674→      <CardContent className="space-y-3">
+   675→        <div className="rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 p-4 text-white">
+   676→          <p className="text-xs text-white/80">Net this month (after {feePct}% platform fee)</p>
+   677→          <p className="mt-1 text-3xl font-bold">${Math.round(net)}</p>
+   678→        </div>
+   679→        <div className="grid grid-cols-2 gap-2 text-center">
+   680→          <div className="rounded-lg border p-2">
+   681→            <p className="text-xs text-muted-foreground">Gross</p>
+   682→            <p className="text-sm font-bold">${gross}</p>
+   683→          </div>
+   684→          <div className="rounded-lg border p-2">
+   685→            <p className="text-xs text-muted-foreground">Payout</p>
+   686→            <p className="text-sm font-bold capitalize">{tp?.paymentTerms.payoutSchedule}</p>
+   687→          </div>
+   688→        </div>
+   689→        <Button onClick={() => useAppStore.getState().openTutorPortal()} variant="outline" size="sm" className="w-full">View earnings details</Button>
+   690→      </CardContent>
+   691→    </Card>
+   692→  );
+   693→}
+   694→
+   695→function TutorProfilePanel() {
+   696→  const user = useAppStore((s) => s.currentUser())!;
+   697→  const tp = user.tutorProfile;
+   698→  if (!tp) return null;
+   699→
+   700→  const completeness = [
+   701→    !!tp.headline, !!tp.bio, tp.expertise.length > 0, tp.hourlyRate > 0, user.enrolledCourseIds.length > 0,
+   702→  ].filter(Boolean).length;
+   703→  const pct = Math.round((completeness / 5) * 100);
+   704→
+   705→  return (
+   706→    <Card>
+   707→      <CardHeader className="pb-3">
+   708→        <CardTitle className="flex items-center gap-2 text-base"><Star className="h-4 w-4 text-amber-500" /> Profile strength</CardTitle>
+   709→      </CardHeader>
+   710→      <CardContent className="space-y-3">
+   711→        <div>
+   712→          <div className="mb-1 flex justify-between text-xs">
+   713→            <span className="text-muted-foreground">Completeness</span>
+   714→            <span className="font-semibold">{pct}%</span>
+   715→          </div>
+   716→          <Progress value={pct} className="h-2" />
+   717→        </div>
+   718→        <div className="space-y-1 text-xs">
+   719→          <div className="flex justify-between"><span className="text-muted-foreground">Rating</span><span className="font-medium">★ {tp.rating}</span></div>
+   720→          <div className="flex justify-between"><span className="text-muted-foreground">Hourly rate</span><span className="font-medium">${tp.hourlyRate}/hr</span></div>
+   721→          <div className="flex justify-between"><span className="text-muted-foreground">Availability</span><span className="font-medium capitalize">{tp.availability}</span></div>
+   722→          <div className="flex justify-between"><span className="text-muted-foreground">Status</span><span className={`font-medium ${tp.approved ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>{tp.approved ? 'Approved' : 'Pending'}</span></div>
+   723→        </div>
+   724→        <Button onClick={() => useAppStore.getState().openTutorPortal()} variant="outline" size="sm" className="w-full">Edit profile</Button>
+   725→      </CardContent>
+   726→    </Card>
+   727→  );
+   728→}
+   729→
+   730→// ============================================================
+   731→// Admin dashboard
+   732→// ============================================================
+   733→
+   734→function AdminDashboard() {
+   735→  return (
+   736→    <div className="space-y-6 pt-6">
+   737→      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+   738→        <QuickAction icon={Users} label="Users" desc="Manage all roles & permissions" color="from-rose-500 to-pink-600" onClick={() => useAppStore.getState().openAdmin('users')} />
+   739→        <QuickAction icon={BookOpen} label="Courses" desc="Catalog, bundles, categories" color="from-emerald-500 to-teal-600" onClick={() => useAppStore.getState().openAdmin('courses')} />
+   740→        <QuickAction icon={DollarSign} label="Pricing" desc="Subscriptions & one-time" color="from-amber-500 to-orange-600" onClick={() => useAppStore.getState().openAdmin('pricing')} />
+   741→        <QuickAction icon={Users} label="Tutors" desc="Approve, set payouts" color="from-sky-500 to-cyan-600" onClick={() => useAppStore.getState().openAdmin('tutors')} />
+   742→        <QuickAction icon={Zap} label="Integrations" desc="Stripe, Zoom, Slack" color="from-violet-500 to-purple-600" onClick={() => useAppStore.getState().openAdmin('integrations')} />
+   743→        <QuickAction icon={ShieldCheck} label="Roles & permissions" desc="Full RBAC matrix" color="from-indigo-500 to-blue-600" onClick={() => useAppStore.getState().openAdmin('roles')} />
+   744→        <QuickAction icon={BarChart3} label="Audit log" desc="Every platform action" color="from-fuchsia-500 to-pink-600" onClick={() => useAppStore.getState().openAdmin('audit')} />
+   745→        <QuickAction icon={Sparkles} label="Features" desc="WPLMS-parity feature list" color="from-emerald-500 to-teal-600" onClick={() => useAppStore.getState().openFeatures()} />
+   746→      </div>
+   747→
+   748→      <div className="grid gap-6 lg:grid-cols-3">
+   749→        <div className="space-y-6 lg:col-span-2">
+   750→          <AdminKpiPanel />
+   751→          <AdminPendingPanel />
+   752→        </div>
+   753→        <div className="space-y-6">
+   754→          <AdminAuditPanel />
+   755→          <AdminIntegrationsPanel />
+   756→        </div>
+   757→      </div>
+   758→    </div>
+   759→  );
+   760→}
+   761→
+   762→function AdminQuickStats() {
+   763→  const users = useAppStore((s) => s.users);
+   764→  const bookings = useAppStore((s) => s.bookings);
+   765→  const integrations = useAppStore((s) => s.integrations);
+   766→  const candidates = users.filter((u) => u.role === 'candidate').length;
+   767→  const tutors = users.filter((u) => u.role === 'tutor').length;
+   768→  const liveSessions = bookings.filter((b) => b.status === 'upcoming').length;
+   769→  const connectedIntegrations = integrations.filter((i) => i.connected).length;
+   770→
+   771→  const stats = [
+   772→    { label: 'Candidates', value: candidates, icon: GraduationCap },
+   773→    { label: 'Tutors', value: tutors, icon: Users },
+   774→    { label: 'Live sessions', value: liveSessions, icon: Video },
+   775→    { label: 'Integrations', value: `${connectedIntegrations}/${integrations.length}`, icon: Zap },
+   776→  ];
+   777→  return (
+   778→    <>
+   779→      {stats.map((s) => (
+   780→        <div key={s.label} className="rounded-xl bg-white/10 p-3 backdrop-blur">
+   781→          <div className="flex items-center gap-2">
+   782→            <s.icon className="h-4 w-4 text-white/70" />
+   783→            <span className="text-xs font-medium text-white/70">{s.label}</span>
+   784→          </div>
+   785→          <p className="mt-1 text-2xl font-bold">{s.value}</p>
+   786→        </div>
+   787→      ))}
+   788→    </>
+   789→  );
+   790→}
+   791→
+   792→function AdminKpiPanel() {
+   793→  const users = useAppStore((s) => s.users);
+   794→  const bookings = useAppStore((s) => s.bookings);
+   795→  const candidates = users.filter((u) => u.role === 'candidate');
+   796→  const tutors = users.filter((u) => u.role === 'tutor');
+   797→  const pendingTutors = tutors.filter((t) => t.status === 'pending');
+   798→  const completedBookings = bookings.filter((b) => b.status === 'completed');
+   799→  const revenue = completedBookings.reduce((sum, b) => sum + b.price, 0);
+   800→  const avgTutorRating = tutors.filter((t) => t.tutorProfile).reduce((sum, t) => sum + (t.tutorProfile?.rating ?? 0), 0) / (tutors.length || 1);
+   801→
+   802→  const kpis = [
+   803→    { label: 'Total revenue (sessions)', value: `$${revenue}`, icon: DollarSign, color: 'text-emerald-600' },
+   804→    { label: 'Active candidates', value: candidates.filter((c) => c.status === 'active').length, icon: GraduationCap, color: 'text-sky-600' },
+   805→    { label: 'Avg tutor rating', value: `★ ${avgTutorRating.toFixed(2)}`, icon: Star, color: 'text-amber-500' },
+   806→    { label: 'Completed sessions', value: completedBookings.length, icon: CheckCircle2, color: 'text-violet-600' },
+   807→  ];
+   808→
+   809→  return (
+   810→    <Card>
+   811→      <CardHeader className="pb-3">
+   812→        <CardTitle className="flex items-center gap-2 text-base"><TrendingUp className="h-4 w-4 text-rose-600" /> Platform KPIs</CardTitle>
+   813→      </CardHeader>
+   814→      <CardContent className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+   815→        {kpis.map((k) => (
+   816→          <div key={k.label} className="rounded-lg border bg-card p-3">
+   817→            <k.icon className={`h-5 w-5 ${k.color}`} />
+   818→            <p className="mt-1 text-xl font-bold">{k.value}</p>
+   819→            <p className="text-xs text-muted-foreground">{k.label}</p>
+   820→          </div>
+   821→        ))}
+   822→      </CardContent>
+   823→    </Card>
+   824→  );
+   825→}
+   826→
+   827→function AdminPendingPanel() {
+   828→  const users = useAppStore((s) => s.users);
+   829→  const approveTutor = useAppStore((s) => s.approveTutor);
+   830→  const pendingTutors = users.filter((u) => u.role === 'tutor' && u.status === 'pending');
+   831→
+   832→  return (
+   833→    <Card>
+   834→      <CardHeader className="pb-3">
+   835→        <CardTitle className="flex items-center gap-2 text-base"><Clock className="h-4 w-4 text-amber-500" /> Pending approvals ({pendingTutors.length})</CardTitle>
+   836→      </CardHeader>
+   837→      <CardContent>
+   838→        {pendingTutors.length === 0 ? (
+   839→          <p className="py-6 text-center text-sm text-muted-foreground">No pending items. You&apos;re all caught up!</p>
+   840→        ) : (
+   841→          <div className="space-y-2">
+   842→            {pendingTutors.map((t) => (
+   843→              <div key={t.id} className="flex items-center gap-3 rounded-lg border p-3">
+   844→                <Avatar className="h-9 w-9">
+   845→                  <AvatarFallback className={`bg-gradient-to-br ${t.avatarColor} text-white text-xs font-bold`}>{t.name.charAt(0)}</AvatarFallback>
+   846→                </Avatar>
+   847→                <div className="min-w-0 flex-1">
+   848→                  <p className="truncate text-sm font-medium">{t.name}</p>
+   849→                  <p className="truncate text-xs text-muted-foreground">{t.email} · {t.tutorProfile?.headline}</p>
+   850→                </div>
+   851→                <Button size="sm" className="bg-emerald-600 text-white hover:bg-emerald-700" onClick={() => approveTutor(t.id)}>
+   852→                  <CheckCircle2 className="mr-1 h-3.5 w-3.5" /> Approve
+   853→                </Button>
+   854→                <Button size="sm" variant="outline" onClick={() => useAppStore.getState().openAdmin('tutors')}>Review</Button>
+   855→              </div>
+   856→            ))}
+   857→          </div>
+   858→        )}
+   859→      </CardContent>
+   860→    </Card>
+   861→  );
+   862→}
+   863→
+   864→function AdminAuditPanel() {
+   865→  const auditLogs = useAppStore((s) => s.auditLogs).slice(0, 6);
+   866→  return (
+   867→    <Card>
+   868→      <CardHeader className="pb-3">
+   869→        <div className="flex items-center justify-between">
+   870→          <CardTitle className="flex items-center gap-2 text-base"><ActivityIcon className="h-4 w-4 text-rose-600" /> Audit log</CardTitle>
+   871→          <Button variant="ghost" size="sm" onClick={() => useAppStore.getState().openAdmin('audit')} className="text-xs">All <ChevronRight className="h-3 w-3" /></Button>
+   872→        </div>
+   873→      </CardHeader>
+   874→      <CardContent>
+   875→        <ScrollArea className="h-[260px] pr-3">
+   876→          <ol className="space-y-2">
+   877→            {auditLogs.map((log) => (
+   878→              <li key={log.id} className="rounded-md border p-2 text-xs">
+   879→                <div className="flex items-center justify-between gap-2">
+   880→                  <span className="font-medium">{log.actorName}</span>
+   881→                  <span className="text-muted-foreground">{timeAgo(log.timestamp)}</span>
+   882→                </div>
+   883→                <p className="text-muted-foreground">{log.action}{log.target ? ` · ${log.target}` : ''}</p>
+   884→              </li>
+   885→            ))}
+   886→          </ol>
+   887→        </ScrollArea>
+   888→      </CardContent>
+   889→    </Card>
+   890→  );
+   891→}
+   892→
+   893→function AdminIntegrationsPanel() {
+   894→  const integrations = useAppStore((s) => s.integrations).slice(0, 5);
+   895→  const toggleIntegration = useAppStore((s) => s.toggleIntegration);
+   896→
+   897→  return (
+   898→    <Card>
+   899→      <CardHeader className="pb-3">
+   900→        <div className="flex items-center justify-between">
+   901→          <CardTitle className="flex items-center gap-2 text-base"><Zap className="h-4 w-4 text-violet-600" /> Integrations</CardTitle>
+   902→          <Button variant="ghost" size="sm" onClick={() => useAppStore.getState().openAdmin('integrations')} className="text-xs">All <ChevronRight className="h-3 w-3" /></Button>
+   903→        </div>
+   904→      </CardHeader>
+   905→      <CardContent className="space-y-2">
+   906→        {integrations.map((i) => (
+   907→          <div key={i.id} className="flex items-center gap-3 rounded-lg border p-2.5">
+   908→            <span className="grid h-8 w-8 place-items-center rounded-md bg-muted text-base">{i.icon}</span>
+   909→            <div className="min-w-0 flex-1">
+   910→              <p className="truncate text-sm font-medium">{i.name}</p>
+   911→              <p className="truncate text-xs text-muted-foreground capitalize">{i.category}</p>
+   912→            </div>
+   913→            <Button
+   914→              size="sm"
+   915→              variant={i.connected ? 'default' : 'outline'}
+   916→              onClick={() => toggleIntegration(i.id)}
+   917→              className={i.connected ? 'bg-emerald-600 text-white hover:bg-emerald-700' : ''}
+   918→            >
+   919→              {i.connected ? 'Connected' : 'Connect'}
+   920→            </Button>
+   921→          </div>
+   922→        ))}
+   923→      </CardContent>
+   924→    </Card>
+   925→  );
+   926→}
+   927→
