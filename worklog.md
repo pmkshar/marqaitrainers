@@ -116,3 +116,48 @@ Stage Summary:
 - LIVE: https://github.com/pmkshar/marqaitainers/wiki (10 documentation pages)
 - Vercel deploy URL: https://vercel.com/new/clone?repository-url=https://github.com/pmkshar/marqaitainers
 - User must complete Vercel deploy themselves (sign in with GitHub at the URL above; auto-detects Next.js; ~60s build).
+
+---
+Task ID: videos-python-voice-intro
+Agent: main (Super Z)
+Task: Fix broken lesson videos, add Python course with multiple chapters, add multilingual voice-based AI tutor intro before training starts
+
+Work Log:
+- Investigated video playback issue: confirmed Google Cloud Storage `gtv-videos-bucket` returns HTTP 403 AccessDenied for all 5 sample video URLs (BigBuckBunny, ElephantsDream, ForBiggerBlazes/Escapes/Fun).
+- Tested alternative public MP4 sources. Selected 6 verified-working URLs (HTTP 206 / video/mp4):
+  * test-videos.co.uk: Big_Buck_Bunny_720_10s_5MB, Sintel_720_10s_1MB, Big_Buck_Bunny_360_10s_1MB
+  * w3schools.com: mov_bbb.mp4, movie.mp4
+  * learningcontainer.com: sample-mp4-file.mp4
+- Replaced SAMPLE_VIDEO_1..5 in courses.ts and added SAMPLE_VIDEO_6.
+- Improved video player in lesson-view.tsx: added onError handler that swaps the broken <video> for a friendly "Video preview unavailable" panel with a "Open video in new tab" link. Also added key={lesson.videoUrl}, preload="metadata", crossOrigin="anonymous".
+- Created scripts/add_python_course.py generator and ran it to append a 6-chapter, 14-lesson Python Programming course to courses.ts (78 KB of content added). Topics:
+  * Chapter 1 — Python Foundations (3 lessons: setup, variables/types, control flow)
+  * Chapter 2 — Built-in Data Structures (2 lessons: lists/tuples, dicts/sets)
+  * Chapter 3 — Functions, OOP & Functional Tools (3 lessons: functions, classes, decorators/generators)
+  * Chapter 4 — Web Development with Flask & Django (2 lessons: Flask REST API, Django+DRF)
+  * Chapter 5 — Data Science with NumPy & Pandas (2 lessons: NumPy arrays, Pandas DataFrames)
+  * Chapter 6 — Testing, Async, Packaging & Production (3 lessons: pytest, asyncio, pyproject.toml+Docker)
+  * Each lesson has 4 step-by-step lab steps + 3 quiz questions. Total: 56 steps + 42 quiz questions.
+  * Pricing: $149 one-time / $19 monthly / $189 annual / 365-day access.
+- Added "cat-python" (Python & Scripting) category to seed-social.ts.
+- Added "Code2" Lucide icon to CourseIcon map in navbar.tsx so the Python course renders its own icon.
+- Built src/components/ai-tutor-intro.tsx (541 lines):
+  * Multilingual AI tutor introduction shown before any lesson starts (once per lesson per browser)
+  * 10 languages with native scripts: English, हिन्दी, தமிழ், తెలుగు, Español, Français, Deutsch, Português, العربية, 中文
+  * 5-line personalized script per language (greeting, intro, what-you'll-learn, tip about Ask AI Tutor, goodbye)
+  * Uses Web Speech API (window.speechSynthesis) — works in all modern browsers, no API key needed
+  * Auto-selects best matching voice per language (BCP-47 exact match → prefix match → user-pinned)
+  * Voice picker dropdown when multiple voices exist for a language
+  * Subtitles with line-by-line highlight synced to spoken text
+  * Controls: Play / Pause / Resume / Replay / Speed slider (0.5x-1.5x) / Skip (X)
+  * "Don't show again" toggle persisted to localStorage (key: marq-ai-tutor-intro-prefs)
+  * Per-lesson "seen" tracking (key: marq-ai-tutor-intro-seen) so intro shows once per lesson per browser
+  * Graceful fallback: if speechSynthesis unsupported, shows subtitles only with a notice
+  * Integrated into lesson-view.tsx — overlays the lesson until dismissed
+- TypeScript clean. Production build clean (Next.js 16.1.3 Turbopack, 7.2s compile, 4 routes).
+- Committed as 0873613 and pushed to GitHub. Triggers Vercel auto-rebuild.
+
+Stage Summary:
+- Files modified: src/lib/courses.ts (+78 KB Python course + 6 working video URLs), src/lib/seed-social.ts (+cat-python category), src/components/navbar.tsx (+Code2 icon), src/components/lesson-view.tsx (AI tutor intro integration + video fallback), src/components/ai-tutor-intro.tsx (NEW, 541 lines), scripts/add_python_course.py (NEW generator).
+- Three features all in commit 0873613, pushed to GitHub main. Vercel will auto-deploy (user may need to verify in Vercel dashboard if auto-deploy is enabled).
+- Verification: NEW video URLs all return HTTP 206 video/mp4 (working). Python course catalog shows 6 chapters. AI tutor intro has 10 languages, 5 lines each, voice picker, controls.
