@@ -213,3 +213,34 @@ Stage Summary:
   (b) download the patch file and apply it on their own machine:
       `git am < fix-candidate-login-videos-tutor.patch && git push origin main`
 - After push, Vercel auto-deploys (~60s). All four issues will be resolved.
+
+---
+Task ID: 5
+Agent: Main
+Task: Redesign AI Tutor sidebar with 3D profile photo, controls, and teaching animations
+
+Work Log:
+- Generated 3D Pixar-style profile images for Maya (female) and Arjun (male) tutors using AI image generation
+- Images saved to public/tutors/maya.png and public/tutors/arjun.png
+- Updated TutorPersona type with new fields: experience, expertise, profileImage, tutorType, rating, studentsCount, coursesCount
+- Completely redesigned tutor-chat.tsx with:
+  - Large 3D profile photo at top (112px) with animated glow ring when speaking
+  - Name + verified badge + title below photo
+  - Stats row: Experience | Students | Rating
+  - Expertise tags (AI/ML, Java, Python, .NET, Mobile, Flutter)
+  - AI TUTOR badge on profile photo
+  - Speaking animation with sound wave visualizer
+  - Control bar: Play/Read aloud, Pause, Stop, Record/Mic, Chat toggle, Clear
+  - Chat section now toggleable for cleaner layout
+  - Profile photo scales up when speaking
+- Updated page.tsx marginLeft to 340px
+- Built successfully with `next build`
+- GitHub PAT expired, couldn't push to GitHub
+- Deployed directly to Vercel using Vercel CLI
+- Verified deployment: new code confirmed in JS chunks, images accessible, API working
+
+Stage Summary:
+- AI Tutor sidebar completely redesigned with 3D animated profile
+- Live on marqaitrainers.vercel.app
+- GitHub push failed (PAT expired) - user needs to provide new token to sync
+- Vercel deployment successful with all new features
