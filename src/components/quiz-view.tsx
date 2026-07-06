@@ -15,7 +15,10 @@ import { CourseIcon } from './navbar';
 export function QuizView({ courseId, moduleId, lessonId }: { courseId: string; moduleId: string; lessonId: string }) {
   const result = findLesson(courseId, moduleId, lessonId);
   const course = findCourse(courseId);
-  const { openLesson, openCourse, setTutorOpen, markLessonComplete } = useAppStore();
+  const openLesson = useAppStore((s) => s.openLesson);
+  const openCourse = useAppStore((s) => s.openCourse);
+  const setTutorOpen = useAppStore((s) => s.setTutorOpen);
+  const markLessonComplete = useAppStore((s) => s.markLessonComplete);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [submitted, setSubmitted] = useState(false);
 

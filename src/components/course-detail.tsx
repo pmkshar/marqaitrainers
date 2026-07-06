@@ -12,7 +12,11 @@ import { CourseIcon } from './navbar';
 
 export function CourseDetail({ courseId }: { courseId: string }) {
   const course = findCourse(courseId);
-  const { openLesson, openQuiz, goHome, setTutorOpen, completedLessons } = useAppStore();
+  const openLesson = useAppStore((s) => s.openLesson);
+  const openQuiz = useAppStore((s) => s.openQuiz);
+  const goHome = useAppStore((s) => s.goHome);
+  const setTutorOpen = useAppStore((s) => s.setTutorOpen);
+  const completedLessons = useAppStore((s) => s.completedLessons) ?? [];
 
   if (!course) {
     return (

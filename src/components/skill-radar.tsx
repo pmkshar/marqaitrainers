@@ -38,8 +38,11 @@ const LEVEL_TO_SCORE: Record<string, number> = {
 const LEVEL_LABELS = ['Beginner', 'Intermediate', 'Advanced', 'Expert'];
 
 export function SkillRadar() {
-  const { currentUser, completedLessons, skillMatrix } = useAppStore();
-  const user = currentUser();
+  const currentUserId = useAppStore((s) => s.currentUserId);
+  const users = useAppStore((s) => s.users) ?? [];
+  const completedLessons = useAppStore((s) => s.completedLessons) ?? [];
+  const skillMatrix = useAppStore((s) => s.skillMatrix) ?? [];
+  const user = currentUserId ? users.find((u) => u.id === currentUserId) ?? null : null;
 
   if (!user) return null;
 

@@ -10,8 +10,15 @@ import { COURSES, findCourse, getAllLessons } from '@/lib/courses';
 import { CourseIcon } from './navbar';
 
 export function MyLearning() {
-  const { currentUser, goHome, openLesson, openCourse, completedLessons, bookings, users, setTutorOpen } = useAppStore();
-  const user = currentUser();
+  const currentUserId = useAppStore((s) => s.currentUserId);
+  const users = useAppStore((s) => s.users) ?? [];
+  const goHome = useAppStore((s) => s.goHome);
+  const openLesson = useAppStore((s) => s.openLesson);
+  const openCourse = useAppStore((s) => s.openCourse);
+  const completedLessons = useAppStore((s) => s.completedLessons) ?? [];
+  const bookings = useAppStore((s) => s.bookings) ?? [];
+  const setTutorOpen = useAppStore((s) => s.setTutorOpen);
+  const user = currentUserId ? users.find((u) => u.id === currentUserId) ?? null : null;
 
   if (!user || user.role !== 'candidate') {
     return (

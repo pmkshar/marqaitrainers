@@ -103,6 +103,7 @@ interface AppState {
 
   // Learning
   completedLessons: string[];
+  passedLessonTests: string[];
 
   // Auth
   currentUserId: string | null;
@@ -182,6 +183,7 @@ interface AppState {
 
   // ---- learning ----
   markLessonComplete: (lessonId: string) => void;
+  markLessonTestPassed: (lessonId: string) => void;
 
   // ---- chat ----
   addMessage: (msg: ChatMessage) => void;
@@ -329,6 +331,7 @@ export const useAppStore = create<AppState>()(
 
       chatMessages: [],
       completedLessons: [],
+      passedLessonTests: [],
 
       currentUserId: null,
       users: SEED_USERS,
@@ -604,6 +607,12 @@ export const useAppStore = create<AppState>()(
             lessonId,
             text: 'Completed a lesson',
           });
+        }
+      },
+      markLessonTestPassed: (lessonId) => {
+        const alreadyPassed = get().passedLessonTests.includes(lessonId);
+        if (!alreadyPassed) {
+          set((s) => ({ passedLessonTests: [...s.passedLessonTests, lessonId] }));
         }
       },
 
@@ -1520,20 +1529,23 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'marq-ai-storage',
-      version: 9,
+      version: 11,
       storage: createJSONStorage(() => (typeof window !== 'undefined' ? localStorage : (undefined as never))),
       // Drop any persisted state from an older schema version. This prevents
       // crashes when the seeded data shape changes (e.g. new fields like
       // `enrolledCourseIds`, `tutorProfile`, `categoryIds`, etc.).
       migrate: (_persistedState, version) => {
-        if (version < 9) {
+        if (version < 11) {
           // Returning the seed-state shape triggers a fresh re-init.
+          // This clears stale localStorage that may be missing fields
+          // like passedLessonTests, corporates, skillMatrix, etc.
           return {} as Partial<AppState>;
         }
         return (_persistedState as Partial<AppState>) ?? {};
       },
       partialize: (s) => ({
         completedLessons: s.completedLessons,
+        passedLessonTests: s.passedLessonTests,
         chatMessages: s.chatMessages.slice(-20),
         currentUserId: s.currentUserId,
         users: s.users,
@@ -1572,29 +1584,48 @@ export const useAppStore = create<AppState>()(
       // Defensive merge — never let a corrupted persisted state crash the app
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<AppState>;
+        // Helper: safely get an array, falling back to current default
+        const arr = <K extends keyof AppState>(key: K): AppState[K] => {
+          const val = p[key];
+          return Array.isArray(val) ? val : current[key];
+        };
         return {
           ...current,
           ...p,
           // Always ensure critical arrays exist (defensive against partial persistence)
           users: Array.isArray(p.users) && p.users.length > 0 ? p.users : current.users,
           roles: Array.isArray(p.roles) && p.roles.length > 0 ? p.roles : current.roles,
-          bookings: Array.isArray(p.bookings) ? p.bookings : current.bookings,
-          integrations: Array.isArray(p.integrations) ? p.integrations : current.integrations,
-          auditLogs: Array.isArray(p.auditLogs) ? p.auditLogs : current.auditLogs,
-          notifications: Array.isArray(p.notifications) ? p.notifications : current.notifications,
-          activities: Array.isArray(p.activities) ? p.activities : current.activities,
-          certificates: Array.isArray(p.certificates) ? p.certificates : current.certificates,
-          userBadges: Array.isArray(p.userBadges) ? p.userBadges : current.userBadges,
-          notes: Array.isArray(p.notes) ? p.notes : current.notes,
-          discussions: Array.isArray(p.discussions) ? p.discussions : current.discussions,
-          announcements: Array.isArray(p.announcements) ? p.announcements : current.announcements,
-          assignments: Array.isArray(p.assignments) ? p.assignments : current.assignments,
-          groups: Array.isArray(p.groups) ? p.groups : current.groups,
-          messages: Array.isArray(p.messages) ? p.messages : current.messages,
-          calendarEvents: Array.isArray(p.calendarEvents) ? p.calendarEvents : current.calendarEvents,
-          friendships: Array.isArray(p.friendships) ? p.friendships : current.friendships,
-          completedLessons: Array.isArray(p.completedLessons) ? p.completedLessons : [],
-          chatMessages: Array.isArray(p.chatMessages) ? p.chatMessages : [],
+          bookings: arr('bookings'),
+          integrations: arr('integrations'),
+          auditLogs: arr('auditLogs'),
+          notifications: arr('notifications'),
+          activities: arr('activities'),
+          certificates: arr('certificates'),
+          userBadges: arr('userBadges'),
+          notes: arr('notes'),
+          discussions: arr('discussions'),
+          announcements: arr('announcements'),
+          assignments: arr('assignments'),
+          groups: arr('groups'),
+          messages: arr('messages'),
+          calendarEvents: arr('calendarEvents'),
+          friendships: arr('friendships'),
+          completedLessons: arr('completedLessons'),
+          passedLessonTests: arr('passedLessonTests'),
+          chatMessages: arr('chatMessages'),
+          // ---- corporate ----
+          corporates: arr('corporates'),
+          skillMatrix: arr('skillMatrix'),
+          aiInterviewReports: arr('aiInterviewReports'),
+          // ---- advanced ----
+          certTemplates: arr('certTemplates'),
+          registrationForms: arr('registrationForms'),
+          emailSchedules: arr('emailSchedules'),
+          analyticsEvents: arr('analyticsEvents'),
+          gdprBundles: arr('gdprBundles'),
+          badges: arr('badges'),
+          categories: arr('categories'),
+          bundles: arr('bundles'),
           // ---- locale: fall back to India defaults if not persisted ----
           language: p.language ?? current.language,
           currency: p.currency ?? current.currency,
