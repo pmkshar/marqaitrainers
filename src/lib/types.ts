@@ -186,7 +186,7 @@ export interface CourseEnrollmentMeta {
   lastAccessedAt: number;
 }
 
-export type RoleKey = 'super_admin' | 'tutor' | 'candidate' | 'guest';
+export type RoleKey = 'super_admin' | 'admin' | 'tutor' | 'candidate' | 'corporate_admin' | 'corporate_user' | 'guest';
 
 export type PermissionKey =
   | 'users.read' | 'users.write' | 'users.delete'
@@ -216,6 +216,8 @@ export interface User {
   role: RoleKey;
   avatarColor: string;
   enrolledCourseIds: string[];
+  approvedCourseIds: string[];      // courses approved by corporate admin
+  corporateId?: string;              // linked corporate account
   createdAt: number;
   // tutor-only fields
   tutorProfile?: TutorProfile;
@@ -480,6 +482,7 @@ export type ViewName =
   | 'tutors'         // human tutor marketplace
   | 'tutor_portal'   // logged-in tutor dashboard
   | 'admin'          // super admin portal
+  | 'corporate'      // corporate portal (admin + employee)
   | 'my_learning'
   | 'dashboard'      // unified post-login dashboard (all roles)
   | 'certificates'
@@ -535,13 +538,81 @@ export interface ChatMessage {
 
 export type CurrencyCode = 'USD' | 'EUR' | 'GBP' | 'JPY' | 'INR' | 'AUD' | 'CAD';
 
-export type LanguageCode = 'en' | 'es' | 'de' | 'ja' | 'hi' | 'fr';
+export type LanguageCode = 'en' | 'es' | 'de' | 'ja' | 'hi' | 'fr' | 'pt' | 'ko' | 'zh';
 
 export interface LocaleConfig {
   language: LanguageCode;
   currency: CurrencyCode;
   country: string;
   timezone: string;
+}
+
+// ============================================================
+// Corporate / B2B types
+// ============================================================
+
+export type CorporatePlanModel = 'single_course' | 'monthly' | 'annual';
+
+export type CorporatePlanTier = 'starter' | 'growth' | 'enterprise';
+
+export type CorporateStatus = 'pending' | 'approved' | 'rejected' | 'suspended';
+
+export interface CorporateSubscription {
+  id: string;
+  corporateId: string;
+  planModel: CorporatePlanModel;
+  planTier: CorporatePlanTier;
+  courseIds: string[];            // courses covered by this subscription
+  pricePerSeat: number;           // per-employee cost
+  employeeLimit: number;          // max employees allowed
+  startedAt: number;
+  expiresAt: number;
+  status: 'active' | 'cancelled' | 'expired';
+}
+
+export interface Corporate {
+  id: string;
+  name: string;
+  domain: string;
+  industry: string;
+  country: string;
+  contactName: string;
+  contactEmail: string;
+  adminUserId: string;
+  employeeUserIds: string[];
+  planTier: CorporatePlanTier;
+  status: CorporateStatus;
+  subscriptions: CorporateSubscription[];
+  subscribedCourseIds: string[];              // all course IDs from active subscriptions
+  employeeRestrictedCourseIds: string[];      // courses employees can access (admin-controlled)
+  createdAt: number;
+}
+
+export type SkillLevel = 'beginner' | 'intermediate' | 'advanced' | 'expert';
+
+export interface SkillMatrixEntry {
+  id: string;
+  userId: string;
+  courseId: string;
+  level: SkillLevel;
+  scorePct: number;
+  certified: boolean;
+  assessedAt: number;
+}
+
+export interface AiInterviewReport {
+  id: string;
+  userId: string;
+  corporateId: string;
+  courseId: string;
+  overallScore: number;
+  technicalScore: number;
+  communicationScore: number;
+  problemSolvingScore: number;
+  summary: string;
+  strengths: string[];
+  improvements: string[];
+  completedAt: number;
 }
 
 // ============================================================

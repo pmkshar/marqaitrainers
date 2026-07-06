@@ -6,6 +6,7 @@ import {
   TrendingUp, Users, MessageSquare, Bell, CheckCircle2, PlayCircle, FileQuestion,
   Trophy, Target, Flame, ChevronRight, Settings, ShieldCheck, DollarSign,
   GraduationCap, BarChart3, Star, Zap, BookMarked, Activity as ActivityIcon,
+  Building2, Globe,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,9 +15,14 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 import { useAppStore } from '@/lib/store';
 import { COURSES, findCourse, getAllLessons } from '@/lib/courses';
+import { SUPPORTED_LANGUAGES } from '@/lib/i18n';
+import { SUPPORTED_CURRENCIES, COUNTRY_TIMEZONES } from '@/lib/currency';
 import { CourseIcon } from './navbar';
+import type { LanguageCode, CurrencyCode } from '@/lib/types';
 
 // ============================================================
 // Helpers
@@ -73,6 +79,8 @@ export function Dashboard() {
         {user.role === 'candidate' && <CandidateDashboard />}
         {user.role === 'tutor' && <TutorDashboard />}
         {user.role === 'super_admin' && <AdminDashboard />}
+        {(user.role === 'corporate_admin' || user.role === 'corporate_user') && <CorporateUserDashboard />}
+        <LocaleSettingsSection />
       </div>
     </div>
   );
@@ -87,9 +95,14 @@ function DashboardHeader() {
   const completedLessons = useAppStore((s) => s.completedLessons);
   if (!user) return null;
 
-  const roleLabel = user.role === 'super_admin' ? 'Super Admin' : user.role === 'tutor' ? 'Human Tutor' : 'Candidate';
+  const roleLabel = user.role === 'super_admin' ? 'Super Admin'
+    : user.role === 'corporate_admin' ? 'Corporate Admin'
+    : user.role === 'corporate_user' ? 'Corporate Employee'
+    : user.role === 'tutor' ? 'Human Tutor' : 'Candidate';
   const roleGradient =
     user.role === 'super_admin' ? 'from-rose-500 to-pink-600'
+    : user.role === 'corporate_admin' ? 'from-indigo-500 to-purple-600'
+    : user.role === 'corporate_user' ? 'from-amber-500 to-orange-600'
     : user.role === 'tutor' ? 'from-sky-500 to-cyan-600'
     : 'from-emerald-500 to-teal-600';
 
@@ -139,6 +152,11 @@ function DashboardHeader() {
             {user.role === 'super_admin' && (
               <Button onClick={() => useAppStore.getState().openAdmin('dashboard')} className="bg-white/15 text-white hover:bg-white/25 backdrop-blur">
                 <ShieldCheck className="mr-1.5 h-4 w-4" /> Admin Portal
+              </Button>
+            )}
+            {(user.role === 'corporate_admin' || user.role === 'corporate_user') && (
+              <Button onClick={() => useAppStore.getState().openCorporate()} className="bg-white/15 text-white hover:bg-white/25 backdrop-blur">
+                <Building2 className="mr-1.5 h-4 w-4" /> Corporate Portal
               </Button>
             )}
           </div>
@@ -935,6 +953,122 @@ function AdminIntegrationsPanel() {
             </Button>
           </div>
         ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+// ============================================================
+// Corporate User Dashboard (lightweight — full dashboard in corporate portal)
+// ============================================================
+
+function CorporateUserDashboard() {
+  const user = useAppStore((s) => s.currentUser());
+  const corporates = useAppStore((s) => s.corporates);
+  const openCorporate = useAppStore((s) => s.openCorporate);
+
+  if (!user) return null;
+  const myCorporate = user.corporateId ? corporates.find((c) => c.id === user.corporateId) : null;
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center gap-4">
+            <span className="grid h-14 w-14 place-items-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
+              <Building2 className="h-7 w-7" />
+            </span>
+            <div>
+              <h2 className="text-xl font-bold">{myCorporate?.name ?? 'Corporate Portal'}</h2>
+              <p className="text-sm text-muted-foreground">
+                {user.role === 'corporate_admin'
+                  ? 'Manage your corporate training, employees, and subscriptions.'
+                  : 'Access your approved courses and track your learning progress.'}
+              </p>
+            </div>
+            <Button onClick={openCorporate} className="ml-auto bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700">
+              Open Corporate Portal <ChevronRight className="ml-1 h-4 w-4" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ============================================================
+// Locale Settings Section
+// ============================================================
+
+function LocaleSettingsSection() {
+  const language = useAppStore((s) => s.language);
+  const currency = useAppStore((s) => s.currency);
+  const country = useAppStore((s) => s.country);
+  const setLanguage = useAppStore((s) => s.setLanguage);
+  const setCurrency = useAppStore((s) => s.setCurrency);
+  const setLocale = useAppStore((s) => s.setLocale);
+  const detectLocaleFromGps = useAppStore((s) => s.detectLocaleFromGps);
+
+  return (
+    <Card className="mt-8">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Globe className="h-5 w-5 text-emerald-600" /> Language, Country & Currency
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="mb-4 text-sm text-muted-foreground">
+          These settings are auto-detected from your location. You can override them anytime.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="space-y-1.5">
+            <Label>Language</Label>
+            <Select value={language} onValueChange={(v) => setLanguage(v as LanguageCode)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {SUPPORTED_LANGUAGES.map((lang) => (
+                  <SelectItem key={lang.code} value={lang.code}>
+                    {lang.flag} {lang.nativeName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Currency</Label>
+            <Select value={currency} onValueChange={(v) => setCurrency(v as CurrencyCode)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {SUPPORTED_CURRENCIES.map((cur) => (
+                  <SelectItem key={cur.code} value={cur.code}>
+                    {cur.symbol} {cur.code} — {cur.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Country / Region</Label>
+            <Select value={country} onValueChange={(v) => {
+              const info = COUNTRY_TIMEZONES[v];
+              if (info) setLocale({ country: v, timezone: info.timezone, currency: info.currency });
+            }}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {Object.entries(COUNTRY_TIMEZONES).map(([code, info]) => (
+                  <SelectItem key={code} value={code}>
+                    {info.country}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div className="mt-4">
+          <Button variant="outline" size="sm" onClick={detectLocaleFromGps}>
+            <Globe className="mr-1.5 h-3.5 w-3.5" /> Auto-detect from GPS
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, ArrowRight, BookOpen, CheckCircle2, Clock, FileQuestion, PlayCircle, Star, Users, Video, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BookOpen, CheckCircle2, Clock, FileQuestion, PlayCircle, Star, Users, Video, Sparkles, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +28,42 @@ export function CourseDetail({ courseId }: { courseId: string }) {
   const allLessons = getAllLessons(courseId);
   const completedCount = allLessons.filter((l) => completedLessons.includes(l.lessonId)).length;
   const progressPct = allLessons.length ? Math.round((completedCount / allLessons.length) * 100) : 0;
+
+  const downloadCourseMaterial = () => {
+    let content = `${course.title}\n${'='.repeat(course.title.length)}\n\n`;
+    content += `Subtitle: ${course.subtitle}\nLevel: ${course.level}\nDuration: ${course.duration}\nInstructor: ${course.instructor}\n\n`;
+    content += `DESCRIPTION\n${'-'.repeat(11)}\n${course.longDescription}\n\n`;
+    content += `WHAT YOU'LL LEARN\n${'-'.repeat(17)}\n`;
+    course.whatYouLearn.forEach((item) => { content += `- ${item}\n`; });
+    content += `\nPREREQUISITES\n${'-'.repeat(13)}\n`;
+    course.prerequisites.forEach((item) => { content += `- ${item}\n`; });
+    course.modules.forEach((mod) => {
+      content += `\n\nMODULE: ${mod.title}\n${mod.description}\n${'='.repeat(mod.title.length + 8)}\n`;
+      mod.lessons.forEach((lesson) => {
+        content += `\n  Lesson: ${lesson.title}\n  Duration: ${lesson.duration}\n  ${lesson.description}\n`;
+        lesson.steps.forEach((step, i) => {
+          content += `\n  Step ${i + 1}: ${step.title}\n  ${step.content}\n`;
+          if (step.code) content += `\n  Code:\n  ${step.code.split('\n').join('\n  ')}\n`;
+          if (step.tip) content += `\n  Tip: ${step.tip}\n`;
+        });
+        if (lesson.quiz.length > 0) {
+          content += `\n  Quiz:\n`;
+          lesson.quiz.forEach((q, i) => {
+            content += `  Q${i + 1}: ${q.question}\n`;
+            q.options.forEach((o, j) => content += `    ${j + 1}. ${o}${j === q.correctAnswer ? ' (Correct)' : ''}\n`);
+            content += `  Explanation: ${q.explanation}\n`;
+          });
+        }
+      });
+    });
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${course.title.replace(/\s+/g, '_')}_Material.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="bg-background">
@@ -108,7 +144,7 @@ export function CourseDetail({ courseId }: { courseId: string }) {
                 >
                   {completedCount > 0 ? 'Continue learning' : 'Start first lesson'} <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   <Button
                     onClick={() => useAppStore.getState().openPricing()}
                     variant="outline"
@@ -122,6 +158,13 @@ export function CourseDetail({ courseId }: { courseId: string }) {
                     className="border-white/40 bg-transparent text-white hover:bg-white/10"
                   >
                     <Sparkles className="mr-1 h-4 w-4" /> AI Tutor
+                  </Button>
+                  <Button
+                    onClick={() => downloadCourseMaterial()}
+                    variant="outline"
+                    className="border-white/40 bg-transparent text-white hover:bg-white/10"
+                  >
+                    <Download className="mr-1 h-4 w-4" /> Material
                   </Button>
                 </div>
               </CardContent>

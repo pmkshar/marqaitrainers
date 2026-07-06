@@ -6,6 +6,8 @@ import { useT } from '@/components/language-currency-switcher';
 import {
   Building2, Users, Award, Filter, Download, Plus, CheckCircle2,
   Clock, XCircle, TrendingUp, Search, ChevronRight,
+  CreditCard, BookOpen, BarChart3, FileText, Shield,
+  MessageSquare, Settings, Eye, Trash2, Star,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,9 +22,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import type { SkillLevel, CurrencyCode } from '@/lib/types';
+import type { SkillLevel, CurrencyCode, CorporatePlanModel } from '@/lib/types';
 import { formatPrice } from '@/lib/currency';
-import { COURSES } from '@/lib/courses';
+import { COURSES, findCourse } from '@/lib/courses';
 
 const LEVEL_COLORS: Record<SkillLevel, string> = {
   beginner: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
@@ -37,20 +39,9 @@ export function CorporatePortal() {
   const corporates = useAppStore((s) => s.corporates);
   const users = useAppStore((s) => s.users);
   const skillMatrix = useAppStore((s) => s.skillMatrix);
+  const aiInterviewReports = useAppStore((s) => s.aiInterviewReports);
+  const certificates = useAppStore((s) => s.certificates);
   const currency = useAppStore((s) => s.currency);
-  const registerCorporate = useAppStore((s) => s.registerCorporate);
-  const approveCorporate = useAppStore((s) => s.approveCorporate);
-  const rejectCorporate = useAppStore((s) => s.rejectCorporate);
-  const enrollCorporateEmployee = useAppStore((s) => s.enrollCorporateEmployee);
-  const exportProfiles = useAppStore((s) => s.exportCorporateProfiles);
-
-  const [activeTab, setActiveTab] = useState<'overview' | 'register' | 'dashboard' | 'skillmatrix'>('overview');
-
-  // Detect corporate role
-  const myCorporate = currentUser ? corporates.find((c) => c.adminUserId === currentUser.id || c.id === currentUser.corporateId) : null;
-  const isCorpAdmin = currentUser?.role === 'corporate_admin';
-  const isSuperAdmin = currentUser?.role === 'super_admin';
-  const canSeeAdminActions = isSuperAdmin;
 
   if (!currentUser) {
     return (
@@ -58,111 +49,727 @@ export function CorporatePortal() {
         <Card>
           <CardContent className="p-8 text-center">
             <Building2 className="mx-auto h-12 w-12 text-muted-foreground" />
-            <h2 className="mt-4 text-xl font-bold">{t('corporate.title')}</h2>
+            <h2 className="mt-4 text-xl font-bold">Corporate Portal</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              {t('corporate.subtitle')}
+              Sign in to access corporate training, employee management, and subscription plans.
             </p>
-            <p className="mt-4 text-sm">Please sign in to access the corporate portal.</p>
           </CardContent>
         </Card>
       </div>
     );
   }
 
+  const isCorpAdmin = currentUser.role === 'corporate_admin';
+  const isCorpUser = currentUser.role === 'corporate_user';
+  const isSuperAdmin = currentUser.role === 'super_admin';
+  const myCorporate = currentUser.corporateId
+    ? corporates.find((c) => c.id === currentUser.corporateId)
+    : null;
+
+  // Corporate employee view - restricted course access
+  if (isCorpUser && myCorporate) {
+    return <CorporateEmployeeDashboard corp={myCorporate} user={currentUser} allUsers={users} skillMatrix={skillMatrix} aiInterviewReports={aiInterviewReports} certificates={certificates} />;
+  }
+
+  // Corporate admin dashboard
+  if (isCorpAdmin && myCorporate) {
+    return (
+      <CorporateAdminDashboard
+        corp={myCorporate}
+        allUsers={users}
+        skillMatrix={skillMatrix}
+        aiInterviewReports={aiInterviewReports}
+        certificates={certificates}
+        currency={currency}
+      />
+    );
+  }
+
+  // Super admin or unlinked user — show overview + register
+  return <CorporateOverview corporates={corporates} users={users} skillMatrix={skillMatrix} currentUser={currentUser} currency={currency} isSuperAdmin={isSuperAdmin} />;
+}
+
+// ============================================================
+// Corporate Employee Dashboard
+// ============================================================
+function CorporateEmployeeDashboard({ corp, user, allUsers, skillMatrix, aiInterviewReports, certificates }: {
+  corp: ReturnType<typeof useAppStore.getState>['corporates'][number];
+  user: ReturnType<typeof useAppStore.getState>['currentUser'] extends () => infer U | null ? NonNullable<U> : never;
+  allUsers: ReturnType<typeof useAppStore.getState>['users'];
+  skillMatrix: ReturnType<typeof useAppStore.getState>['skillMatrix'];
+  aiInterviewReports: ReturnType<typeof useAppStore.getState>['aiInterviewReports'];
+  certificates: ReturnType<typeof useAppStore.getState>['certificates'];
+}) {
+  const openCourse = useAppStore((s) => s.openCourse);
+  const [tab, setTab] = useState<'courses' | 'skills' | 'reports' | 'certs'>('courses');
+
+  // Only show courses approved by admin
+  const accessibleCourses = COURSES.filter((c) =>
+    corp.employeeRestrictedCourseIds.includes(c.id) || user.approvedCourseIds.includes(c.id)
+  );
+
+  const mySkills = skillMatrix.filter((s) => s.userId === user.id);
+  const myReports = aiInterviewReports.filter((r) => r.userId === user.id);
+  const myCerts = certificates.filter((c) => c.userId === user.id);
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center gap-2">
-          <Building2 className="h-6 w-6 text-emerald-600" />
-          <h1 className="text-2xl font-bold">{t('corporate.title')}</h1>
+      <div className="mb-6 flex items-center gap-3">
+        <span className="grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
+          <Building2 className="h-6 w-6" />
+        </span>
+        <div>
+          <h1 className="text-2xl font-bold">{corp.name} — Employee Portal</h1>
+          <p className="text-sm text-muted-foreground">Welcome, {user.name}. Access your approved courses and track your progress.</p>
         </div>
-        <p className="mt-1 text-sm text-muted-foreground">{t('corporate.subtitle')}</p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
-        <TabsList className="grid w-full max-w-2xl grid-cols-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="register">{t('corporate.register')}</TabsTrigger>
-          <TabsTrigger value="dashboard">{t('corporate.dashboard')}</TabsTrigger>
-          <TabsTrigger value="skillmatrix">{t('corporate.skillMatrix')}</TabsTrigger>
+      <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
+        <TabsList>
+          <TabsTrigger value="courses"><BookOpen className="mr-1.5 h-4 w-4" /> My Courses</TabsTrigger>
+          <TabsTrigger value="skills"><BarChart3 className="mr-1.5 h-4 w-4" /> Skills</TabsTrigger>
+          <TabsTrigger value="reports"><MessageSquare className="mr-1.5 h-4 w-4" /> AI Reports</TabsTrigger>
+          <TabsTrigger value="certs"><Award className="mr-1.5 h-4 w-4" /> Certificates</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="courses" className="mt-6">
+          {accessibleCourses.length === 0 ? (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <BookOpen className="mx-auto h-10 w-10 text-muted-foreground" />
+                <p className="mt-4 text-sm text-muted-foreground">No courses have been approved for you yet. Contact your corporate admin.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {accessibleCourses.map((course) => {
+                const skill = mySkills.find((s) => s.courseId === course.id);
+                return (
+                  <Card key={course.id} className="group cursor-pointer transition-all hover:-translate-y-1 hover:shadow-lg" onClick={() => openCourse(course.id)}>
+                    <div className={`h-24 bg-gradient-to-br ${course.gradient}`}>
+                      <Badge className="ml-3 mt-3 bg-white/20 text-white">{course.level}</Badge>
+                    </div>
+                    <CardContent className="p-4">
+                      <h3 className="font-semibold">{course.title}</h3>
+                      <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{course.subtitle}</p>
+                      {skill && (
+                        <div className="mt-2 flex items-center gap-2">
+                          <Badge className={`${LEVEL_COLORS[skill.level]} text-[10px]`}>{skill.level}</Badge>
+                          <span className="text-xs text-muted-foreground">{skill.scorePct}%</span>
+                        </div>
+                      )}
+                      <Button size="sm" className="mt-3 w-full bg-emerald-600 hover:bg-emerald-700 text-white">
+                        <Eye className="mr-1.5 h-3.5 w-3.5" /> Continue Learning
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="skills" className="mt-6">
+          {mySkills.length === 0 ? (
+            <Card><CardContent className="p-8 text-center"><p className="text-sm text-muted-foreground">No skill assessments yet.</p></CardContent></Card>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {mySkills.map((s) => {
+                const course = findCourse(s.courseId);
+                return (
+                  <Card key={s.id}>
+                    <CardContent className="flex items-center gap-4 p-4">
+                      <span className={`grid h-12 w-12 place-items-center rounded-xl ${s.certified ? 'bg-gradient-to-br from-amber-500 to-orange-600' : 'bg-muted'} text-white`}>
+                        {s.certified ? <Star className="h-5 w-5" /> : <BarChart3 className="h-5 w-5" />}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{course?.title ?? s.courseId}</p>
+                        <div className="mt-1 flex items-center gap-2">
+                          <Badge className={`${LEVEL_COLORS[s.level]} text-[10px]`}>{s.level}</Badge>
+                          <span className="text-xs text-muted-foreground">{s.scorePct}%</span>
+                          {s.certified && <Badge className="bg-amber-100 text-amber-800 text-[10px]">Certified</Badge>}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="reports" className="mt-6">
+          {myReports.length === 0 ? (
+            <Card><CardContent className="p-8 text-center"><p className="text-sm text-muted-foreground">No AI interview reports yet.</p></CardContent></Card>
+          ) : (
+            <div className="space-y-4">
+              {myReports.map((r) => {
+                const course = findCourse(r.courseId);
+                return (
+                  <Card key={r.id}>
+                    <CardContent className="p-5">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-semibold">{course?.title ?? r.courseId}</h4>
+                        <Badge variant="outline">{new Date(r.completedAt).toLocaleDateString()}</Badge>
+                      </div>
+                      <p className="mt-2 text-sm text-muted-foreground">{r.summary}</p>
+                      <div className="mt-3 grid grid-cols-4 gap-3 text-center">
+                        <ScoreBlock label="Overall" score={r.overallScore} />
+                        <ScoreBlock label="Technical" score={r.technicalScore} />
+                        <ScoreBlock label="Communication" score={r.communicationScore} />
+                        <ScoreBlock label="Problem Solving" score={r.problemSolvingScore} />
+                      </div>
+                      <div className="mt-3 flex gap-6">
+                        <div>
+                          <p className="text-xs font-medium text-emerald-600">Strengths</p>
+                          <ul className="mt-1 space-y-0.5">{r.strengths.map((s) => <li key={s} className="text-xs text-muted-foreground">+ {s}</li>)}</ul>
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium text-amber-600">Improvements</p>
+                          <ul className="mt-1 space-y-0.5">{r.improvements.map((s) => <li key={s} className="text-xs text-muted-foreground">- {s}</li>)}</ul>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="certs" className="mt-6">
+          {myCerts.length === 0 ? (
+            <Card><CardContent className="p-8 text-center"><p className="text-sm text-muted-foreground">No certificates earned yet.</p></CardContent></Card>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {myCerts.map((c) => {
+                const course = findCourse(c.courseId);
+                return (
+                  <Card key={c.id}>
+                    <CardContent className="flex items-center gap-4 p-4">
+                      <span className="grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white">
+                        <Award className="h-5 w-5" />
+                      </span>
+                      <div>
+                        <p className="font-medium">{course?.title ?? c.courseId}</p>
+                        <p className="text-xs text-muted-foreground">Score: {c.scorePct}% · Code: {c.code}</p>
+                        <Badge variant="outline" className="mt-1">{c.template}</Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+function ScoreBlock({ label, score }: { label: string; score: number }) {
+  const color = score >= 80 ? 'text-emerald-600' : score >= 60 ? 'text-amber-600' : 'text-rose-600';
+  return (
+    <div>
+      <p className={`text-lg font-bold ${color}`}>{score}</p>
+      <p className="text-[10px] text-muted-foreground">{label}</p>
+    </div>
+  );
+}
+
+// ============================================================
+// Corporate Admin Dashboard
+// ============================================================
+function CorporateAdminDashboard({ corp, allUsers, skillMatrix, aiInterviewReports, certificates, currency }: {
+  corp: ReturnType<typeof useAppStore.getState>['corporates'][number];
+  allUsers: ReturnType<typeof useAppStore.getState>['users'];
+  skillMatrix: ReturnType<typeof useAppStore.getState>['skillMatrix'];
+  aiInterviewReports: ReturnType<typeof useAppStore.getState>['aiInterviewReports'];
+  certificates: ReturnType<typeof useAppStore.getState>['certificates'];
+  currency: CurrencyCode;
+}) {
+  const addCorporateSubscription = useAppStore((s) => s.addCorporateSubscription);
+  const cancelCorporateSubscription = useAppStore((s) => s.cancelCorporateSubscription);
+  const registerCorporateEmployee = useAppStore((s) => s.registerCorporateEmployee);
+  const approveEmployeeCourse = useAppStore((s) => s.approveEmployeeCourse);
+  const removeCorporateEmployee = useAppStore((s) => s.removeCorporateEmployee);
+  const exportCorporateProfiles = useAppStore((s) => s.exportCorporateProfiles);
+  const [tab, setTab] = useState<'overview' | 'employees' | 'subscriptions' | 'reports' | 'certs'>('overview');
+
+  const employees = allUsers.filter((u) => corp.employeeUserIds.includes(u.id));
+  const activeSubs = corp.subscriptions.filter((s) => s.status === 'active');
+  const corpReports = aiInterviewReports.filter((r) => r.corporateId === corp.id);
+  const corpCerts = certificates.filter((c) => corp.employeeUserIds.includes(c.userId));
+
+  const [newEmpName, setNewEmpName] = useState('');
+  const [newEmpEmail, setNewEmpEmail] = useState('');
+
+  const handleAddEmployee = () => {
+    if (!newEmpName.trim() || !newEmpEmail.trim()) return;
+    registerCorporateEmployee(corp.id, newEmpName, newEmpEmail);
+    setNewEmpName('');
+    setNewEmpEmail('');
+  };
+
+  const handleDownloadCourseMaterial = (courseId: string) => {
+    const course = findCourse(courseId);
+    if (!course) return;
+    let content = `${course.title}\n${'='.repeat(course.title.length)}\n\n`;
+    content += `Subtitle: ${course.subtitle}\n`;
+    content += `Level: ${course.level}\n`;
+    content += `Duration: ${course.duration}\n`;
+    content += `Instructor: ${course.instructor}\n\n`;
+    content += `DESCRIPTION\n${'-'.repeat(11)}\n${course.longDescription}\n\n`;
+    course.modules.forEach((mod) => {
+      content += `\nMODULE: ${mod.title}\n${mod.description}\n\n`;
+      mod.lessons.forEach((lesson) => {
+        content += `  Lesson: ${lesson.title}\n  Duration: ${lesson.duration}\n`;
+        lesson.steps.forEach((step, i) => {
+          content += `\n  Step ${i + 1}: ${step.title}\n  ${step.content}\n`;
+          if (step.code) content += `\n  Code:\n  ${step.code.split('\n').join('\n  ')}\n`;
+          if (step.tip) content += `\n  Tip: ${step.tip}\n`;
+        });
+        if (lesson.quiz.length > 0) {
+          content += `\n  Quiz:\n`;
+          lesson.quiz.forEach((q, i) => {
+            content += `  Q${i + 1}: ${q.question}\n`;
+            q.options.forEach((o, j) => content += `    ${j + 1}. ${o}${j === q.correctAnswer ? ' (Correct)' : ''}\n`);
+            content += `  Explanation: ${q.explanation}\n`;
+          });
+        }
+        content += '\n';
+      });
+    });
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${course.title.replace(/\s+/g, '_')}_Material.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportProfiles = () => {
+    const csv = exportCorporateProfiles(corp.id);
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${corp.name.replace(/\s+/g, '_')}_profiles.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="mx-auto max-w-7xl px-4 py-8">
+      <div className="mb-6 flex items-center gap-3">
+        <span className="grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
+          <Building2 className="h-6 w-6" />
+        </span>
+        <div>
+          <h1 className="text-2xl font-bold">{corp.name} — Admin Dashboard</h1>
+          <p className="text-sm text-muted-foreground">Manage employees, subscriptions, and track progress.</p>
+        </div>
+      </div>
+
+      <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
+        <TabsList className="flex-wrap">
+          <TabsTrigger value="overview"><BarChart3 className="mr-1.5 h-4 w-4" /> Overview</TabsTrigger>
+          <TabsTrigger value="employees"><Users className="mr-1.5 h-4 w-4" /> Employees</TabsTrigger>
+          <TabsTrigger value="subscriptions"><CreditCard className="mr-1.5 h-4 w-4" /> Subscriptions</TabsTrigger>
+          <TabsTrigger value="reports"><MessageSquare className="mr-1.5 h-4 w-4" /> AI Reports</TabsTrigger>
+          <TabsTrigger value="certs"><Award className="mr-1.5 h-4 w-4" /> Certificates</TabsTrigger>
         </TabsList>
 
         {/* OVERVIEW */}
         <TabsContent value="overview" className="mt-6">
-          <div className="grid gap-4 md:grid-cols-3">
-            <StatCard
-              icon={Building2}
-              label="Total Corporates"
-              value={corporates.length}
-              color="from-indigo-500 to-purple-600"
-            />
-            <StatCard
-              icon={CheckCircle2}
-              label="Approved"
-              value={corporates.filter((c) => c.status === 'approved').length}
-              color="from-emerald-500 to-teal-600"
-            />
-            <StatCard
-              icon={Clock}
-              label="Pending Approval"
-              value={corporates.filter((c) => c.status === 'pending').length}
-              color="from-amber-500 to-orange-600"
-            />
+          <div className="grid gap-4 md:grid-cols-4">
+            <StatCard icon={Users} label="Employees" value={employees.length} color="from-emerald-500 to-teal-600" />
+            <StatCard icon={CreditCard} label="Active Plans" value={activeSubs.length} color="from-indigo-500 to-purple-600" />
+            <StatCard icon={Award} label="Certificates" value={corpCerts.length} color="from-amber-500 to-orange-600" />
+            <StatCard icon={MessageSquare} label="AI Reports" value={corpReports.length} color="from-sky-500 to-cyan-600" />
           </div>
 
+          {/* Subscribed courses with download */}
           <Card className="mt-6">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="h-5 w-5" /> Registered Corporates
-              </CardTitle>
+              <CardTitle className="flex items-center gap-2"><BookOpen className="h-5 w-5" /> Subscribed Courses</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {corporates.map((corp) => {
-                  const empCount = corp.employeeUserIds.length;
-                  const admin = users.find((u) => u.id === corp.adminUserId);
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {corp.subscribedCourseIds.map((cid) => {
+                  const course = findCourse(cid);
+                  if (!course) return null;
                   return (
-                    <div
-                      key={corp.id}
-                      className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between"
-                    >
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-semibold">{corp.name}</h4>
-                          <Badge variant={corp.status === 'approved' ? 'default' : corp.status === 'pending' ? 'secondary' : 'destructive'}>
-                            {corp.status === 'approved' ? t('corporate.status.approved') : corp.status === 'pending' ? t('corporate.status.pending') : 'Rejected'}
-                          </Badge>
-                          <Badge variant="outline" className="capitalize">{corp.planTier}</Badge>
-                        </div>
-                        <p className="mt-1 text-sm text-muted-foreground">
-                          {corp.industry} · {corp.country} · {corp.domain}
-                        </p>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          Admin: {admin?.name ?? '—'} · {empCount} employee{empCount !== 1 ? 's' : ''}
-                        </p>
+                    <div key={cid} className="flex items-center justify-between rounded-lg border p-3">
+                      <div>
+                        <p className="font-medium text-sm">{course.title}</p>
+                        <p className="text-xs text-muted-foreground">{course.level} · {course.duration}</p>
                       </div>
-                      {canSeeAdminActions && corp.status === 'pending' && (
-                        <div className="flex gap-2">
-                          <Button size="sm" onClick={() => approveCorporate(corp.id)} className="bg-emerald-600 hover:bg-emerald-700">
-                            <CheckCircle2 className="mr-1 h-4 w-4" /> Approve
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => rejectCorporate(corp.id)}>
-                            <XCircle className="mr-1 h-4 w-4" /> Reject
-                          </Button>
-                        </div>
-                      )}
+                      <Button size="sm" variant="outline" onClick={() => handleDownloadCourseMaterial(cid)}>
+                        <Download className="mr-1 h-3.5 w-3.5" /> Material
+                      </Button>
                     </div>
                   );
                 })}
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
 
-          <Card className="mt-6">
+        {/* EMPLOYEES */}
+        <TabsContent value="employees" className="mt-6">
+          {/* Add employee */}
+          <Card className="mb-6">
             <CardHeader>
-              <CardTitle>Corporate Plans</CardTitle>
+              <CardTitle className="flex items-center gap-2"><Plus className="h-5 w-5" /> Add Employee</CardTitle>
             </CardHeader>
+            <CardContent>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                <div className="flex-1 space-y-1.5">
+                  <Label>Name</Label>
+                  <Input placeholder="Employee name" value={newEmpName} onChange={(e) => setNewEmpName(e.target.value)} />
+                </div>
+                <div className="flex-1 space-y-1.5">
+                  <Label>Email</Label>
+                  <Input type="email" placeholder="employee@company.com" value={newEmpEmail} onChange={(e) => setNewEmpEmail(e.target.value)} />
+                </div>
+                <Button onClick={handleAddEmployee} disabled={!newEmpName.trim() || !newEmpEmail.trim()} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                  <Plus className="mr-1 h-4 w-4" /> Add
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Employee list with course approval */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Employees ({employees.length})</CardTitle>
+                <Button variant="outline" size="sm" onClick={handleExportProfiles}>
+                  <Download className="mr-1 h-4 w-4" /> Export CSV
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {employees.length === 0 ? (
+                <p className="py-6 text-center text-sm text-muted-foreground">No employees yet.</p>
+              ) : (
+                <div className="space-y-4">
+                  {employees.map((emp) => {
+                    const empSkills = skillMatrix.filter((s) => s.userId === emp.id);
+                    const empCerts = empSkills.filter((s) => s.certified).length;
+                    return (
+                      <div key={emp.id} className="rounded-lg border p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <span className={`grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br ${emp.avatarColor} text-sm font-bold text-white`}>
+                              {emp.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
+                            </span>
+                            <div>
+                              <p className="font-medium">{emp.name}</p>
+                              <p className="text-xs text-muted-foreground">{emp.email} · {empSkills.length} skills · {empCerts} certified</p>
+                            </div>
+                          </div>
+                          <Button size="sm" variant="ghost" className="text-rose-500 hover:text-rose-700 hover:bg-rose-50" onClick={() => removeCorporateEmployee(corp.id, emp.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        {/* Course approval checkboxes */}
+                        <div className="mt-3">
+                          <p className="text-xs font-medium text-muted-foreground mb-2">Approved Courses:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {corp.subscribedCourseIds.map((cid) => {
+                              const course = findCourse(cid);
+                              const isApproved = emp.approvedCourseIds.includes(cid);
+                              return (
+                                <button
+                                  key={cid}
+                                  onClick={() => approveEmployeeCourse(corp.id, emp.id, cid)}
+                                  className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs transition-colors ${
+                                    isApproved
+                                      ? 'border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                                      : 'border-border hover:border-emerald-500/50 text-muted-foreground'
+                                  }`}
+                                >
+                                  {isApproved ? <CheckCircle2 className="h-3 w-3" /> : <span className="h-3 w-3 rounded-full border" />}
+                                  {course?.title?.split(' ').slice(0, 3).join(' ') ?? cid}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* SUBSCRIPTIONS */}
+        <TabsContent value="subscriptions" className="mt-6">
+          <SubscriptionManager corp={corp} currency={currency} />
+        </TabsContent>
+
+        {/* AI REPORTS */}
+        <TabsContent value="reports" className="mt-6">
+          {corpReports.length === 0 ? (
+            <Card><CardContent className="p-8 text-center"><p className="text-sm text-muted-foreground">No AI interview reports yet.</p></CardContent></Card>
+          ) : (
+            <div className="space-y-4">
+              {corpReports.map((r) => {
+                const emp = allUsers.find((u) => u.id === r.userId);
+                const course = findCourse(r.courseId);
+                return (
+                  <Card key={r.id}>
+                    <CardContent className="p-5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          {emp && (
+                            <span className={`grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br ${emp.avatarColor} text-xs font-bold text-white`}>
+                              {emp.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
+                            </span>
+                          )}
+                          <div>
+                            <p className="font-medium">{emp?.name ?? r.userId}</p>
+                            <p className="text-xs text-muted-foreground">{course?.title ?? r.courseId}</p>
+                          </div>
+                        </div>
+                        <Badge variant="outline">{new Date(r.completedAt).toLocaleDateString()}</Badge>
+                      </div>
+                      <p className="mt-2 text-sm text-muted-foreground">{r.summary}</p>
+                      <div className="mt-3 grid grid-cols-4 gap-3 text-center">
+                        <ScoreBlock label="Overall" score={r.overallScore} />
+                        <ScoreBlock label="Technical" score={r.technicalScore} />
+                        <ScoreBlock label="Communication" score={r.communicationScore} />
+                        <ScoreBlock label="Problem Solving" score={r.problemSolvingScore} />
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* CERTIFICATES */}
+        <TabsContent value="certs" className="mt-6">
+          {corpCerts.length === 0 ? (
+            <Card><CardContent className="p-8 text-center"><p className="text-sm text-muted-foreground">No certificates earned by employees yet.</p></CardContent></Card>
+          ) : (
+            <div className="space-y-3">
+              {corpCerts.map((c) => {
+                const emp = allUsers.find((u) => u.id === c.userId);
+                const course = findCourse(c.courseId);
+                return (
+                  <Card key={c.id}>
+                    <CardContent className="flex items-center gap-4 p-4">
+                      <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white">
+                        <Award className="h-5 w-5" />
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium">{emp?.name ?? c.userId}</p>
+                        <p className="text-xs text-muted-foreground">{course?.title ?? c.courseId} · Score: {c.scorePct}%</p>
+                      </div>
+                      <Badge variant="outline">Code: {c.code}</Badge>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+// ============================================================
+// Subscription Manager
+// ============================================================
+function SubscriptionManager({ corp, currency }: { corp: ReturnType<typeof useAppStore.getState>['corporates'][number]; currency: CurrencyCode }) {
+  const addCorporateSubscription = useAppStore((s) => s.addCorporateSubscription);
+  const cancelCorporateSubscription = useAppStore((s) => s.cancelCorporateSubscription);
+  const [planModel, setPlanModel] = useState<CorporatePlanModel>('monthly');
+  const [selectedCourseIds, setSelectedCourseIds] = useState<string[]>([]);
+
+  const toggleCourse = (cid: string) => {
+    setSelectedCourseIds((prev) =>
+      prev.includes(cid) ? prev.filter((id) => id !== cid) : [...prev, cid]
+    );
+  };
+
+  const pricePerSeat = planModel === 'annual' ? 1999 : planModel === 'monthly' ? 499 : 299;
+  const employeeLimit = planModel === 'annual' ? 200 : planModel === 'monthly' ? 50 : 10;
+
+  const handleSubscribe = () => {
+    const courseIds = selectedCourseIds.length > 0 ? selectedCourseIds : COURSES.map((c) => c.id);
+    addCorporateSubscription(corp.id, planModel, courseIds, pricePerSeat, employeeLimit);
+    setSelectedCourseIds([]);
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Current subscriptions */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Current Subscriptions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {corp.subscriptions.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No subscriptions yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {corp.subscriptions.map((sub) => (
+                <div key={sub.id} className="flex items-center justify-between rounded-lg border p-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <Badge className={sub.status === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}>
+                        {sub.status}
+                      </Badge>
+                      <span className="font-medium capitalize">{sub.planModel.replace('_', ' ')}</span>
+                      <Badge variant="outline">{sub.planTier}</Badge>
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {sub.courseIds.length} course{sub.courseIds.length !== 1 ? 's' : ''} · {sub.employeeLimit} seats · {formatPrice(sub.pricePerSeat, currency)}/seat
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Started: {new Date(sub.startedAt).toLocaleDateString()} · Expires: {new Date(sub.expiresAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  {sub.status === 'active' && (
+                    <Button size="sm" variant="outline" className="text-rose-600 hover:bg-rose-50" onClick={() => cancelCorporateSubscription(corp.id, sub.id)}>
+                      <XCircle className="mr-1 h-4 w-4" /> Cancel
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Add new subscription */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><Plus className="h-5 w-5" /> New Subscription</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label>Plan Model</Label>
+            <div className="mt-2 grid grid-cols-3 gap-3">
+              {([
+                { value: 'single_course' as const, label: 'Single Course', price: 299, seats: 10 },
+                { value: 'monthly' as const, label: 'Monthly', price: 499, seats: 50 },
+                { value: 'annual' as const, label: 'Annual', price: 1999, seats: 200 },
+              ]).map((plan) => (
+                <button
+                  key={plan.value}
+                  onClick={() => setPlanModel(plan.value)}
+                  className={`rounded-lg border p-3 text-left transition-colors ${
+                    planModel === plan.value ? 'border-emerald-500 bg-emerald-500/5' : 'hover:border-emerald-500/30'
+                  }`}
+                >
+                  <p className="font-medium">{plan.label}</p>
+                  <p className="text-xs text-muted-foreground">{formatPrice(plan.price, currency)}/seat · {plan.seats} seats</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <Label>Select Courses {selectedCourseIds.length === 0 && <span className="text-muted-foreground">(none = all-access)</span>}</Label>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {COURSES.map((course) => {
+                const selected = selectedCourseIds.includes(course.id);
+                return (
+                  <button
+                    key={course.id}
+                    onClick={() => toggleCourse(course.id)}
+                    className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs transition-colors ${
+                      selected ? 'border-emerald-500 bg-emerald-500/10 text-emerald-700' : 'hover:border-emerald-500/30 text-muted-foreground'
+                    }`}
+                  >
+                    {selected ? <CheckCircle2 className="h-3 w-3" /> : <span className="h-3 w-3 rounded-full border" />}
+                    {course.title.split(' ').slice(0, 2).join(' ')}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <Button onClick={handleSubscribe} className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700">
+            <CreditCard className="mr-2 h-4 w-4" /> Subscribe — {formatPrice(pricePerSeat, currency)}/seat
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ============================================================
+// Corporate Overview (Super Admin / Unlinked User)
+// ============================================================
+function CorporateOverview({ corporates, users, skillMatrix, currentUser, currency, isSuperAdmin }: {
+  corporates: ReturnType<typeof useAppStore.getState>['corporates'];
+  users: ReturnType<typeof useAppStore.getState>['users'];
+  skillMatrix: ReturnType<typeof useAppStore.getState>['skillMatrix'];
+  currentUser: ReturnType<typeof useAppStore.getState>['currentUser'] extends () => infer U | null ? NonNullable<U> : never;
+  currency: CurrencyCode;
+  isSuperAdmin: boolean;
+}) {
+  const registerCorporate = useAppStore((s) => s.registerCorporate);
+  const approveCorporate = useAppStore((s) => s.approveCorporate);
+  const rejectCorporate = useAppStore((s) => s.rejectCorporate);
+  const [activeTab, setActiveTab] = useState<'overview' | 'register'>('overview');
+  const [form, setForm] = useState({
+    name: '', domain: '', industry: 'Software', country: 'IN',
+    contactName: '', contactEmail: '', planTier: 'growth' as 'starter' | 'growth' | 'enterprise',
+  });
+
+  const handleRegister = (e: React.FormEvent) => {
+    e.preventDefault();
+    registerCorporate({
+      name: form.name,
+      domain: form.domain,
+      industry: form.industry,
+      country: form.country,
+      contactEmail: form.contactEmail,
+      contactName: form.contactName,
+      adminUserId: currentUser.id,
+      planTier: form.planTier,
+    });
+    setActiveTab('overview');
+  };
+
+  return (
+    <div className="mx-auto max-w-7xl px-4 py-8">
+      <div className="mb-6">
+        <div className="flex items-center gap-2">
+          <Building2 className="h-6 w-6 text-emerald-600" />
+          <h1 className="text-2xl font-bold">Corporate Portal</h1>
+        </div>
+        <p className="mt-1 text-sm text-muted-foreground">Corporate training solutions for businesses of all sizes.</p>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="register">Register Company</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="mt-6">
+          <div className="grid gap-4 md:grid-cols-3">
+            <StatCard icon={Building2} label="Total Corporates" value={corporates.length} color="from-indigo-500 to-purple-600" />
+            <StatCard icon={CheckCircle2} label="Approved" value={corporates.filter((c) => c.status === 'approved').length} color="from-emerald-500 to-teal-600" />
+            <StatCard icon={Clock} label="Pending Approval" value={corporates.filter((c) => c.status === 'pending').length} color="from-amber-500 to-orange-600" />
+          </div>
+
+          {/* Plans */}
+          <Card className="mt-6">
+            <CardHeader><CardTitle>Corporate Plans</CardTitle></CardHeader>
             <CardContent>
               <div className="grid gap-3 md:grid-cols-3">
                 <PlanCard tier="Starter" priceUSD={499} currency={currency} features={['Up to 25 employees', '3 courses access', 'Basic skill matrix', 'Email support']} />
@@ -171,61 +778,113 @@ export function CorporatePortal() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
 
-        {/* REGISTER */}
-        <TabsContent value="register" className="mt-6">
-          <CorporateRegistrationForm
-            onSubmit={(form) => {
-              const id = registerCorporate({
-                name: form.name,
-                domain: form.domain,
-                industry: form.industry,
-                country: form.country,
-                contactEmail: form.contactEmail,
-                contactName: form.contactName,
-                adminUserId: currentUser.id,
-                planTier: form.planTier,
-              });
-              void id;
-              setActiveTab('overview');
-            }}
-          />
-        </TabsContent>
-
-        {/* DASHBOARD */}
-        <TabsContent value="dashboard" className="mt-6">
-          {myCorporate ? (
-            <CorporateDashboard
-              corp={myCorporate}
-              allUsers={users}
-              skillMatrix={skillMatrix}
-              onEnroll={(userId) => enrollCorporateEmployee(myCorporate.id, userId)}
-              onExport={() => {
-                const csv = exportProfiles(myCorporate.id);
-                const blob = new Blob([csv], { type: 'text/csv' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${myCorporate.name.replace(/\s+/g, '_')}_profiles.csv`;
-                a.click();
-                URL.revokeObjectURL(url);
-              }}
-            />
-          ) : (
-            <Card>
-              <CardContent className="p-8 text-center">
-                <p className="text-sm text-muted-foreground">
-                  You are not linked to a corporate account. Submit an application on the Register tab to get started.
-                </p>
+          {/* Corporate list */}
+          {corporates.length > 0 && (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Building2 className="h-5 w-5" /> Registered Corporates</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {corporates.map((corp) => {
+                    const empCount = corp.employeeUserIds.length;
+                    const admin = users.find((u) => u.id === corp.adminUserId);
+                    return (
+                      <div key={corp.id} className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-semibold">{corp.name}</h4>
+                            <Badge variant={corp.status === 'approved' ? 'default' : corp.status === 'pending' ? 'secondary' : 'destructive'}>
+                              {corp.status}
+                            </Badge>
+                            <Badge variant="outline" className="capitalize">{corp.planTier}</Badge>
+                          </div>
+                          <p className="mt-1 text-sm text-muted-foreground">{corp.industry} · {corp.country} · {corp.domain}</p>
+                          <p className="mt-1 text-xs text-muted-foreground">Admin: {admin?.name ?? '—'} · {empCount} employee{empCount !== 1 ? 's' : ''}</p>
+                        </div>
+                        {isSuperAdmin && corp.status === 'pending' && (
+                          <div className="flex gap-2">
+                            <Button size="sm" onClick={() => approveCorporate(corp.id)} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                              <CheckCircle2 className="mr-1 h-4 w-4" /> Approve
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => rejectCorporate(corp.id)}>
+                              <XCircle className="mr-1 h-4 w-4" /> Reject
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </CardContent>
             </Card>
           )}
         </TabsContent>
 
-        {/* SKILL MATRIX */}
-        <TabsContent value="skillmatrix" className="mt-6">
-          <SkillMatrixDashboard />
+        <TabsContent value="register" className="mt-6">
+          <Card>
+            <CardHeader><CardTitle>Register Your Company</CardTitle></CardHeader>
+            <CardContent>
+              <form onSubmit={handleRegister} className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label>Company Name *</Label>
+                  <Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Acme Technologies Inc." />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Domain *</Label>
+                  <Input required value={form.domain} onChange={(e) => setForm({ ...form, domain: e.target.value })} placeholder="acme.com" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Industry</Label>
+                  <Input value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} placeholder="Software / FinTech / Healthcare" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Country</Label>
+                  <Select value={form.country} onValueChange={(v) => setForm({ ...form, country: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="IN">India</SelectItem>
+                      <SelectItem value="US">United States</SelectItem>
+                      <SelectItem value="GB">United Kingdom</SelectItem>
+                      <SelectItem value="DE">Germany</SelectItem>
+                      <SelectItem value="FR">France</SelectItem>
+                      <SelectItem value="JP">Japan</SelectItem>
+                      <SelectItem value="AU">Australia</SelectItem>
+                      <SelectItem value="CA">Canada</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Contact Name *</Label>
+                  <Input required value={form.contactName} onChange={(e) => setForm({ ...form, contactName: e.target.value })} placeholder="Sarah Chen" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Contact Email *</Label>
+                  <Input type="email" required value={form.contactEmail} onChange={(e) => setForm({ ...form, contactEmail: e.target.value })} placeholder="hr@acme.com" />
+                </div>
+                <div className="space-y-1.5 md:col-span-2">
+                  <Label>Plan Tier</Label>
+                  <Select value={form.planTier} onValueChange={(v) => setForm({ ...form, planTier: v as typeof form.planTier })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="starter">Starter — up to 25 employees</SelectItem>
+                      <SelectItem value="growth">Growth — up to 100 employees (Most Popular)</SelectItem>
+                      <SelectItem value="enterprise">Enterprise — unlimited employees</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="md:col-span-2">
+                  <Button type="submit" className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700">
+                    Apply for Corporate Account
+                  </Button>
+                  <p className="mt-2 text-center text-xs text-muted-foreground">
+                    Your application will be reviewed by our Super Admin. You will be notified once approved.
+                  </p>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
@@ -233,7 +892,7 @@ export function CorporatePortal() {
 }
 
 // ============================================================
-// Sub-components
+// Shared sub-components
 // ============================================================
 function StatCard({ icon: Icon, label, value, color }: {
   icon: React.ComponentType<{ className?: string }>;
@@ -278,401 +937,6 @@ function PlanCard({ tier, priceUSD, currency, features, highlighted }: {
           </li>
         ))}
       </ul>
-    </div>
-  );
-}
-
-interface RegFormState {
-  name: string;
-  domain: string;
-  industry: string;
-  country: string;
-  contactName: string;
-  contactEmail: string;
-  planTier: 'starter' | 'growth' | 'enterprise';
-}
-
-function CorporateRegistrationForm({ onSubmit }: { onSubmit: (form: RegFormState) => void }) {
-  const t = useT();
-  const [form, setForm] = useState<RegFormState>({
-    name: '',
-    domain: '',
-    industry: 'Software',
-    country: 'US',
-    contactName: '',
-    contactEmail: '',
-    planTier: 'growth',
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit(form);
-  };
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t('corporate.register')}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="corp-name">{t('corporate.companyName')} *</Label>
-            <Input id="corp-name" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Acme Technologies Inc." />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="corp-domain">{t('corporate.domain')} *</Label>
-            <Input id="corp-domain" required value={form.domain} onChange={(e) => setForm({ ...form, domain: e.target.value })} placeholder="acme.com" />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="corp-industry">{t('corporate.industry')}</Label>
-            <Input id="corp-industry" value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} placeholder="Software / FinTech / Healthcare" />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="corp-country">{t('corporate.country')}</Label>
-            <Select value={form.country} onValueChange={(v) => setForm({ ...form, country: v })}>
-              <SelectTrigger id="corp-country"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="US">United States</SelectItem>
-                <SelectItem value="IN">India</SelectItem>
-                <SelectItem value="GB">United Kingdom</SelectItem>
-                <SelectItem value="DE">Germany</SelectItem>
-                <SelectItem value="FR">France</SelectItem>
-                <SelectItem value="JP">Japan</SelectItem>
-                <SelectItem value="ES">Spain</SelectItem>
-                <SelectItem value="AU">Australia</SelectItem>
-                <SelectItem value="CA">Canada</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="corp-contact-name">{t('corporate.contactName')} *</Label>
-            <Input id="corp-contact-name" required value={form.contactName} onChange={(e) => setForm({ ...form, contactName: e.target.value })} placeholder="Sarah Chen" />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="corp-contact-email">{t('corporate.contactEmail')} *</Label>
-            <Input id="corp-contact-email" type="email" required value={form.contactEmail} onChange={(e) => setForm({ ...form, contactEmail: e.target.value })} placeholder="hr@acme.com" />
-          </div>
-          <div className="space-y-1.5 md:col-span-2">
-            <Label htmlFor="corp-plan">{t('corporate.planTier')}</Label>
-            <Select value={form.planTier} onValueChange={(v) => setForm({ ...form, planTier: v as RegFormState['planTier'] })}>
-              <SelectTrigger id="corp-plan"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="starter">Starter — up to 25 employees</SelectItem>
-                <SelectItem value="growth">Growth — up to 100 employees (Most Popular)</SelectItem>
-                <SelectItem value="enterprise">Enterprise — unlimited employees</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="md:col-span-2">
-            <Button type="submit" className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700">
-              {t('corporate.apply')}
-            </Button>
-            <p className="mt-2 text-center text-xs text-muted-foreground">
-              Your application will be reviewed by our Super Admin. You will be notified once approved.
-            </p>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
-  );
-}
-
-function CorporateDashboard({ corp, allUsers, skillMatrix, onEnroll, onExport }: {
-  corp: ReturnType<typeof useAppStore.getState>['corporates'][number];
-  allUsers: ReturnType<typeof useAppStore.getState>['users'];
-  skillMatrix: ReturnType<typeof useAppStore.getState>['skillMatrix'];
-  onEnroll: (userId: string) => void;
-  onExport: () => void;
-}) {
-  const t = useT();
-  const [search, setSearch] = useState('');
-
-  const employees = allUsers.filter((u) => corp.employeeUserIds.includes(u.id));
-  const filteredEmployees = employees.filter((e) =>
-    e.name.toLowerCase().includes(search.toLowerCase()) ||
-    e.email.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const nonEmployees = allUsers.filter((u) =>
-    !corp.employeeUserIds.includes(u.id) &&
-    u.role === 'candidate' &&
-    u.status === 'active'
-  );
-
-  // Skills progress stats
-  const skillStats = useMemo(() => {
-    const corpSkills = skillMatrix.filter((s) => corp.employeeUserIds.includes(s.userId));
-    const byLevel: Record<SkillLevel, number> = { beginner: 0, intermediate: 0, advanced: 0, expert: 0 };
-    let certifiedCount = 0;
-    let totalScore = 0;
-    corpSkills.forEach((s) => {
-      byLevel[s.level]++;
-      if (s.certified) certifiedCount++;
-      totalScore += s.scorePct;
-    });
-    return {
-      total: corpSkills.length,
-      byLevel,
-      certified: certifiedCount,
-      avgScore: corpSkills.length > 0 ? Math.round(totalScore / corpSkills.length) : 0,
-    };
-  }, [skillMatrix, corp.employeeUserIds]);
-
-  return (
-    <div className="space-y-6">
-      {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <StatCard icon={Users} label="Employees" value={employees.length} color="from-emerald-500 to-teal-600" />
-        <StatCard icon={Award} label="Certified Skills" value={skillStats.certified} color="from-violet-500 to-purple-600" />
-        <StatCard icon={TrendingUp} label="Avg Score" value={skillStats.avgScore} color="from-amber-500 to-orange-600" />
-        <StatCard icon={CheckCircle2} label="Skills Tracked" value={skillStats.total} color="from-sky-500 to-cyan-600" />
-      </div>
-
-      {/* Skill distribution */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Skill Level Distribution</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            {(['beginner', 'intermediate', 'advanced', 'expert'] as SkillLevel[]).map((level) => (
-              <div key={level} className="rounded-lg border p-3">
-                <Badge className={`${LEVEL_COLORS[level]} capitalize`}>{t(`corporate.skillLevel.${level}`)}</Badge>
-                <p className="mt-2 text-2xl font-bold">{skillStats.byLevel[level]}</p>
-                <p className="text-xs text-muted-foreground">employees</p>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Employee list */}
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <CardTitle>{t('corporate.employees')} ({employees.length})</CardTitle>
-            <div className="flex gap-2">
-              <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder={t('common.search')}
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-8 w-48"
-                />
-              </div>
-              <Button variant="outline" size="sm" onClick={onExport}>
-                <Download className="mr-1 h-4 w-4" /> {t('corporate.exportProfiles')}
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {filteredEmployees.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">{t('corporate.noEmployees')}</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-left text-xs uppercase tracking-wider text-muted-foreground">
-                    <th className="pb-2 pr-3">Employee</th>
-                    <th className="pb-2 pr-3">Email</th>
-                    <th className="pb-2 pr-3">Courses</th>
-                    <th className="pb-2 pr-3">Skills Tracked</th>
-                    <th className="pb-2 pr-3">Certified</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredEmployees.map((emp) => {
-                    const skills = skillMatrix.filter((s) => s.userId === emp.id);
-                    const certCount = skills.filter((s) => s.certified).length;
-                    return (
-                      <tr key={emp.id} className="border-b last:border-0">
-                        <td className="py-2 pr-3">
-                          <div className="flex items-center gap-2">
-                            <span className={`grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br ${emp.avatarColor} text-xs font-semibold text-white`}>
-                              {emp.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
-                            </span>
-                            <span className="font-medium">{emp.name}</span>
-                          </div>
-                        </td>
-                        <td className="py-2 pr-3 text-muted-foreground">{emp.email}</td>
-                        <td className="py-2 pr-3">{emp.enrolledCourseIds.length}</td>
-                        <td className="py-2 pr-3">{skills.length}</td>
-                        <td className="py-2 pr-3">
-                          <Badge variant={certCount > 0 ? 'default' : 'secondary'}>{certCount}</Badge>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Enroll employees */}
-      {nonEmployees.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Plus className="h-5 w-5" /> {t('corporate.enroll')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-2 md:grid-cols-2">
-              {nonEmployees.slice(0, 10).map((u) => (
-                <div key={u.id} className="flex items-center justify-between rounded-lg border p-3">
-                  <div>
-                    <p className="text-sm font-medium">{u.name}</p>
-                    <p className="text-xs text-muted-foreground">{u.email}</p>
-                  </div>
-                  <Button size="sm" variant="outline" onClick={() => onEnroll(u.id)}>
-                    Enroll <ChevronRight className="ml-1 h-3 w-3" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  );
-}
-
-function SkillMatrixDashboard() {
-  const t = useT();
-  const corporates = useAppStore((s) => s.corporates);
-  const users = useAppStore((s) => s.users);
-  const skillMatrix = useAppStore((s) => s.skillMatrix);
-  const [filterCourse, setFilterCourse] = useState<string>('all');
-  const [filterLevel, setFilterLevel] = useState<string>('all');
-  const [filterCorp, setFilterCorp] = useState<string>('all');
-
-  // Build filtered rows: rows = employees, columns = courses
-  const filteredCorps = filterCorp === 'all' ? corporates : corporates.filter((c) => c.id === filterCorp);
-  const employeeIds = filteredCorps.flatMap((c) => c.employeeUserIds);
-  const employees = users.filter((u) => employeeIds.includes(u.id));
-
-  const courseIds = useMemo(() => {
-    const ids = new Set<string>();
-    skillMatrix.forEach((s) => { if (employeeIds.includes(s.userId)) ids.add(s.courseId); });
-    return Array.from(ids);
-  }, [skillMatrix, employeeIds]);
-
-  const visibleCourseIds = filterCourse === 'all' ? courseIds : [filterCourse];
-
-  const getSkill = (userId: string, courseId: string) =>
-    skillMatrix.find((s) => s.userId === userId && s.courseId === courseId);
-
-  return (
-    <div className="space-y-4">
-      {/* Filters */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">{t('common.filter')}:</span>
-            </div>
-            <Select value={filterCorp} onValueChange={setFilterCorp}>
-              <SelectTrigger className="w-44"><SelectValue placeholder="Corporate" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Corporates</SelectItem>
-                {corporates.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={filterCourse} onValueChange={setFilterCourse}>
-              <SelectTrigger className="w-44"><SelectValue placeholder={t('corporate.filterBySkill')} /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Courses</SelectItem>
-                {courseIds.map((cid) => {
-                  const c = COURSES.find((x) => x.id === cid);
-                  return <SelectItem key={cid} value={cid}>{c?.title ?? cid}</SelectItem>;
-                })}
-              </SelectContent>
-            </Select>
-            <Select value={filterLevel} onValueChange={setFilterLevel}>
-              <SelectTrigger className="w-44"><SelectValue placeholder={t('corporate.filterByLevel')} /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Levels</SelectItem>
-                <SelectItem value="beginner">{t('corporate.skillLevel.beginner')}</SelectItem>
-                <SelectItem value="intermediate">{t('corporate.skillLevel.intermediate')}</SelectItem>
-                <SelectItem value="advanced">{t('corporate.skillLevel.advanced')}</SelectItem>
-                <SelectItem value="expert">{t('corporate.skillLevel.expert')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Matrix */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('corporate.skillMatrix')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {employees.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">No employees to display.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-left text-xs uppercase tracking-wider text-muted-foreground">
-                    <th className="pb-2 pr-3 sticky left-0 bg-card">Employee</th>
-                    <th className="pb-2 pr-3">Corporate</th>
-                    {visibleCourseIds.map((cid) => {
-                      const c = COURSES.find((x) => x.id === cid);
-                      return <th key={cid} className="pb-2 pr-3 text-center">{c?.title?.split(' ').slice(0, 2).join(' ') ?? cid}</th>;
-                    })}
-                  </tr>
-                </thead>
-                <tbody>
-                  {employees.map((emp) => {
-                    const corp = corporates.find((c) => c.id === emp.corporateId);
-                    return (
-                      <tr key={emp.id} className="border-b last:border-0">
-                        <td className="py-2 pr-3 sticky left-0 bg-card">
-                          <div className="flex items-center gap-2">
-                            <span className={`grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br ${emp.avatarColor} text-[10px] font-semibold text-white`}>
-                              {emp.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
-                            </span>
-                            <div>
-                              <p className="font-medium">{emp.name}</p>
-                              <p className="text-xs text-muted-foreground">{emp.email}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-2 pr-3 text-muted-foreground">{corp?.name ?? '—'}</td>
-                        {visibleCourseIds.map((cid) => {
-                          const skill = getSkill(emp.id, cid);
-                          if (!skill) return <td key={cid} className="py-2 pr-3 text-center text-muted-foreground">—</td>;
-                          if (filterLevel !== 'all' && skill.level !== filterLevel) {
-                            return <td key={cid} className="py-2 pr-3 text-center text-muted-foreground opacity-30">—</td>;
-                          }
-                          return (
-                            <td key={cid} className="py-2 pr-3 text-center">
-                              <div className="inline-flex flex-col items-center gap-0.5">
-                                <Badge className={`${LEVEL_COLORS[skill.level]} text-[10px] px-1.5 py-0`}>
-                                  {skill.level.slice(0, 4)}
-                                </Badge>
-                                <span className="text-[10px] text-muted-foreground">{skill.scorePct}%</span>
-                                {skill.certified && <Award className="h-3 w-3 text-amber-500" />}
-                              </div>
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }

@@ -6,11 +6,14 @@ import type { LanguageCode } from '@/lib/types';
 
 export const SUPPORTED_LANGUAGES: { code: LanguageCode; label: string; flag: string; nativeName: string }[] = [
   { code: 'en', label: 'English',    flag: '🇺🇸', nativeName: 'English'  },
+  { code: 'hi', label: 'Hindi',      flag: '🇮🇳', nativeName: 'हिन्दी'    },
   { code: 'es', label: 'Spanish',    flag: '🇪🇸', nativeName: 'Español'  },
   { code: 'de', label: 'German',     flag: '🇩🇪', nativeName: 'Deutsch'  },
   { code: 'ja', label: 'Japanese',   flag: '🇯🇵', nativeName: '日本語'   },
-  { code: 'hi', label: 'Hindi',      flag: '🇮🇳', nativeName: 'हिन्दी'    },
   { code: 'fr', label: 'French',     flag: '🇫🇷', nativeName: 'Français' },
+  { code: 'pt', label: 'Portuguese', flag: '🇧🇷', nativeName: 'Português' },
+  { code: 'ko', label: 'Korean',     flag: '🇰🇷', nativeName: '한국어'    },
+  { code: 'zh', label: 'Chinese',    flag: '🇨🇳', nativeName: '中文'     },
 ];
 
 type Dict = Record<string, string>;

@@ -13,6 +13,7 @@ import { PricingPage } from '@/components/pricing-page';
 import { TutorMarketplace } from '@/components/tutor-marketplace';
 import { TutorPortal } from '@/components/tutor-portal';
 import { AdminPortal } from '@/components/admin-portal';
+import { CorporatePortal } from '@/components/corporate-portal';
 import { MyLearning } from '@/components/my-learning';
 import { Dashboard } from '@/components/dashboard';
 import {
@@ -72,6 +73,7 @@ export default function Home() {
           {view.name === 'tutors' && <TutorMarketplace />}
           {view.name === 'tutor_portal' && <TutorPortal />}
           {view.name === 'admin' && <AdminPortal />}
+          {view.name === 'corporate' && <CorporatePortal />}
           {view.name === 'my_learning' && <MyLearning />}
           {view.name === 'dashboard' && <Dashboard />}
           {view.name === 'calendar' && <CalendarPage />}

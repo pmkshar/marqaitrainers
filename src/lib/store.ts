@@ -10,6 +10,8 @@ import type {
   RegistrationFormConfig, RegistrationFormField,
   EmailSchedule, AnalyticsEvent, AnalyticsSummary, GdprExportBundle,
   LanguageCode, CurrencyCode, LocaleConfig,
+  Corporate, CorporateSubscription, CorporatePlanModel, CorporatePlanTier, CorporateStatus,
+  SkillLevel, SkillMatrixEntry, AiInterviewReport,
 } from '@/lib/types';
 import {
   SEED_USERS, SEED_BOOKINGS, SEED_INTEGRATIONS, DEFAULT_ROLES, SEED_AUDIT_LOGS,
@@ -24,6 +26,68 @@ import {
   SEED_CERT_TEMPLATES, SEED_REG_FORMS, SEED_EMAIL_SCHEDULES,
   SEED_ANALYTICS_EVENTS, SEED_GDPR_BUNDLES,
 } from '@/lib/seed-advanced';
+
+// ============================================================
+// Corporate seed data
+// ============================================================
+const SEED_CORPORATES: Corporate[] = [
+  {
+    id: 'corp-1',
+    name: 'TechNova Solutions',
+    domain: 'technova.com',
+    industry: 'Software',
+    country: 'IN',
+    contactName: 'Priya Sharma',
+    contactEmail: 'hr@technova.com',
+    adminUserId: 'u-corp-admin-1',
+    employeeUserIds: ['u-corp-emp-1', 'u-corp-emp-2'],
+    planTier: 'growth',
+    status: 'approved',
+    subscriptions: [
+      {
+        id: 'sub-1',
+        corporateId: 'corp-1',
+        planModel: 'monthly',
+        planTier: 'growth',
+        courseIds: ['ai-ml', 'fullstack-java', 'python'],
+        pricePerSeat: 1999,
+        employeeLimit: 100,
+        startedAt: Date.now() - 45 * 24 * 60 * 60 * 1000,
+        expiresAt: Date.now() + 315 * 24 * 60 * 60 * 1000,
+        status: 'active',
+      },
+    ],
+    subscribedCourseIds: ['ai-ml', 'fullstack-java', 'python'],
+    employeeRestrictedCourseIds: ['ai-ml', 'fullstack-java', 'python'],
+    createdAt: Date.now() - 90 * 24 * 60 * 60 * 1000,
+  },
+];
+
+const SEED_SKILL_MATRIX: SkillMatrixEntry[] = [
+  { id: 'sm-1', userId: 'u-corp-emp-1', courseId: 'ai-ml', level: 'intermediate', scorePct: 72, certified: false, assessedAt: Date.now() - 5 * 24 * 60 * 60 * 1000 },
+  { id: 'sm-2', userId: 'u-corp-emp-1', courseId: 'python', level: 'advanced', scorePct: 85, certified: true, assessedAt: Date.now() - 10 * 24 * 60 * 60 * 1000 },
+  { id: 'sm-3', userId: 'u-corp-emp-2', courseId: 'fullstack-java', level: 'beginner', scorePct: 45, certified: false, assessedAt: Date.now() - 2 * 24 * 60 * 60 * 1000 },
+  { id: 'sm-4', userId: 'u-corp-emp-2', courseId: 'ai-ml', level: 'intermediate', scorePct: 68, certified: false, assessedAt: Date.now() - 7 * 24 * 60 * 60 * 1000 },
+];
+
+const SEED_AI_INTERVIEW_REPORTS: AiInterviewReport[] = [
+  {
+    id: 'air-1', userId: 'u-corp-emp-1', corporateId: 'corp-1', courseId: 'ai-ml',
+    overallScore: 78, technicalScore: 82, communicationScore: 70, problemSolvingScore: 75,
+    summary: 'Strong technical fundamentals in ML concepts. Good understanding of gradient descent and neural networks.',
+    strengths: ['Deep understanding of backpropagation', 'Clear code structure', 'Good problem decomposition'],
+    improvements: ['Could improve communication of complex ideas', 'Needs more practice with production ML pipelines'],
+    completedAt: Date.now() - 3 * 24 * 60 * 60 * 1000,
+  },
+  {
+    id: 'air-2', userId: 'u-corp-emp-2', corporateId: 'corp-1', courseId: 'fullstack-java',
+    overallScore: 62, technicalScore: 58, communicationScore: 68, problemSolvingScore: 60,
+    summary: 'Basic Java knowledge demonstrated. Needs improvement in Spring Boot and microservices patterns.',
+    strengths: ['Good understanding of OOP concepts', 'Enthusiastic learner'],
+    improvements: ['Needs stronger Spring Boot knowledge', 'Improve REST API design patterns', 'Practice system design problems'],
+    completedAt: Date.now() - 1 * 24 * 60 * 60 * 1000,
+  },
+];
 
 interface AppState {
   // Navigation
@@ -211,6 +275,22 @@ interface AppState {
   requestGdprExport: (userId: string) => void;
   gdprBundlesFor: (userId: string) => GdprExportBundle[];
 
+  // ---- corporate / B2B ----
+  corporates: Corporate[];
+  skillMatrix: SkillMatrixEntry[];
+  aiInterviewReports: AiInterviewReport[];
+  registerCorporate: (data: { name: string; domain: string; industry: string; country: string; contactEmail: string; contactName: string; adminUserId: string; planTier: CorporatePlanTier }) => string;
+  approveCorporate: (corpId: string) => void;
+  rejectCorporate: (corpId: string) => void;
+  enrollCorporateEmployee: (corpId: string, userId: string) => void;
+  exportCorporateProfiles: (corpId: string) => string;
+  addCorporateSubscription: (corpId: string, planModel: CorporatePlanModel, courseIds: string[], pricePerSeat: number, employeeLimit: number) => void;
+  cancelCorporateSubscription: (corpId: string, subId: string) => void;
+  registerCorporateEmployee: (corpId: string, name: string, email: string) => string;
+  approveEmployeeCourse: (corpId: string, userId: string, courseId: string) => void;
+  removeCorporateEmployee: (corpId: string, userId: string) => void;
+  openCorporate: () => void;
+
   // ---- locale / i18n ----
   language: LanguageCode;
   currency: CurrencyCode;
@@ -280,6 +360,11 @@ export const useAppStore = create<AppState>()(
       emailSchedules: SEED_EMAIL_SCHEDULES,
       analyticsEvents: SEED_ANALYTICS_EVENTS,
       gdprBundles: SEED_GDPR_BUNDLES,
+
+      // ---- corporate / B2B seed ----
+      corporates: SEED_CORPORATES,
+      skillMatrix: SEED_SKILL_MATRIX,
+      aiInterviewReports: SEED_AI_INTERVIEW_REPORTS,
 
       // ---- locale defaults: Indian English, India, INR, Asia/Kolkata ----
       language: 'en',
@@ -399,6 +484,7 @@ export const useAppStore = create<AppState>()(
       openMyLearning: () => set({ view: { name: 'my_learning' }, isMenuOpen: false }),
       openDashboard: () => set({ view: { name: 'dashboard' }, isMenuOpen: false }),
       openFeatures: () => set({ view: { name: 'features' }, isMenuOpen: false }),
+      openCorporate: () => set({ view: { name: 'corporate' }, isMenuOpen: false }),
       openCertificates: () => set({ view: { name: 'certificates' }, isMenuOpen: false }),
       openAchievements: () => set({ view: { name: 'achievements' }, isMenuOpen: false }),
       openCalendar: () => set({ view: { name: 'calendar' }, isMenuOpen: false }),
@@ -454,6 +540,7 @@ export const useAppStore = create<AppState>()(
           role,
           avatarColor: AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)],
           enrolledCourseIds: [],
+          approvedCourseIds: [],
           createdAt: Date.now(),
           status: role === 'tutor' ? 'pending' : 'active',
           tutorProfile: role === 'tutor'
@@ -1155,6 +1242,191 @@ export const useAppStore = create<AppState>()(
       },
       gdprBundlesFor: (userId) => get().gdprBundles.filter((b) => b.userId === userId),
 
+      // ---------- corporate / B2B ----------
+      registerCorporate: (data) => {
+        const id = `corp-${Date.now()}`;
+        const now = Date.now();
+        const corp: Corporate = {
+          id,
+          name: data.name,
+          domain: data.domain,
+          industry: data.industry,
+          country: data.country,
+          contactName: data.contactName,
+          contactEmail: data.contactEmail,
+          adminUserId: data.adminUserId,
+          employeeUserIds: [],
+          planTier: data.planTier,
+          status: 'pending',
+          subscriptions: [],
+          subscribedCourseIds: [],
+          employeeRestrictedCourseIds: [],
+          createdAt: now,
+        };
+        set((s) => ({
+          corporates: [...s.corporates, corp],
+        }));
+        // Also set the user's role to corporate_admin and link corporateId
+        set((s) => ({
+          users: s.users.map((u) =>
+            u.id === data.adminUserId
+              ? { ...u, role: 'corporate_admin' as RoleKey, corporateId: id }
+              : u
+          ),
+        }));
+        get().logAction('Registered corporate', data.name);
+        return id;
+      },
+      approveCorporate: (corpId) => {
+        set((s) => ({
+          corporates: s.corporates.map((c) =>
+            c.id === corpId ? { ...c, status: 'approved' as CorporateStatus } : c
+          ),
+        }));
+        get().logAction('Approved corporate', corpId);
+      },
+      rejectCorporate: (corpId) => {
+        set((s) => ({
+          corporates: s.corporates.map((c) =>
+            c.id === corpId ? { ...c, status: 'rejected' as CorporateStatus } : c
+          ),
+        }));
+        get().logAction('Rejected corporate', corpId);
+      },
+      enrollCorporateEmployee: (corpId, userId) => {
+        set((s) => {
+          const corp = s.corporates.find((c) => c.id === corpId);
+          if (!corp || corp.employeeUserIds.includes(userId)) return s;
+          return {
+            corporates: s.corporates.map((c) =>
+              c.id === corpId
+                ? { ...c, employeeUserIds: [...c.employeeUserIds, userId] }
+                : c
+            ),
+            users: s.users.map((u) =>
+              u.id === userId
+                ? { ...u, corporateId: corpId, role: 'corporate_user' as RoleKey }
+                : u
+            ),
+          };
+        });
+        get().logAction('Enrolled employee to corporate', `${corpId}/${userId}`);
+      },
+      exportCorporateProfiles: (corpId) => {
+        const corp = get().corporates.find((c) => c.id === corpId);
+        if (!corp) return '';
+        const emps = get().users.filter((u) => corp.employeeUserIds.includes(u.id));
+        const header = 'Name,Email,Courses,Status\n';
+        const rows = emps.map((e) =>
+          `"${e.name}","${e.email}","${e.enrolledCourseIds.join('; ')}","${e.status}"`
+        ).join('\n');
+        return header + rows;
+      },
+      addCorporateSubscription: (corpId, planModel, courseIds, pricePerSeat, employeeLimit) => {
+        const id = `sub-${Date.now()}`;
+        const now = Date.now();
+        const expiresAt = planModel === 'annual'
+          ? now + 365 * 24 * 60 * 60 * 1000
+          : planModel === 'monthly'
+          ? now + 30 * 24 * 60 * 60 * 1000
+          : now + 180 * 24 * 60 * 60 * 1000; // single_course = 6 months
+        const sub: CorporateSubscription = {
+          id,
+          corporateId: corpId,
+          planModel,
+          planTier: get().corporates.find((c) => c.id === corpId)?.planTier ?? 'growth',
+          courseIds,
+          pricePerSeat,
+          employeeLimit,
+          startedAt: now,
+          expiresAt,
+          status: 'active',
+        };
+        set((s) => ({
+          corporates: s.corporates.map((c) =>
+            c.id === corpId
+              ? {
+                  ...c,
+                  subscriptions: [...c.subscriptions, sub],
+                  subscribedCourseIds: [...new Set([...c.subscribedCourseIds, ...courseIds])],
+                  employeeRestrictedCourseIds: [...new Set([...c.employeeRestrictedCourseIds, ...courseIds])],
+                }
+              : c
+          ),
+        }));
+        get().logAction('Added corporate subscription', `${corpId}/${planModel}`);
+      },
+      cancelCorporateSubscription: (corpId, subId) => {
+        set((s) => ({
+          corporates: s.corporates.map((c) =>
+            c.id === corpId
+              ? {
+                  ...c,
+                  subscriptions: c.subscriptions.map((sub) =>
+                    sub.id === subId ? { ...sub, status: 'cancelled' as const } : sub
+                  ),
+                }
+              : c
+          ),
+        }));
+        get().logAction('Cancelled corporate subscription', `${corpId}/${subId}`);
+      },
+      registerCorporateEmployee: (corpId, name, email) => {
+        const id = `u-corp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+        const corp = get().corporates.find((c) => c.id === corpId);
+        const newUser: User = {
+          id,
+          name,
+          email,
+          role: 'corporate_user',
+          avatarColor: AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)],
+          enrolledCourseIds: [],
+          approvedCourseIds: [],
+          corporateId: corpId,
+          createdAt: Date.now(),
+          status: 'active',
+        };
+        set((s) => ({
+          users: [...s.users, newUser],
+          corporates: s.corporates.map((c) =>
+            c.id === corpId
+              ? { ...c, employeeUserIds: [...c.employeeUserIds, id] }
+              : c
+          ),
+        }));
+        get().logAction('Registered corporate employee', `${corpId}/${name}`);
+        return id;
+      },
+      approveEmployeeCourse: (corpId, userId, courseId) => {
+        set((s) => ({
+          users: s.users.map((u) =>
+            u.id === userId
+              ? {
+                  ...u,
+                  approvedCourseIds: [...new Set([...u.approvedCourseIds, courseId])],
+                  enrolledCourseIds: [...new Set([...u.enrolledCourseIds, courseId])],
+                }
+              : u
+          ),
+        }));
+        get().logAction('Approved employee course', `${corpId}/${userId}/${courseId}`);
+      },
+      removeCorporateEmployee: (corpId, userId) => {
+        set((s) => ({
+          corporates: s.corporates.map((c) =>
+            c.id === corpId
+              ? { ...c, employeeUserIds: c.employeeUserIds.filter((id) => id !== userId) }
+              : c
+          ),
+          users: s.users.map((u) =>
+            u.id === userId
+              ? { ...u, corporateId: undefined, role: 'candidate' as RoleKey, approvedCourseIds: [] }
+              : u
+          ),
+        }));
+        get().logAction('Removed corporate employee', `${corpId}/${userId}`);
+      },
+
       // ---- locale / i18n methods ----
       setLanguage: (lang) => set({ language: lang }),
       setCurrency: (cur) => set({ currency: cur }),
@@ -1248,13 +1520,13 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'marq-ai-storage',
-      version: 4,
+      version: 9,
       storage: createJSONStorage(() => (typeof window !== 'undefined' ? localStorage : (undefined as never))),
       // Drop any persisted state from an older schema version. This prevents
       // crashes when the seeded data shape changes (e.g. new fields like
       // `enrolledCourseIds`, `tutorProfile`, `categoryIds`, etc.).
       migrate: (_persistedState, version) => {
-        if (version < 4) {
+        if (version < 9) {
           // Returning the seed-state shape triggers a fresh re-init.
           return {} as Partial<AppState>;
         }
@@ -1286,6 +1558,10 @@ export const useAppStore = create<AppState>()(
         emailSchedules: s.emailSchedules,
         analyticsEvents: s.analyticsEvents.slice(0, 2000),
         gdprBundles: s.gdprBundles,
+        // ---- corporate ----
+        corporates: s.corporates,
+        skillMatrix: s.skillMatrix,
+        aiInterviewReports: s.aiInterviewReports,
         // ---- locale preferences ----
         language: s.language,
         currency: s.currency,

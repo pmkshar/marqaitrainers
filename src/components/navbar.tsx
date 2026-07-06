@@ -1,6 +1,6 @@
 'use client';
 
-import { GraduationCap, Menu, X, Sparkles, MessageCircle, LogIn, User as UserIcon, ShieldCheck, LayoutDashboard, BookOpen, LogOut, ChevronDown, BadgeCheck, Bell, Grid3x3 } from 'lucide-react';
+import { GraduationCap, Menu, X, Sparkles, MessageCircle, LogIn, User as UserIcon, ShieldCheck, LayoutDashboard, BookOpen, LogOut, ChevronDown, BadgeCheck, Bell, Grid3x3, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -13,7 +13,7 @@ import { LanguageCurrencySwitcher } from './language-currency-switcher';
 export function Navbar() {
   const {
     view, isMenuOpen, toggleMenu, goHome, openCourse,
-    setTutorOpen, openPricing, openTutors, openAdmin, openTutorPortal, openMyLearning, openDashboard, openFeatures,
+    setTutorOpen, openPricing, openTutors, openAdmin, openTutorPortal, openMyLearning, openDashboard, openFeatures, openCorporate,
     currentUser, logout, setAuthOpen,
   } = useAppStore();
   const user = currentUser();
@@ -150,6 +150,11 @@ export function Navbar() {
                       <ShieldCheck className="mr-2 h-4 w-4" /> Admin Portal
                     </DropdownMenuItem>
                   )}
+                  {(user.role === 'corporate_admin' || user.role === 'corporate_user') && (
+                    <DropdownMenuItem onClick={openCorporate}>
+                      <Building2 className="mr-2 h-4 w-4" /> Corporate Portal
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onClick={openFeatures}>
                     <Grid3x3 className="mr-2 h-4 w-4" /> Features
                   </DropdownMenuItem>
@@ -230,6 +235,7 @@ export function Navbar() {
                   {user.role === 'candidate' && <button onClick={openMyLearning} className="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-accent">My Learning</button>}
                   {user.role === 'tutor' && <button onClick={openTutorPortal} className="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-accent">Tutor Dashboard</button>}
                   {user.role === 'super_admin' && <button onClick={() => openAdmin('dashboard')} className="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-accent">Admin Portal</button>}
+                  {(user.role === 'corporate_admin' || user.role === 'corporate_user') && <button onClick={openCorporate} className="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-accent">Corporate Portal</button>}
                   <button onClick={logout} className="w-full rounded-md px-3 py-2 text-left text-sm text-rose-600 hover:bg-accent">Sign out</button>
                 </>
               ) : (

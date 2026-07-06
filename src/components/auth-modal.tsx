@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { GraduationCap, Sparkles, Users, ShieldCheck, X, ArrowRight, Loader2 } from 'lucide-react';
+import { GraduationCap, Sparkles, Users, ShieldCheck, Building2, UserCheck, X, ArrowRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -119,7 +119,7 @@ export function AuthModal() {
                 <div className="relative flex justify-center"><span className="bg-card px-2 text-xs uppercase tracking-wider text-muted-foreground">Or quick demo login</span></div>
               </div>
 
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-5 gap-2">
                 <QuickLogin
                   icon={ShieldCheck}
                   label="Admin"
@@ -137,6 +137,18 @@ export function AuthModal() {
                   label="Candidate"
                   color="from-emerald-500 to-teal-600"
                   onClick={() => quickLogin('u-cand-1')}
+                />
+                <QuickLogin
+                  icon={Building2}
+                  label="Corp Admin"
+                  color="from-indigo-500 to-purple-600"
+                  onClick={() => quickLogin('u-corp-admin-1')}
+                />
+                <QuickLogin
+                  icon={UserCheck}
+                  label="Corp Emp"
+                  color="from-amber-500 to-orange-600"
+                  onClick={() => quickLogin('u-corp-emp-1')}
                 />
               </div>
               <p className="text-center text-[10px] text-muted-foreground">
