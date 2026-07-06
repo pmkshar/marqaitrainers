@@ -9,6 +9,7 @@ import type {
   CertificateTemplate, CertificateElement,
   RegistrationFormConfig, RegistrationFormField,
   EmailSchedule, AnalyticsEvent, AnalyticsSummary, GdprExportBundle,
+  LanguageCode, CurrencyCode, LocaleConfig,
 } from '@/lib/types';
 import {
   SEED_USERS, SEED_BOOKINGS, SEED_INTEGRATIONS, DEFAULT_ROLES, SEED_AUDIT_LOGS,
@@ -209,6 +210,17 @@ interface AppState {
   // ---- advanced: GDPR ----
   requestGdprExport: (userId: string) => void;
   gdprBundlesFor: (userId: string) => GdprExportBundle[];
+
+  // ---- locale / i18n ----
+  language: LanguageCode;
+  currency: CurrencyCode;
+  country: string;
+  timezone: string;
+  localeDetected: boolean;
+  setLanguage: (lang: LanguageCode) => void;
+  setCurrency: (cur: CurrencyCode) => void;
+  setLocale: (patch: Partial<LocaleConfig>) => void;
+  detectLocaleFromGps: () => void;
 }
 
 const AVATAR_COLORS = [
@@ -268,6 +280,13 @@ export const useAppStore = create<AppState>()(
       emailSchedules: SEED_EMAIL_SCHEDULES,
       analyticsEvents: SEED_ANALYTICS_EVENTS,
       gdprBundles: SEED_GDPR_BUNDLES,
+
+      // ---- locale defaults: Indian English, India, INR, Asia/Kolkata ----
+      language: 'en',
+      currency: 'INR',
+      country: 'IN',
+      timezone: 'Asia/Kolkata',
+      localeDetected: false,
 
       currentUser: () => {
         const id = get().currentUserId;
@@ -1135,16 +1154,107 @@ export const useAppStore = create<AppState>()(
         get().logAction('Requested GDPR export', userId);
       },
       gdprBundlesFor: (userId) => get().gdprBundles.filter((b) => b.userId === userId),
+
+      // ---- locale / i18n methods ----
+      setLanguage: (lang) => set({ language: lang }),
+      setCurrency: (cur) => set({ currency: cur }),
+      setLocale: (patch) => set((s) => ({
+        ...(patch.language !== undefined ? { language: patch.language } : {}),
+        ...(patch.currency !== undefined ? { currency: patch.currency } : {}),
+        ...(patch.country !== undefined ? { country: patch.country } : {}),
+        ...(patch.timezone !== undefined ? { timezone: patch.timezone } : {}),
+      })),
+      detectLocaleFromGps: () => {
+        // Only detect once
+        if (get().localeDetected) return;
+
+        // Try timezone-based detection first (no permission needed)
+        try {
+          const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+          const tzToCountry: Record<string, { country: string; currency: CurrencyCode; language: LanguageCode }> = {
+            'Asia/Kolkata':       { country: 'IN', currency: 'INR', language: 'en' },
+            'America/New_York':   { country: 'US', currency: 'USD', language: 'en' },
+            'America/Chicago':    { country: 'US', currency: 'USD', language: 'en' },
+            'America/Denver':     { country: 'US', currency: 'USD', language: 'en' },
+            'America/Los_Angeles': { country: 'US', currency: 'USD', language: 'en' },
+            'America/Toronto':    { country: 'CA', currency: 'CAD', language: 'en' },
+            'America/Vancouver':  { country: 'CA', currency: 'CAD', language: 'en' },
+            'Europe/London':      { country: 'GB', currency: 'GBP', language: 'en' },
+            'Europe/Paris':       { country: 'FR', currency: 'EUR', language: 'fr' },
+            'Europe/Berlin':      { country: 'DE', currency: 'EUR', language: 'de' },
+            'Europe/Madrid':      { country: 'ES', currency: 'EUR', language: 'es' },
+            'Asia/Tokyo':         { country: 'JP', currency: 'JPY', language: 'ja' },
+            'Australia/Sydney':   { country: 'AU', currency: 'AUD', language: 'en' },
+            'Australia/Melbourne': { country: 'AU', currency: 'AUD', language: 'en' },
+          };
+          const detected = tzToCountry[tz];
+          if (detected) {
+            set({
+              timezone: tz,
+              country: detected.country,
+              currency: detected.currency,
+              language: detected.language,
+              localeDetected: true,
+            });
+            return;
+          }
+          // Timezone recognized but not in our mapping — just set timezone
+          set({ timezone: tz, localeDetected: true });
+          return;
+        } catch {
+          // Intl not available, fall through
+        }
+
+        // Try GPS geolocation as fallback
+        if (typeof navigator !== 'undefined' && navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              try {
+                // Use free reverse geocoding
+                const { latitude, longitude } = position.coords;
+                const res = await fetch(
+                  `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+                );
+                const data = await res.json();
+                const code = data.countryCode as string | undefined;
+                if (code) {
+                  const { COUNTRY_TIMEZONES } = await import('@/lib/currency');
+                  const info = COUNTRY_TIMEZONES[code];
+                  if (info) {
+                    set({
+                      country: code,
+                      timezone: info.timezone,
+                      currency: info.currency,
+                      localeDetected: true,
+                    });
+                    return;
+                  }
+                }
+                set({ localeDetected: true });
+              } catch {
+                set({ localeDetected: true });
+              }
+            },
+            () => {
+              // GPS denied or errored — keep India defaults
+              set({ localeDetected: true });
+            },
+            { timeout: 5000, maximumAge: 600000 }
+          );
+        } else {
+          set({ localeDetected: true });
+        }
+      },
     }),
     {
       name: 'marq-ai-storage',
-      version: 3,
+      version: 4,
       storage: createJSONStorage(() => (typeof window !== 'undefined' ? localStorage : (undefined as never))),
       // Drop any persisted state from an older schema version. This prevents
       // crashes when the seeded data shape changes (e.g. new fields like
       // `enrolledCourseIds`, `tutorProfile`, `categoryIds`, etc.).
       migrate: (_persistedState, version) => {
-        if (version < 3) {
+        if (version < 4) {
           // Returning the seed-state shape triggers a fresh re-init.
           return {} as Partial<AppState>;
         }
@@ -1176,6 +1286,12 @@ export const useAppStore = create<AppState>()(
         emailSchedules: s.emailSchedules,
         analyticsEvents: s.analyticsEvents.slice(0, 2000),
         gdprBundles: s.gdprBundles,
+        // ---- locale preferences ----
+        language: s.language,
+        currency: s.currency,
+        country: s.country,
+        timezone: s.timezone,
+        localeDetected: s.localeDetected,
       }),
       // Defensive merge — never let a corrupted persisted state crash the app
       merge: (persisted, current) => {
@@ -1203,6 +1319,12 @@ export const useAppStore = create<AppState>()(
           friendships: Array.isArray(p.friendships) ? p.friendships : current.friendships,
           completedLessons: Array.isArray(p.completedLessons) ? p.completedLessons : [],
           chatMessages: Array.isArray(p.chatMessages) ? p.chatMessages : [],
+          // ---- locale: fall back to India defaults if not persisted ----
+          language: p.language ?? current.language,
+          currency: p.currency ?? current.currency,
+          country: p.country ?? current.country,
+          timezone: p.timezone ?? current.timezone,
+          localeDetected: p.localeDetected ?? current.localeDetected,
         };
       },
     }

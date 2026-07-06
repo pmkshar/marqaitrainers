@@ -528,3 +528,40 @@ export interface ChatMessage {
   content: string;
   timestamp: number;
 }
+
+// ============================================================
+// Multi-lingual / Multi-country support
+// ============================================================
+
+export type CurrencyCode = 'USD' | 'EUR' | 'GBP' | 'JPY' | 'INR' | 'AUD' | 'CAD';
+
+export type LanguageCode = 'en' | 'es' | 'de' | 'ja' | 'hi' | 'fr';
+
+export interface LocaleConfig {
+  language: LanguageCode;
+  currency: CurrencyCode;
+  country: string;
+  timezone: string;
+}
+
+// ============================================================
+// Resume Studio types
+// ============================================================
+
+export type ResumeTemplateId = 'modern' | 'classic' | 'tech' | 'minimal';
+
+export interface ResumeTemplate {
+  id: ResumeTemplateId;
+  name: string;
+  description: string;
+  accentGradient: string;
+  styleHint: string;
+  fontFamily: string;
+}
+
+export const RESUME_TEMPLATES: ResumeTemplate[] = [
+  { id: 'modern', name: 'Modern', description: 'Two-column with sidebar', accentGradient: 'from-emerald-500 to-teal-600', styleHint: 'modern two-column layout with a colored sidebar, bold sans-serif headings, and chips for skills', fontFamily: "'Inter', sans-serif" },
+  { id: 'classic', name: 'Classic', description: 'Traditional single-column ATS-friendly', accentGradient: 'from-slate-700 to-slate-900', styleHint: 'classic single-column ATS-friendly layout with serif typography, centered name header, and conservative spacing', fontFamily: "'Georgia', serif" },
+  { id: 'tech', name: 'Tech', description: 'Developer-focused layout', accentGradient: 'from-indigo-500 to-purple-600', styleHint: 'developer-focused layout with monospace headings, tech-stack badges, and project cards highlighting impact metrics', fontFamily: "'JetBrains Mono', monospace" },
+  { id: 'minimal', name: 'Minimal', description: 'Clean, lots of whitespace', accentGradient: 'from-zinc-500 to-zinc-700', styleHint: 'minimal layout with generous whitespace, thin horizontal rules, small uppercase labels, and no sidebar', fontFamily: "'Helvetica Neue', sans-serif" },
+];

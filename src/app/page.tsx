@@ -39,6 +39,13 @@ export default function Home() {
     }
   }, []);
 
+  // Auto-detect locale from GPS/timezone on first visit
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      useAppStore.getState().detectLocaleFromGps();
+    }
+  }, []);
+
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <Navbar />

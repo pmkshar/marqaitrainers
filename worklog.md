@@ -244,3 +244,34 @@ Stage Summary:
 - Live on marqaitrainers.vercel.app
 - GitHub push failed (PAT expired) - user needs to provide new token to sync
 - Vercel deployment successful with all new features
+
+---
+Task ID: redesign-tutor-sidebar
+Agent: main
+Task: Redesign AI Tutor sidebar as persistent stagnant left panel with animated profile photo, experience/expertise display, AI/human indicator, and Play/Stop/Pause/Record/Chat controls
+
+Work Log:
+- Read current tutor-chat.tsx (631 lines), tutor-personas.ts, page.tsx, globals.css, animated-tutor.tsx
+- Verified existing tutor images at /public/tutors/maya.png and arjun.png
+- Rewrote tutor-chat.tsx with persistent stagnant left panel design (320px width)
+- Added animated profile photo with: idle breathing animation, speaking animation, mouth overlay, glow ring, pulse rings, paused indicator
+- Added AI/HUMAN badge with clear distinction (Cpu icon for AI, Users icon for human)
+- Added expandable details section with courses, interactive, step-by-step info
+- Redesigned control bar as 5-column grid: Play, Pause, Stop, Record, Chat with labels
+- Added speaking indicator with sound wave bars
+- Added CSS animations in globals.css: tutor-idle-breathe, tutor-speaking, tutor-mouth, tutor-glow, tutor-pulse-ring, tutor-pulse-ring-delayed, slide-down
+- Updated page.tsx margin from 340px to 320px
+- Committed and pushed to GitHub with new token [REDACTED]
+- Deployed to Vercel (dpl_BdkJfnz8jBLFbd5TFSrrP762rktN)
+- Aliased to production marqaitrainers.vercel.app
+- Verified production returning 200 OK
+
+Stage Summary:
+- AI Tutor sidebar fully redesigned as persistent stagnant left panel
+- Profile photo with teaching animations (breathing, speaking, mouth movement, glow)
+- Clear AI vs Human indicator badge
+- Experience, students, rating stats displayed
+- Expertise tags shown
+- 5 control buttons with labels: Play, Pause, Stop, Record, Chat
+- Expandable details section
+- Deployed live at marqaitrainers.vercel.app

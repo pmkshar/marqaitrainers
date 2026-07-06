@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAppStore } from '@/lib/store';
 import { COURSES } from '@/lib/courses';
 import { NotificationsBell } from './notifications-bell';
+import { LanguageCurrencySwitcher } from './language-currency-switcher';
 
 export function Navbar() {
   const {
@@ -107,6 +108,7 @@ export function Navbar() {
                 <LayoutDashboard className="mr-1.5 h-4 w-4" /> Dashboard
               </Button>
               <NotificationsBell />
+              <LanguageCurrencySwitcher />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="flex items-center gap-2 rounded-full border bg-card pl-1 pr-2 py-1 text-sm transition-colors hover:bg-accent">
@@ -163,14 +165,17 @@ export function Navbar() {
             </>
           )}
           {!user && (
-            <Button
-              onClick={() => setAuthOpen(true, 'login')}
-              variant="outline"
-              size="sm"
-              className="hidden sm:inline-flex"
-            >
-              <LogIn className="mr-1.5 h-4 w-4" /> Sign in
-            </Button>
+            <>
+              <LanguageCurrencySwitcher />
+              <Button
+                onClick={() => setAuthOpen(true, 'login')}
+                variant="outline"
+                size="sm"
+                className="hidden sm:inline-flex"
+              >
+                <LogIn className="mr-1.5 h-4 w-4" /> Sign in
+              </Button>
+            </>
           )}
           <Button
             onClick={() => setTutorOpen(true)}

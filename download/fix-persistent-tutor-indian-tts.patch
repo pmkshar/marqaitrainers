@@ -1,0 +1,1785 @@
+diff --git a/.gitignore b/.gitignore
+index 3d67daa..58e2de8 100755
+--- a/.gitignore
++++ b/.gitignore
+@@ -51,4 +51,4 @@ prompt
+ 
+ server.log
+ # Skills directory
+-/skills/
+\ No newline at end of file
++/skills/tool-results/
+diff --git a/src/app/api/chapter-tutor/route.ts b/src/app/api/chapter-tutor/route.ts
+new file mode 100644
+index 0000000..e63713a
+--- /dev/null
++++ b/src/app/api/chapter-tutor/route.ts
+@@ -0,0 +1,251 @@
++import { NextRequest, NextResponse } from 'next/server';
++
++export const runtime = 'nodejs';
++export const dynamic = 'force-dynamic';
++
++interface TeachRequestBody {
++  mode: 'teach' | 'answer_question';
++  courseId: string;
++  courseContext: string;
++  lessonTitle: string;
++  slideTitle: string;
++  slideContent: string;
++  slideCode?: string;
++  codeLanguage?: string;
++  studentQuestion?: string;
++}
++
++// =============================================================================
++// Rule-based teaching content generator
++// =============================================================================
++// Generates explanation, example, pitfall, and a check question for any slide.
++// Uses the slide content itself to create meaningful teaching material.
++
++interface TeachingResponse {
++  explanation: string;
++  example: string;
++  pitfall: string;
++  checkQuestion: {
++    question: string;
++    options: string[];
++    correctAnswer: number;
++    explanation: string;
++  };
++}
++
++function generateTeachingContent(body: TeachRequestBody): TeachingResponse {
++  const { slideTitle, slideContent, slideCode, codeLanguage } = body;
++  const hasCode = !!slideCode;
++
++  const explanation = `Let me break down **${slideTitle}** for you.\n\n${slideContent}\n\n${
++    hasCode
++      ? `The code example above demonstrates this concept in ${codeLanguage || 'the given language'}. Pay close attention to how the key logic is structured — each part serves a specific purpose in making the solution work correctly.`
++      : `This is a foundational concept that you'll use throughout your software engineering career. The key is understanding not just the "what" but the "why" behind it.`
++  }\n\nWhen you understand the reasoning, you can apply the same pattern to new problems you haven't seen before.`;
++
++  const example = `**Real-world scenario:** Imagine you're building a production application and you encounter a situation involving ${slideTitle.toLowerCase()}.\n\n${
++    hasCode
++      ? `For instance, in a real codebase, you might write something like:\n\`\`\`${codeLanguage || ''}\n// Production implementation of ${slideTitle}\n${slideCode}\n\`\`\`\n\nThe key difference between the learning example and production code is error handling, edge cases, and testing. In practice, you'd wrap this in try-catch blocks, add input validation, and write unit tests.`
++      : `In practice, teams often apply ${slideTitle.toLowerCase()} by starting with the simplest approach, then refactoring as requirements evolve. The best engineers iterate quickly and test often.`
++  }`;
++
++  const pitfall = `**Watch out!** A common mistake with ${slideTitle.toLowerCase()} is ${
++    hasCode
++      ? `copying the code without understanding each line. If you just memorize the syntax without grasping the logic, you'll struggle when the problem changes even slightly.`
++      : `thinking you understand it after reading about it once. True understanding comes from practice — write code, break things, debug, and fix them.`
++  }\n\nAnother pitfall: not considering edge cases. What happens when the input is empty? What if the value is null? What if the network is slow? Always think about failure modes.`;
++
++  // Generate contextual check question
++  const questionOptions = [
++    `What is the main purpose of ${slideTitle.toLowerCase()}?`,
++    `Which best describes ${slideTitle.toLowerCase()}?`,
++    `What is the key takeaway from ${slideTitle}?`,
++  ];
++  const question = questionOptions[Math.floor(slideTitle.length % questionOptions.length)];
++
++  const optA = `It provides a structured way to handle this specific problem in software development`;
++  const optB = `It is only used in rare edge cases and is not commonly needed`;
++  const optC = `It replaces the need for any other technique or pattern`;
++  const optD = `It is a deprecated approach that should be avoided in modern code`;
++
++  return {
++    explanation,
++    example,
++    pitfall,
++    checkQuestion: {
++      question,
++      options: [optA, optB, optC, optD],
++      correctAnswer: 0,
++      explanation: `The correct answer highlights that ${slideTitle.toLowerCase()} provides a structured, proven approach. The other options are incorrect because: (B) this is not a rare technique, (C) it doesn't replace all other approaches — it complements them, and (D) it is not deprecated — it's widely used in modern software development.`,
++    },
++  };
++}
++
++function generateAnswer(body: TeachRequestBody): string {
++  const { studentQuestion, slideTitle, slideContent } = body;
++
++  return `Great question about **${slideTitle}**!\n\nYou asked: *"${studentQuestion}"*\n\nBased on what we've covered: ${slideContent}\n\nHere's a more detailed explanation:\n\nThe key thing to understand is that ${slideTitle.toLowerCase()} works by breaking down the problem into manageable parts. Think of it like building blocks — each piece serves a purpose, and together they create a complete solution.\n\nIf you're still unsure, try this: re-read the explanation above, then try to explain it in your own words. If you can explain it simply, you truly understand it. If not, that's a sign to revisit the fundamentals.\n\nFeel free to ask more questions — I'm here to help!`;
++}
++
++// =============================================================================
++// ZAI LLM-powered teaching (when API key is configured)
++// =============================================================================
++
++async function resolveZAIConfig() {
++  const envKey = process.env.ZAI_API_KEY;
++  const envBase = process.env.ZAI_BASE_URL;
++  if (envKey && envBase) return { baseUrl: envBase, apiKey: envKey };
++  if (envKey) return { baseUrl: 'https://api.z.ai/api/paas/v4', apiKey: envKey };
++
++  try {
++    const fs = await import('fs/promises');
++    const path = await import('path');
++    const os = await import('os');
++    const candidates = [
++      path.join(process.cwd(), '.z-ai-config'),
++      path.join(os.default.homedir(), '.z-ai-config'),
++      '/etc/.z-ai-config',
++    ];
++    for (const p of candidates) {
++      try {
++        const raw = await fs.default.readFile(p, 'utf-8');
++        const cfg = JSON.parse(raw);
++        if (cfg.baseUrl && cfg.apiKey) return cfg;
++      } catch { /* skip */ }
++    }
++  } catch { /* fs unavailable */ }
++
++  return null;
++}
++
++async function generateAITeaching(body: TeachRequestBody): Promise<TeachingResponse | null> {
++  const config = await resolveZAIConfig();
++  if (!config) return null;
++
++  const systemPrompt = `You are TutorAI, an expert software engineering instructor. Generate a JSON teaching response for the given slide content.
++
++You MUST respond with ONLY valid JSON (no markdown, no code fences) in this exact format:
++{
++  "explanation": "Detailed explanation of the concept in 3-5 sentences. Use markdown formatting for emphasis.",
++  "example": "A real-world practical example with a short code snippet if applicable. Use markdown.",
++  "pitfall": "A common mistake developers make with this concept and how to avoid it. Use markdown.",
++  "checkQuestion": {
++    "question": "A comprehension question to check if the student understood the material",
++    "options": ["Correct answer", "Plausible wrong answer 1", "Plausible wrong answer 2", "Plausible wrong answer 3"],
++    "correctAnswer": 0,
++    "explanation": "Why the correct answer is right and the others are wrong"
++  }
++}`;
++
++  const userPrompt = body.mode === 'teach'
++    ? `Course: ${body.courseContext}\nLesson: ${body.lessonTitle}\nSlide: ${body.slideTitle}\nContent: ${body.slideContent}\n${body.slideCode ? `Code (${body.codeLanguage || ''}):\n${body.slideCode}` : ''}\n\nGenerate the teaching content for this slide.`
++    : `Course: ${body.courseContext}\nLesson: ${body.lessonTitle}\nSlide: ${body.slideTitle}\nContent: ${body.slideContent}\nStudent asks: ${body.studentQuestion}\n\nAnswer the student's question in a helpful, educational way.`;
++
++  try {
++    const url = `${config.baseUrl.replace(/\/$/, '')}/chat/completions`;
++    const response = await fetch(url, {
++      method: 'POST',
++      headers: {
++        'Content-Type': 'application/json',
++        Authorization: `Bearer ${config.apiKey}`,
++        'X-Z-AI-From': 'Z',
++      },
++      body: JSON.stringify({
++        messages: [
++          { role: 'system', content: systemPrompt },
++          { role: 'user', content: userPrompt },
++        ],
++        temperature: 0.4,
++        max_tokens: 2000,
++        thinking: { type: 'disabled' },
++      }),
++    });
++
++    if (!response.ok) return null;
++
++    const data = await response.json();
++    const content = data?.choices?.[0]?.message?.content;
++    if (!content) return null;
++
++    // Try to parse JSON from the response
++    try {
++      // Strip markdown code fences if present
++      let jsonStr = content.trim();
++      if (jsonStr.startsWith('```')) {
++        jsonStr = jsonStr.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
++      }
++      return JSON.parse(jsonStr);
++    } catch {
++      return null;
++    }
++  } catch {
++    return null;
++  }
++}
++
++export async function POST(req: NextRequest) {
++  try {
++    const body = (await req.json()) as TeachRequestBody;
++
++    if (!body.mode || !body.slideTitle) {
++      return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 });
++    }
++
++    if (body.mode === 'answer_question') {
++      // Try AI first, fall back to rule-based
++      const aiConfig = await resolveZAIConfig();
++      if (aiConfig) {
++        try {
++          const url = `${aiConfig.baseUrl.replace(/\/$/, '')}/chat/completions`;
++          const response = await fetch(url, {
++            method: 'POST',
++            headers: {
++              'Content-Type': 'application/json',
++              Authorization: `Bearer ${aiConfig.apiKey}`,
++              'X-Z-AI-From': 'Z',
++            },
++            body: JSON.stringify({
++              messages: [
++                {
++                  role: 'system',
++                  content: `You are TutorAI, an expert software engineering instructor for the course "${body.courseContext}". Answer the student's question clearly and helpfully. Use markdown formatting. Keep it concise but thorough.`,
++                },
++                {
++                  role: 'user',
++                  content: `We're studying "${body.slideTitle}" in lesson "${body.lessonTitle}".\n\nSlide content: ${body.slideContent}\n\nStudent asks: ${body.studentQuestion}`,
++                },
++              ],
++              temperature: 0.4,
++              max_tokens: 1000,
++              thinking: { type: 'disabled' },
++            }),
++          });
++          if (response.ok) {
++            const data = await response.json();
++            const content = data?.choices?.[0]?.message?.content;
++            if (content) {
++              return NextResponse.json({ content });
++            }
++          }
++        } catch { /* fall through */ }
++      }
++      return NextResponse.json({ content: generateAnswer(body) });
++    }
++
++    // mode === 'teach'
++    // Try AI-powered generation first
++    const aiTeaching = await generateAITeaching(body);
++    if (aiTeaching && aiTeaching.explanation && aiTeaching.checkQuestion) {
++      return NextResponse.json(aiTeaching);
++    }
++
++    // Fall back to rule-based generation
++    return NextResponse.json(generateTeachingContent(body));
++  } catch (err) {
++    console.error('Chapter tutor API error:', err);
++    return NextResponse.json(
++      { error: 'Failed to generate teaching content.' },
++      { status: 500 },
++    );
++  }
++}
+diff --git a/src/components/lesson-view.tsx b/src/components/lesson-view.tsx
+index c850133..5d409c0 100755
+--- a/src/components/lesson-view.tsx
++++ b/src/components/lesson-view.tsx
+@@ -1,69 +1,407 @@
+ 'use client';
+ 
+-import { useEffect, useRef, useState } from 'react';
++import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+ import {
+   ArrowLeft, ArrowRight, CheckCircle2, ChevronLeft, ChevronRight,
+   Clock, FileQuestion, Lightbulb, ListChecks, Sparkles, Video,
++  Pause, Play, Square, Volume2, Loader2, Bot, HelpCircle,
++  AlertTriangle, MessageSquare, Send, MessagesSquare,
+ } from 'lucide-react';
+ import { Button } from '@/components/ui/button';
+ import { Card, CardContent } from '@/components/ui/card';
+ import { Badge } from '@/components/ui/badge';
+ import { Progress } from '@/components/ui/progress';
++import {
++  Dialog, DialogContent, DialogDescription, DialogFooter,
++  DialogHeader, DialogTitle,
++} from '@/components/ui/dialog';
+ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+ import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+ import { findCourse, findLesson, getAllLessons } from '@/lib/courses';
+ import { useAppStore } from '@/lib/store';
++import { getTutorForCourse, type TutorPersona } from '@/lib/tutor-personas';
+ import { CourseIcon } from './navbar';
+-import { AITutorIntro, useShouldShowIntro } from './ai-tutor-intro';
+ 
+-const INTRO_PER_LESSON_KEY = 'marq-ai-tutor-intro-seen';
++// ============================================================
++// TTS Helpers — with Google Translate fallback for Indian langs
++// ============================================================
++
++function toSpokenText(md: string): string {
++  return md
++    .replace(/```[\s\S]*?```/g, ' (code block) ')
++    .replace(/`([^`]+)`/g, '$1')
++    .replace(/^#{1,6}\s+/gm, '')
++    .replace(/^\s*[-*]\s+/gm, '')
++    .replace(/\*\*([^*]+)\*\*/g, '$1')
++    .replace(/\*([^*]+)\*/g, '$1')
++    .replace(/\n{2,}/g, '. ')
++    .replace(/\n/g, ' ')
++    .replace(/\s+/g, ' ')
++    .trim();
++}
+ 
+-function lessonSeen(lessonId: string): boolean {
+-  if (typeof window === 'undefined') return false;
+-  try {
+-    const raw = window.localStorage.getItem(INTRO_PER_LESSON_KEY);
+-    const seen: string[] = raw ? JSON.parse(raw) : [];
+-    return seen.includes(lessonId);
+-  } catch { return false; }
++function browserHasVoiceForLang(lang: string): boolean {
++  if (typeof window === 'undefined' || !window.speechSynthesis) return false;
++  const voices = window.speechSynthesis.getVoices();
++  const prefix = lang.toLowerCase();
++  return voices.some(v => v.lang.toLowerCase().startsWith(prefix));
+ }
+ 
+-function markLessonSeen(lessonId: string) {
+-  if (typeof window === 'undefined') return;
+-  try {
+-    const raw = window.localStorage.getItem(INTRO_PER_LESSON_KEY);
+-    const seen: string[] = raw ? JSON.parse(raw) : [];
+-    if (!seen.includes(lessonId)) {
+-      seen.push(lessonId);
+-      window.localStorage.setItem(INTRO_PER_LESSON_KEY, JSON.stringify(seen));
++function playGoogleTTS(text: string, lang: string, signal?: AbortSignal): Promise<void> {
++  return new Promise((resolve, reject) => {
++    if (signal?.aborted) { resolve(); return; }
++
++    const bcp47Map: Record<string, string> = {
++      en: 'en', hi: 'hi', ta: 'ta', te: 'te', kn: 'kn',
++      es: 'es', fr: 'fr', de: 'de', pt: 'pt', ar: 'ar', zh: 'zh-CN',
++    };
++    const ttsLang = bcp47Map[lang] ?? lang;
++
++    const MAX_LEN = 180;
++    const chunks: string[] = [];
++    let remaining = text;
++    while (remaining.length > 0) {
++      if (remaining.length <= MAX_LEN) {
++        chunks.push(remaining);
++        break;
++      }
++      let cutIdx = remaining.lastIndexOf('.', MAX_LEN);
++      if (cutIdx < MAX_LEN * 0.4) cutIdx = remaining.lastIndexOf(' ', MAX_LEN);
++      if (cutIdx < MAX_LEN * 0.4) cutIdx = MAX_LEN;
++      chunks.push(remaining.slice(0, cutIdx + 1));
++      remaining = remaining.slice(cutIdx + 1).trim();
++    }
++
++    let chunkIdx = 0;
++
++    function playNext() {
++      if (signal?.aborted) { resolve(); return; }
++      if (chunkIdx >= chunks.length) { resolve(); return; }
++      const chunk = chunks[chunkIdx];
++      const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(chunk)}&tl=${ttsLang}&client=tw-ob`;
++      const audio = new Audio(url);
++      audio.onended = () => { chunkIdx++; playNext(); };
++      audio.onerror = () => { resolve(); };
++      audio.play().catch(() => resolve());
+     }
+-  } catch { /* noop */ }
++
++    playNext();
++  });
++}
++
++// ============================================================
++// Teaching content types
++// ============================================================
++
++interface SlideTeaching {
++  explanation: string;
++  example: string;
++  pitfall: string;
++  checkQuestion: {
++    question: string;
++    options: string[];
++    correctAnswer: number;
++    explanation: string;
++  };
++}
++
++interface QAHistoryItem {
++  slideIdx: number;
++  slideTitle: string;
++  question: string;
++  answer: string;
++  askedAt: number;
++}
++
++// ============================================================
++// Persistent AI Tutor Sidebar Component
++// ============================================================
++
++function AITutorSidebar({
++  tutor,
++  isSpeaking,
++  voiceMode,
++  voicePlaying,
++  voicePaused,
++  voicePhase,
++  voiceProgress,
++  voiceLoading,
++  voiceError,
++  getPreferredLang,
++  onPlay,
++  onPauseResume,
++  onStop,
++  onLangChange,
++  onSpeedChange,
++  onPrevSlide,
++  onNextSlide,
++  currentSlide,
++  totalSlides,
++  slideProgress,
++}: {
++  tutor: TutorPersona;
++  isSpeaking: boolean;
++  voiceMode: boolean;
++  voicePlaying: boolean;
++  voicePaused: boolean;
++  voicePhase: string;
++  voiceProgress: number;
++  voiceLoading: boolean;
++  voiceError: string | null;
++  getPreferredLang: () => string;
++  onPlay: () => void;
++  onPauseResume: () => void;
++  onStop: () => void;
++  onLangChange: (lang: string) => void;
++  onSpeedChange: (speed: number) => void;
++  onPrevSlide: () => void;
++  onNextSlide: () => void;
++  currentSlide: number;
++  totalSlides: number;
++  slideProgress: number;
++}) {
++  return (
++    <div className="space-y-3 lg:sticky lg:top-6 lg:self-start">
++      {/* Profile Card */}
++      <Card className="overflow-hidden border-2 border-emerald-500/30">
++        <CardContent className="flex flex-col items-center p-4">
++          {/* Profile icon — animated when speaking */}
++          <div className="relative">
++            <div className={`grid h-20 w-20 place-items-center rounded-full bg-gradient-to-br ${
++              tutor.gender === 'female' ? 'from-emerald-500 to-teal-600' : 'from-blue-500 to-indigo-600'
++            } text-white shadow-lg`}>
++              <span className="text-2xl font-bold">{tutor.initial}</span>
++            </div>
++            {isSpeaking && (
++              <>
++                <span className="absolute inset-0 animate-ping rounded-full bg-emerald-400/30" style={{ animationDuration: '2s' }} />
++                <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white">
++                  <Volume2 className="h-3.5 w-3.5" />
++                </span>
++              </>
++            )}
++          </div>
++          <div className="mt-3 text-center">
++            <h3 className="text-lg font-bold">{tutor.name}</h3>
++            <p className="text-[11px] text-muted-foreground">{tutor.title}</p>
++            <p className="mt-0.5 text-[11px] text-emerald-600 dark:text-emerald-400 italic">{tutor.tagline}</p>
++          </div>
++          {/* Status badge */}
++          <div className="mt-2 flex items-center gap-1.5">
++            {voiceMode && voicePlaying && !voicePaused && (
++              <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 animate-pulse text-[10px]">
++                <Volume2 className="mr-1 h-3 w-3" /> Speaking...
++              </Badge>
++            )}
++            {voiceMode && voicePaused && (
++              <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-300 text-[10px]">
++                <Pause className="mr-1 h-3 w-3" /> Paused
++              </Badge>
++            )}
++            {voiceMode && voicePhase === 'done' && !voicePlaying && (
++              <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[10px]">
++                <CheckCircle2 className="mr-1 h-3 w-3" /> Done
++              </Badge>
++            )}
++            {!voiceMode && !voiceLoading && (
++              <Badge variant="outline" className="text-muted-foreground text-[10px]">Ready</Badge>
++            )}
++            {voiceLoading && (
++              <Badge className="bg-blue-500/15 text-blue-700 dark:text-blue-300 text-[10px]">
++                <Loader2 className="mr-1 h-3 w-3 animate-spin" /> Loading...
++              </Badge>
++            )}
++          </div>
++          {/* Progress bar when in voice mode */}
++          {voiceMode && (
++            <div className="mt-2 w-full">
++              <div className="flex items-center justify-between text-[9px] text-muted-foreground mb-0.5">
++                <span className="capitalize">{voicePhase === 'awaiting_answer' ? 'Waiting' : voicePhase}</span>
++                <span>{Math.round(voiceProgress)}%</span>
++              </div>
++              <Progress value={voiceProgress} className="h-1" />
++            </div>
++          )}
++          {voiceError && (
++            <p className="mt-1 text-[10px] text-rose-600 dark:text-rose-400">{voiceError}</p>
++          )}
++        </CardContent>
++      </Card>
++
++      {/* Voice Controls Card — always visible */}
++      <Card className="overflow-hidden">
++        <CardContent className="p-3 space-y-2.5">
++          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Voice Controls</p>
++
++          {/* Language selector */}
++          <div className="space-y-0.5">
++            <label className="text-[10px] font-medium text-muted-foreground">Language</label>
++            <select
++              value={getPreferredLang()}
++              onChange={(e) => onLangChange(e.target.value)}
++              className="w-full rounded-md border bg-background px-2 py-1.5 text-xs cursor-pointer"
++            >
++              <option value="en">English</option>
++              <option value="hi">हिन्दी (Hindi)</option>
++              <option value="te">తెలుగు (Telugu)</option>
++              <option value="ta">தமிழ் (Tamil)</option>
++              <option value="kn">ಕನ್ನಡ (Kannada)</option>
++            </select>
++          </div>
++
++          {/* Speed slider */}
++          <div className="space-y-0.5">
++            <label className="text-[10px] font-medium text-muted-foreground">Speed</label>
++            <input
++              type="range" min="0.5" max="1.5" step="0.1" defaultValue="0.9"
++              onChange={(e) => onSpeedChange(parseFloat(e.target.value))}
++              className="w-full h-1 cursor-pointer"
++            />
++          </div>
++
++          {/* Play / Pause / Stop buttons — always present */}
++          <div className="flex items-center gap-1.5">
++            {!voiceMode ? (
++              <Button className="flex-1 bg-emerald-600 text-white hover:bg-emerald-700 h-8 text-xs" onClick={onPlay} disabled={voiceLoading}>
++                <Play className="mr-1 h-3.5 w-3.5" /> Play
++              </Button>
++            ) : (
++              <>
++                <Button variant="outline" size="sm" onClick={onPauseResume} className="flex-1 h-8 text-xs">
++                  {voicePaused ? <><Play className="mr-1 h-3.5 w-3.5" /> Resume</> : <><Pause className="mr-1 h-3.5 w-3.5" /> Pause</>}
++                </Button>
++                <Button variant="destructive" size="sm" onClick={onStop} className="flex-1 h-8 text-xs">
++                  <Square className="mr-1 h-3.5 w-3.5" /> Stop
++                </Button>
++              </>
++            )}
++          </div>
++
++          {/* Slide navigation */}
++          <div className="flex items-center gap-1.5">
++            <Button variant="outline" size="sm" onClick={onPrevSlide} disabled={currentSlide === 0} className="flex-1 h-8 text-xs">
++              <ChevronLeft className="mr-1 h-3.5 w-3.5" /> Prev
++            </Button>
++            <span className="text-[10px] text-muted-foreground tabular-nums whitespace-nowrap">
++              {currentSlide + 1}/{totalSlides}
++            </span>
++            <Button variant="outline" size="sm" onClick={onNextSlide} className="flex-1 h-8 text-xs">
++              Next <ChevronRight className="ml-1 h-3.5 w-3.5" />
++            </Button>
++          </div>
++
++          <div className="flex items-center gap-2 pt-0.5">
++            <Progress value={slideProgress} className="flex-1 h-1" />
++            <span className="text-[9px] text-muted-foreground tabular-nums">{slideProgress}%</span>
++          </div>
++        </CardContent>
++      </Card>
++    </div>
++  );
++}
++
++// ============================================================
++// FlowingAnswer + MarkdownLite (reused from voice-chapter-tutor)
++// ============================================================
++
++function FlowingAnswer({ label, icon, active, done, children }: {
++  label: string; icon: React.ReactNode; active: boolean; done: boolean; children: React.ReactNode;
++}) {
++  return (
++    <div className={`rounded-lg border p-3 transition-all duration-500 ${active ? 'border-emerald-500/60 bg-emerald-500/10 shadow-sm' : done ? 'border-border bg-background opacity-70' : 'border-border bg-background/40 opacity-50'}`}>
++      <p className={`flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider ${active ? 'text-emerald-700 dark:text-emerald-300' : 'text-muted-foreground'}`}>
++        {icon} {label}
++        {active && <span className="ml-1 text-emerald-600">· speaking now</span>}
++        {done && !active && <CheckCircle2 className="ml-1 h-3 w-3 text-emerald-500" />}
++      </p>
++      <div className="mt-1.5 text-foreground/90 text-sm">{children}</div>
++    </div>
++  );
++}
++
++function MarkdownLite({ content }: { content: string }) {
++  const parts = content.split(/```([\s\S]*?)```/g);
++  return (
++    <div className="space-y-2">
++      {parts.map((part, i) => {
++        if (i % 2 === 1) {
++          const lines = part.split('\n');
++          const lang = lines[0]?.trim() || '';
++          const code = lines.slice(lang ? 1 : 0).join('\n').replace(/\n$/, '');
++          return (
++            <pre key={i} className="overflow-x-auto rounded-lg bg-zinc-950 p-2.5 text-[12px] leading-relaxed text-emerald-200">
++              {lang && <div className="mb-1 text-[10px] uppercase tracking-wider text-zinc-500">{lang}</div>}
++              <code>{code}</code>
++            </pre>
++          );
++        }
++        return (
++          <div key={i} className="whitespace-pre-wrap leading-relaxed text-sm"
++            dangerouslySetInnerHTML={{ __html: renderInline(part) }} />
++        );
++      })}
++    </div>
++  );
++}
++
++function renderInline(text: string): string {
++  let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
++  html = html.replace(/`([^`]+)`/g, '<code class="px-1 py-0.5 rounded bg-black/10 dark:bg-white/10 font-mono text-[12px]">$1</code>');
++  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
++  html = html.replace(/^###\s+(.+)$/gm, '<div class="font-semibold mt-1">$1</div>');
++  html = html.replace(/^##\s+(.+)$/gm, '<div class="font-semibold text-base mt-1">$1</div>');
++  html = html.replace(/^[-*]\s+(.+)$/gm, '<div class="pl-3 before:content-[\'•\'] before:mr-1.5 before:text-muted-foreground">$1</div>');
++  return html;
+ }
+ 
++// ============================================================
++// LessonView — with persistent AI tutor sidebar
++// ============================================================
++
+ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string; moduleId: string; lessonId: string }) {
+   const result = findLesson(courseId, moduleId, lessonId);
+-  const { openCourse, openQuiz, setTutorOpen, markLessonComplete, completedLessons } = useAppStore();
++  const { openCourse, openQuiz, setTutorOpen, markLessonComplete, completedLessons, passedLessonTests, markLessonTestPassed } = useAppStore();
+   const [activeStep, setActiveStep] = useState(0);
+   const stepRef = useRef<HTMLDivElement>(null);
+ 
+-  // AI tutor intro overlay state
+-  const globalIntroEnabled = useShouldShowIntro();
+-  const [introSeenForThisLesson, setIntroSeenForThisLesson] = useState(true);
++  // AI tutor state
++  const tutor = getTutorForCourse(courseId);
+ 
+-  // Reset intro state when lesson changes
+-  useEffect(() => {
+-    if (globalIntroEnabled && !lessonSeen(lessonId)) {
+-      setIntroSeenForThisLesson(false);
+-    } else {
+-      setIntroSeenForThisLesson(true);
+-    }
+-    // Also reset the active step when lesson changes
+-    setActiveStep(0);
+-  }, [lessonId, globalIntroEnabled]);
++  // Voice state
++  const [voiceMode, setVoiceMode] = useState(false);
++  const [voicePlaying, setVoicePlaying] = useState(false);
++  const [voicePaused, setVoicePaused] = useState(false);
++  const [voicePhase, setVoicePhase] = useState<string>('intro');
++  const [voiceProgress, setVoiceProgress] = useState(0);
++  const [voiceLoading, setVoiceLoading] = useState(false);
++  const [voiceError, setVoiceError] = useState<string | null>(null);
+ 
+-  const handleIntroStart = () => {
+-    markLessonSeen(lessonId);
+-    setIntroSeenForThisLesson(true);
+-  };
++  // Teaching content state
++  const [teachings, setTeachings] = useState<Record<number, SlideTeaching>>({});
++  const [teachError, setTeachError] = useState<string | null>(null);
++  const [loadingTeach, setLoadingTeach] = useState(false);
++
++  // Check question popup
++  const [questionPopupOpen, setQuestionPopupOpen] = useState(false);
++  const [popupAnswer, setPopupAnswer] = useState<number | null>(null);
++  const [popupRevealed, setPopupRevealed] = useState(false);
++  const [popupWasCorrect, setPopupWasCorrect] = useState(false);
++  const [showWrongAnswerWarning, setShowWrongAnswerWarning] = useState(false);
++
++  // Q&A state
++  const [qaInput, setQaInput] = useState('');
++  const [slideQA, setSlideQA] = useState<Record<number, { q: string; a: string; loading: boolean }>>({});
++  const [qaHistory, setQaHistory] = useState<QAHistoryItem[]>([]);
++
++  // Test state
++  const [testAnswers, setTestAnswers] = useState<Record<string, number>>({});
++  const [testSubmitted, setTestSubmitted] = useState(false);
++  const [testPopupOpen, setTestPopupOpen] = useState(false);
++
++  // Refs
++  const abortRef = useRef<AbortController | null>(null);
++  const audioRef = useRef<{ _timer?: ReturnType<typeof setInterval> } | null>(null);
++  const startedVoiceForSlide = useRef<Set<number>>(new Set());
+ 
+   const course = findCourse(courseId);
+   const allLessons = getAllLessons(courseId);
+@@ -71,6 +409,7 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
+   const prevLesson = currentIndex > 0 ? allLessons[currentIndex - 1] : null;
+   const nextLesson = currentIndex < allLessons.length - 1 ? allLessons[currentIndex + 1] : null;
+   const isComplete = completedLessons.includes(lessonId);
++  const testAlreadyPassed = passedLessonTests.includes(lessonId);
+ 
+   if (!result || !course) {
+     return (
+@@ -86,17 +425,600 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
+   const { course: c, module: mod, lesson } = result;
+   const step = lesson.steps[activeStep];
+   const stepProgress = Math.round(((activeStep + 1) / lesson.steps.length) * 100);
++  const totalSlides = lesson.steps.length;
++  const totalQuestions = lesson.quiz.length;
+ 
+-  // Show the AI tutor intro first (once per lesson, if globally enabled)
+-  if (!introSeenForThisLesson) {
+-    return (
+-      <AITutorIntro
+-        lessonTitle={lesson.title}
+-        courseTitle={c.title}
+-        onStart={handleIntroStart}
+-      />
++  // ============================================================
++  // GET PREFERRED LANG
++  // ============================================================
++  const getPreferredLang = useCallback((): string => {
++    try {
++      if (typeof window === 'undefined') return 'en';
++      const raw = window.localStorage.getItem('marq-ai-tutor-intro-prefs');
++      if (raw) {
++        const p = JSON.parse(raw);
++        if (p && typeof p.lang === 'string') return p.lang;
++      }
++    } catch { /* noop */ }
++    return 'en';
++  }, []);
++
++  // ============================================================
++  // PICK SYSTEM VOICE — gender-aware
++  // ============================================================
++  const pickSystemVoice = useCallback((): SpeechSynthesisVoice | null => {
++    if (typeof window === 'undefined' || !window.speechSynthesis) return null;
++    const voices = window.speechSynthesis.getVoices();
++    if (!voices || voices.length === 0) return null;
++
++    const preferredLang = getPreferredLang();
++    const isFemaleTutor = tutor.gender === 'female';
++
++    const bcp47Map: Record<string, string> = {
++      en: 'en-IN', hi: 'hi-IN', ta: 'ta-IN', te: 'te-IN', kn: 'kn-IN',
++      es: 'es-ES', fr: 'fr-FR', de: 'de-DE', pt: 'pt-BR', ar: 'ar-SA', zh: 'zh-CN',
++    };
++    const preferredBcp47 = bcp47Map[preferredLang] ?? 'en-IN';
++    const langPrefix = preferredBcp47.split('-')[0].toLowerCase();
++
++    const femaleVoicePatterns: Record<string, string[]> = {
++      en: ['female', 'samantha', 'victoria', 'karen', 'zira', 'google us english', 'shruti', 'swara', 'heera'],
++      hi: ['hindi', 'heera', 'shruti', 'swara', 'lata', 'female'],
++      ta: ['tamil', 'pallavi', 'female'],
++      te: ['telugu', 'female'],
++      kn: ['kannada', 'female'],
++    };
++    const maleVoicePatterns: Record<string, string[]> = {
++      en: ['male', 'daniel', 'james', 'alex', 'fred', 'rishi', 'hemant'],
++      hi: ['male', 'hemant', 'lala'],
++      ta: ['male'],
++      te: ['male'],
++      kn: ['male'],
++    };
++
++    const nameHints = isFemaleTutor
++      ? (femaleVoicePatterns[langPrefix] ?? ['female'])
++      : (maleVoicePatterns[langPrefix] ?? ['male']);
++
++    // Try exact BCP-47 with gender
++    for (const hint of nameHints) {
++      const match = voices.find(v => v.lang === preferredBcp47 && v.name.toLowerCase().includes(hint));
++      if (match) return match;
++    }
++    // Try case-insensitive BCP-47 with gender
++    for (const hint of nameHints) {
++      const match = voices.find(v => v.lang.toLowerCase() === preferredBcp47.toLowerCase() && v.name.toLowerCase().includes(hint));
++      if (match) return match;
++    }
++    // Any voice for exact BCP-47
++    const exactMatch = voices.find(v => v.lang === preferredBcp47);
++    if (exactMatch) return exactMatch;
++    // Language prefix with gender
++    for (const hint of nameHints) {
++      const match = voices.find(v => v.lang.toLowerCase().startsWith(langPrefix) && v.name.toLowerCase().includes(hint));
++      if (match) return match;
++    }
++    // Any voice for language prefix
++    const prefixMatch = voices.find(v => v.lang.toLowerCase().startsWith(langPrefix));
++    if (prefixMatch) return prefixMatch;
++    // English fallback
++    const anyEnglish = voices.find(v => v.lang.toLowerCase().startsWith('en'));
++    if (anyEnglish) return anyEnglish;
++    return voices[0];
++  }, [tutor.gender, getPreferredLang]);
++
++  const getPreferredBcp47 = useCallback((): string => {
++    const preferredLang = getPreferredLang();
++    const bcp47Map: Record<string, string> = {
++      en: 'en-IN', hi: 'hi-IN', ta: 'ta-IN', te: 'te-IN', kn: 'kn-IN',
++      es: 'es-ES', fr: 'fr-FR', de: 'de-DE', pt: 'pt-BR', ar: 'ar-SA', zh: 'zh-CN',
++    };
++    return bcp47Map[preferredLang] ?? 'en-IN';
++  }, [getPreferredLang]);
++
++  // ============================================================
++  // SPEAK CHUNK — with Google TTS fallback for Indian languages
++  // ============================================================
++  const speakChunk = useCallback((text: string, signal?: AbortSignal): Promise<void> => {
++    return new Promise((resolve, reject) => {
++      if (signal?.aborted) { resolve(); return; }
++
++      const preferredLang = getPreferredLang();
++      const spoken = toSpokenText(text);
++      if (!spoken) { resolve(); return; }
++
++      // For Indian languages without native browser voices, use Google TTS
++      const indianLangsNeedingFallback = ['te', 'ta', 'kn'];
++      if (indianLangsNeedingFallback.includes(preferredLang) && !browserHasVoiceForLang(preferredLang)) {
++        playGoogleTTS(spoken, preferredLang, signal).then(resolve).catch(() => resolve());
++        return;
++      }
++      // Hindi may or may not have voices — check
++      if (preferredLang === 'hi' && !browserHasVoiceForLang('hi')) {
++        playGoogleTTS(spoken, 'hi', signal).then(resolve).catch(() => resolve());
++        return;
++      }
++
++      if (typeof window === 'undefined' || !window.speechSynthesis) {
++        reject(new Error('Speech synthesis not supported'));
++        return;
++      }
++
++      const utterance = new SpeechSynthesisUtterance(spoken);
++      const voice = pickSystemVoice();
++      if (voice) {
++        utterance.voice = voice;
++        utterance.lang = voice.lang;
++      } else {
++        utterance.lang = getPreferredBcp47();
++      }
++      let userRate = 0.9;
++      try {
++        const raw = window.localStorage.getItem('marq-ai-tutor-intro-prefs');
++        if (raw) {
++          const p = JSON.parse(raw);
++          if (p && typeof p.rate === 'number') userRate = p.rate;
++        }
++      } catch { /* noop */ }
++      utterance.rate = Math.min(1.0, Math.max(0.5, tutor.speed * userRate * 0.85));
++      utterance.pitch = tutor.gender === 'female' ? 1.15 : 1.0;
++      utterance.volume = 1.0;
++
++      if (signal?.aborted) { resolve(); return; }
++
++      utterance.onend = () => resolve();
++      utterance.onerror = (ev) => {
++        if (ev.error === 'canceled' || ev.error === 'interrupted' || signal?.aborted) {
++          resolve();
++        } else {
++          // Try Google TTS as fallback even for languages that should have voices
++          playGoogleTTS(spoken, preferredLang, signal).then(resolve).catch(() => resolve());
++        }
++      };
++
++      if (signal) {
++        const onAbort = () => {
++          window.speechSynthesis.cancel();
++          resolve();
++        };
++        signal.addEventListener('abort', onAbort, { once: true });
++      }
++
++      window.speechSynthesis.speak(utterance);
++    });
++  }, [pickSystemVoice, getPreferredBcp47, tutor.speed, tutor.gender, getPreferredLang]);
++
++  const startProgressTimer = (estimatedSeconds: number, rangeStart: number, rangeEnd: number) => {
++    const startTime = Date.now();
++    const span = rangeEnd - rangeStart;
++    const timer = setInterval(() => {
++      const elapsed = (Date.now() - startTime) / 1000;
++      const pct = Math.min(95, (elapsed / Math.max(1, estimatedSeconds)) * 100);
++      setVoiceProgress(rangeStart + Math.min(span, (pct / 100) * span));
++      if (elapsed >= estimatedSeconds * 1.5) clearInterval(timer);
++    }, 250);
++    if (!audioRef.current) audioRef.current = {};
++    audioRef.current._timer = timer;
++    return () => clearInterval(timer);
++  };
++
++  // ============================================================
++  // FETCH TEACHING FOR SLIDE
++  // ============================================================
++  const fetchTeachingForSlide = useCallback(async (idx: number): Promise<SlideTeaching | null> => {
++    if (teachings[idx]) return teachings[idx];
++    setLoadingTeach(true);
++    setTeachError(null);
++    try {
++      const s = lesson.steps[idx];
++      const res = await fetch('/api/chapter-tutor', {
++        method: 'POST',
++        headers: { 'Content-Type': 'application/json' },
++        body: JSON.stringify({
++          mode: 'teach',
++          courseId: course.id,
++          courseContext: `${course.title} — ${course.subtitle}`,
++          lessonTitle: lesson.title,
++          slideTitle: s.title,
++          slideContent: s.content,
++          slideCode: s.code,
++          codeLanguage: s.codeLanguage,
++        }),
++      });
++      if (!res.ok) throw new Error(`HTTP ${res.status}`);
++      const data = await res.json();
++      setTeachings((prev) => ({ ...prev, [idx]: data }));
++      return data;
++    } catch (err) {
++      setTeachError(err instanceof Error ? err.message : 'Failed to load teaching');
++      return null;
++    } finally {
++      setLoadingTeach(false);
++    }
++  }, [teachings, course.id, course.title, course.subtitle, lesson.title, lesson.steps]);
++
++  // ============================================================
++  // SLIDE CHANGE — stop voice, reset states, DON'T hide controls
++  // ============================================================
++  useEffect(() => {
++    // Stop current voice when slide changes
++    if (abortRef.current) {
++      abortRef.current.abort();
++      abortRef.current = null;
++    }
++    if (typeof window !== 'undefined' && window.speechSynthesis) {
++      window.speechSynthesis.cancel();
++    }
++    if (audioRef.current?._timer) {
++      clearInterval(audioRef.current._timer);
++      audioRef.current._timer = undefined;
++    }
++
++    // Reset voice state but keep the tutor sidebar visible
++    setVoiceMode(false);
++    setVoicePlaying(false);
++    setVoicePaused(false);
++    setVoiceProgress(0);
++    setVoicePhase('intro');
++    setVoiceError(null);
++    setQaInput('');
++    setTeachError(null);
++    setQuestionPopupOpen(false);
++    setPopupAnswer(null);
++    setPopupRevealed(false);
++    setPopupWasCorrect(false);
++    setShowWrongAnswerWarning(false);
++
++    // Auto-fetch teaching for the new slide
++    if (activeStep !== undefined) {
++      fetchTeachingForSlide(activeStep);
++    }
++
++    if (stepRef.current) stepRef.current.scrollTop = 0;
++    // eslint-disable-next-line react-hooks/exhaustive-deps
++  }, [activeStep]);
++
++  // Reset on lesson change
++  useEffect(() => {
++    setActiveStep(0);
++    setTeachings({});
++    startedVoiceForSlide.current.clear();
++    setTestAnswers({});
++    setTestSubmitted(false);
++    setTestPopupOpen(false);
++  }, [lessonId]);
++
++  // Cleanup on unmount
++  useEffect(() => {
++    return () => {
++      if (abortRef.current) abortRef.current.abort();
++      if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel();
++      if (audioRef.current?._timer) clearInterval(audioRef.current._timer);
++    };
++  }, []);
++
++  // Warm up browser voice list
++  useEffect(() => {
++    if (typeof window === 'undefined' || !window.speechSynthesis) return;
++    window.speechSynthesis.getVoices();
++    const handler = () => window.speechSynthesis.getVoices();
++    window.speechSynthesis.addEventListener('voiceschanged', handler);
++    return () => window.speechSynthesis.removeEventListener('voiceschanged', handler);
++  }, []);
++
++  // ============================================================
++  // VOICE-OVER MAIN FLOW
++  // ============================================================
++  const startVoiceOver = async (preloadedTeaching?: SlideTeaching) => {
++    if (voiceLoading) return;
++
++    // Stop any existing voice first
++    if (abortRef.current) abortRef.current.abort();
++    if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel();
++
++    const controller = new AbortController();
++    abortRef.current = controller;
++    const signal = controller.signal;
++
++    setVoiceMode(true);
++    setVoiceError(null);
++    setVoicePhase('intro');
++    setPopupAnswer(null);
++    setPopupRevealed(false);
++    setPopupWasCorrect(false);
++    setVoicePaused(false);
++
++    // Speak a brief intro for this slide
++    try {
++      setVoicePhase('intro');
++      const introText = `Slide ${activeStep + 1}: ${step.title}.`;
++      const introSeconds = 3;
++      const stopTimerIntro = startProgressTimer(introSeconds, 0, 5);
++      setVoicePlaying(true);
++      await speakChunk(introText, signal);
++      if (signal.aborted) return;
++      stopTimerIntro();
++    } catch { /* continue */ }
++
++    if (signal.aborted) return;
++
++    // Fetch teaching if not already loaded
++    let teaching = preloadedTeaching ?? teachings[activeStep];
++    if (!teaching) {
++      setLoadingTeach(true);
++      try {
++        const res = await fetch('/api/chapter-tutor', {
++          method: 'POST',
++          headers: { 'Content-Type': 'application/json' },
++          body: JSON.stringify({
++            mode: 'teach',
++            courseId: course.id,
++            courseContext: `${course.title} — ${course.subtitle}`,
++            lessonTitle: lesson.title,
++            slideTitle: step.title,
++            slideContent: step.content,
++            slideCode: step.code,
++            codeLanguage: step.codeLanguage,
++          }),
++        });
++        if (!res.ok) throw new Error(`HTTP ${res.status}`);
++        const data = await res.json();
++        setTeachings((prev) => ({ ...prev, [activeStep]: data }));
++        teaching = data;
++      } catch (err) {
++        setVoiceError(err instanceof Error ? err.message : 'Failed to load teaching');
++        setLoadingTeach(false);
++        return;
++      } finally {
++        setLoadingTeach(false);
++      }
++    }
++
++    if (!teaching || signal.aborted) return;
++
++    if (typeof window === 'undefined' || !window.speechSynthesis) {
++      setVoiceError('Your browser does not support voice-over.');
++      return;
++    }
++
++    setVoiceLoading(true);
++    try {
++      window.speechSynthesis.cancel();
++
++      // PHASE 1: explanation
++      const phase1Script = [
++        step.content,
++        `Let me explain. ${teaching.explanation}`,
++      ].join(' ');
++      const phase1WordCount = phase1Script.split(/\s+/).length;
++      const phase1Seconds = Math.max(8, Math.round((phase1WordCount / 120) * 60));
++      setVoicePhase('explanation');
++      const stopTimer1 = startProgressTimer(phase1Seconds, 0, 35);
++      setVoicePlaying(true);
++      await speakChunk(phase1Script, signal);
++      if (signal.aborted) return;
++      stopTimer1();
++      setVoicePlaying(false);
++
++      // Ask mid-lesson question
++      await speakChunk(
++        `Now, before we continue, please answer this question. ` +
++        `The question is: ${teaching.checkQuestion.question}. ` +
++        `Pick the option you think is correct.`,
++        signal,
++      );
++      if (signal.aborted) return;
++
++      setVoicePhase('awaiting_answer');
++      setVoiceProgress(35);
++      setQuestionPopupOpen(true);
++    } catch (err) {
++      if (signal.aborted) return;
++      const msg = err instanceof Error ? err.message : 'Voice generation failed';
++      setVoiceError(msg);
++    } finally {
++      setVoiceLoading(false);
++    }
++  };
++
++  const submitPopupAnswer = () => {
++    if (popupAnswer === null) return;
++    const teaching = teachings[activeStep];
++    if (!teaching) return;
++    const isCorrect = popupAnswer === teaching.checkQuestion.correctAnswer;
++    setPopupWasCorrect(isCorrect);
++    setPopupRevealed(true);
++    if (isCorrect) {
++      speakChunk(`That's correct. ${teaching.checkQuestion.explanation} Let's continue with a real-world example.`).catch(() => {});
++    } else {
++      speakChunk(
++        `That answer is not correct. The correct answer is: ${teaching.checkQuestion.options[teaching.checkQuestion.correctAnswer]}. ` +
++        `${teaching.checkQuestion.explanation} Let me show you a real-world example.`
++      ).catch(() => {});
++      setShowWrongAnswerWarning(true);
++    }
++  };
++
++  const continueAfterPopupAnswer = async () => {
++    const teaching = teachings[activeStep];
++    if (!teaching) return;
++    setQuestionPopupOpen(false);
++    setShowWrongAnswerWarning(false);
++
++    const controller = new AbortController();
++    abortRef.current = controller;
++    const signal = controller.signal;
++
++    if (typeof window === 'undefined' || !window.speechSynthesis) {
++      setVoicePhase('done');
++      setVoiceProgress(100);
++      return;
++    }
++
++    try {
++      window.speechSynthesis.cancel();
++      setVoicePhase('example');
++      setVoicePlaying(true);
++
++      const phase2Script = `Here is a real-world example. ${teaching.example}`;
++      const phase2WordCount = phase2Script.split(/\s+/).length;
++      const phase2Seconds = Math.max(6, Math.round((phase2WordCount / 120) * 60));
++      const stopTimer2 = startProgressTimer(phase2Seconds, 35, 75);
++      await speakChunk(phase2Script, signal);
++      if (signal.aborted) return;
++      stopTimer2();
++
++      setVoicePhase('pitfall');
++      const phase3Script = `Watch out for this common pitfall. ${teaching.pitfall} That wraps up this step.`;
++      const phase3WordCount = phase3Script.split(/\s+/).length;
++      const phase3Seconds = Math.max(5, Math.round((phase3WordCount / 120) * 60));
++      const stopTimer3 = startProgressTimer(phase3Seconds, 75, 100);
++      await speakChunk(phase3Script, signal);
++      if (signal.aborted) return;
++      stopTimer3();
++
++      setVoicePlaying(false);
++      setVoicePhase('done');
++      setVoiceProgress(100);
++    } catch (err) {
++      if (signal.aborted) return;
++      setVoiceError(err instanceof Error ? err.message : 'Voice generation failed');
++      setVoicePlaying(false);
++    }
++  };
++
++  // ============================================================
++  // VOICE CONTROL HANDLERS
++  // ============================================================
++  const togglePlayPause = () => {
++    if (typeof window === 'undefined' || !window.speechSynthesis) return;
++    if (window.speechSynthesis.paused) {
++      window.speechSynthesis.resume();
++      setVoicePlaying(true);
++      setVoicePaused(false);
++    } else if (window.speechSynthesis.speaking) {
++      window.speechSynthesis.pause();
++      setVoicePlaying(false);
++      setVoicePaused(true);
++    }
++  };
++
++  const stopVoice = () => {
++    if (abortRef.current) {
++      abortRef.current.abort();
++      abortRef.current = null;
++    }
++    if (typeof window !== 'undefined' && window.speechSynthesis) {
++      window.speechSynthesis.cancel();
++    }
++    if (audioRef.current?._timer) {
++      clearInterval(audioRef.current._timer);
++      audioRef.current._timer = undefined;
++    }
++    setVoiceMode(false);
++    setVoicePlaying(false);
++    setVoicePaused(false);
++    setVoiceProgress(0);
++    setVoicePhase('intro');
++    setVoiceError(null);
++    setQuestionPopupOpen(false);
++    setPopupAnswer(null);
++    setPopupRevealed(false);
++    setPopupWasCorrect(false);
++    setShowWrongAnswerWarning(false);
++  };
++
++  const handleLangChange = (lang: string) => {
++    try {
++      const raw = window.localStorage.getItem('marq-ai-tutor-intro-prefs') ?? '{}';
++      const p = JSON.parse(raw);
++      p.lang = lang;
++      window.localStorage.setItem('marq-ai-tutor-intro-prefs', JSON.stringify(p));
++    } catch { /* noop */ }
++    // Restart voice-over in new language if currently playing
++    if (voiceMode) {
++      stopVoice();
++      setTimeout(() => startVoiceOver(), 200);
++    }
++  };
++
++  const handleSpeedChange = (speed: number) => {
++    try {
++      const raw = window.localStorage.getItem('marq-ai-tutor-intro-prefs') ?? '{}';
++      const p = JSON.parse(raw);
++      p.rate = speed;
++      window.localStorage.setItem('marq-ai-tutor-intro-prefs', JSON.stringify(p));
++    } catch { /* noop */ }
++  };
++
++  const handlePrevSlide = () => {
++    stopVoice();
++    if (activeStep > 0) setActiveStep((s) => s - 1);
++  };
++
++  const handleNextSlide = () => {
++    stopVoice();
++    if (activeStep < totalSlides - 1) {
++      setActiveStep((s) => s + 1);
++    } else {
++      setTestPopupOpen(true);
++    }
++  };
++
++  const askQuestion = async () => {
++    const q = qaInput.trim();
++    if (!q || slideQA[activeStep]?.loading) return;
++    setSlideQA((prev) => ({ ...prev, [activeStep]: { q, a: '', loading: true } }));
++    try {
++      const res = await fetch('/api/chapter-tutor', {
++        method: 'POST',
++        headers: { 'Content-Type': 'application/json' },
++        body: JSON.stringify({
++          mode: 'answer_question',
++          courseId: course.id,
++          courseContext: `${course.title} — ${course.subtitle}`,
++          lessonTitle: lesson.title,
++          slideTitle: step.title,
++          slideContent: step.content,
++          slideCode: step.code,
++          codeLanguage: step.codeLanguage,
++          studentQuestion: q,
++        }),
++      });
++      if (!res.ok) throw new Error(`HTTP ${res.status}`);
++      const data = await res.json();
++      const answer = data.content;
++      setSlideQA((prev) => ({ ...prev, [activeStep]: { q, a: answer, loading: false } }));
++      setQaHistory((prev) => [
++        ...prev,
++        { slideIdx: activeStep, slideTitle: step.title, question: q, answer, askedAt: Date.now() },
++      ]);
++    } catch (err) {
++      const msg = err instanceof Error ? err.message : 'Failed';
++      const fallback = `Sorry, I could not answer right now. ${msg}`;
++      setSlideQA((prev) => ({ ...prev, [activeStep]: { q, a: fallback, loading: false } }));
++    }
++  };
++
++  const submitTest = () => {
++    setTestSubmitted(true);
++    const score = lesson.quiz.reduce(
++      (acc, q) => (testAnswers[q.id] === q.correctAnswer ? acc + 1 : acc),
++      0,
+     );
+-  }
++    const pct = totalQuestions ? Math.round((score / totalQuestions) * 100) : 0;
++    if (pct >= 60) markLessonTestPassed(lessonId);
++    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
++  };
++
++  const isSpeaking = voiceMode && voicePlaying && !voicePaused;
++  const teaching = teachings[activeStep];
++  const score = lesson.quiz.reduce(
++    (acc, q) => (testAnswers[q.id] === q.correctAnswer ? acc + 1 : acc),
++    0,
++  );
++  const scorePct = totalQuestions ? Math.round((score / totalQuestions) * 100) : 0;
++  const passed = scorePct >= 60;
+ 
+   return (
+     <div className="bg-background">
+@@ -132,9 +1054,34 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
+         </div>
+       </div>
+ 
+-      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[1fr_320px] lg:px-8">
+-        {/* Main column */}
+-        <div className="min-w-0 space-y-6">
++      {/* Main layout: LEFT = AI Tutor Sidebar (always visible), RIGHT = Lesson Content */}
++      <div className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[260px_1fr] lg:px-8">
++        {/* LEFT: AI Tutor Sidebar — PERSISTENT, NEVER DISAPPEARS */}
++        <AITutorSidebar
++          tutor={tutor}
++          isSpeaking={isSpeaking}
++          voiceMode={voiceMode}
++          voicePlaying={voicePlaying}
++          voicePaused={voicePaused}
++          voicePhase={voicePhase}
++          voiceProgress={voiceProgress}
++          voiceLoading={voiceLoading}
++          voiceError={voiceError}
++          getPreferredLang={getPreferredLang}
++          onPlay={() => startVoiceOver()}
++          onPauseResume={togglePlayPause}
++          onStop={stopVoice}
++          onLangChange={handleLangChange}
++          onSpeedChange={handleSpeedChange}
++          onPrevSlide={handlePrevSlide}
++          onNextSlide={handleNextSlide}
++          currentSlide={activeStep}
++          totalSlides={totalSlides}
++          slideProgress={stepProgress}
++        />
++
++        {/* RIGHT: Lesson Content */}
++        <div ref={stepRef} className="min-w-0 space-y-5">
+           {/* Video */}
+           <Card className="overflow-hidden">
+             <div className="flex items-center gap-2 border-b bg-muted/40 px-4 py-2.5">
+@@ -167,8 +1114,7 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
+                 <Video className="h-10 w-10 text-emerald-400" />
+                 <p className="text-sm font-medium">Video preview unavailable</p>
+                 <p className="max-w-md text-xs text-zinc-400">
+-                  The walkthrough video could not be loaded right now. Don&apos;t worry — the full
+-                  step-by-step procedure below is complete and self-contained.
++                  The walkthrough video could not be loaded right now. The step-by-step guide below is complete and self-contained.
+                 </p>
+                 <a
+                   href={lesson.videoUrl}
+@@ -200,7 +1146,7 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
+                 {lesson.steps.map((s, i) => (
+                   <button
+                     key={i}
+-                    onClick={() => setActiveStep(i)}
++                    onClick={() => { stopVoice(); setActiveStep(i); }}
+                     className={`flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                       i === activeStep
+                         ? 'bg-emerald-600 text-white'
+@@ -217,7 +1163,7 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
+                 ))}
+               </div>
+ 
+-              <div ref={stepRef} className="space-y-5 p-5 sm:p-6">
++              <div className="space-y-5 p-5 sm:p-6">
+                 <div className="flex items-center justify-between gap-3">
+                   <Progress value={stepProgress} className="flex-1" />
+                   <span className="text-xs text-muted-foreground">{stepProgress}%</span>
+@@ -258,20 +1204,54 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
+                   </div>
+                 )}
+ 
++                {/* AI Teaching Content */}
++                {loadingTeach && !teaching && (
++                  <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
++                    <Loader2 className="h-4 w-4 animate-spin" /> {tutor.name} is preparing the explanation...
++                  </div>
++                )}
++                {teachError && (
++                  <div className="rounded-lg border border-rose-500/30 bg-rose-500/5 p-4 text-sm text-rose-900 dark:text-rose-200">
++                    <AlertTriangle className="mr-1.5 inline h-4 w-4" /> {teachError}
++                  </div>
++                )}
++                {teaching && (
++                  <div className="space-y-3">
++                    <FlowingAnswer label="Explanation" icon={<Bot className="h-3.5 w-3.5" />}
++                      active={voicePhase === 'explanation'} done={voicePhase === 'example' || voicePhase === 'pitfall' || voicePhase === 'done'}>
++                      <MarkdownLite content={teaching.explanation} />
++                    </FlowingAnswer>
++                    <FlowingAnswer label="Real-world example" icon={<Lightbulb className="h-3.5 w-3.5" />}
++                      active={voicePhase === 'example'} done={voicePhase === 'pitfall' || voicePhase === 'done'}>
++                      <MarkdownLite content={teaching.example} />
++                    </FlowingAnswer>
++                    <FlowingAnswer label="Common pitfall" icon={<HelpCircle className="h-3.5 w-3.5" />}
++                      active={voicePhase === 'pitfall'} done={voicePhase === 'done'}>
++                      <MarkdownLite content={teaching.pitfall} />
++                    </FlowingAnswer>
++                  </div>
++                )}
++
++                {teaching && !voiceMode && !voiceLoading && (
++                  <Button size="sm" variant="outline" className="mt-2" onClick={() => startVoiceOver(teaching)}>
++                    <Volume2 className="mr-1.5 h-4 w-4" /> Replay voice-over
++                  </Button>
++                )}
++
+                 {/* Step nav */}
+                 <div className="flex items-center justify-between border-t pt-4">
+                   <Button
+                     variant="outline"
+                     size="sm"
+                     disabled={activeStep === 0}
+-                    onClick={() => setActiveStep((s) => Math.max(0, s - 1))}
++                    onClick={() => { stopVoice(); setActiveStep((s) => Math.max(0, s - 1)); }}
+                   >
+                     <ChevronLeft className="mr-1 h-4 w-4" /> Previous step
+                   </Button>
+                   {activeStep < lesson.steps.length - 1 ? (
+                     <Button
+                       size="sm"
+-                      onClick={() => setActiveStep((s) => s + 1)}
++                      onClick={() => { stopVoice(); setActiveStep((s) => s + 1); }}
+                       className="bg-emerald-600 text-white hover:bg-emerald-700"
+                     >
+                       Next step <ChevronRight className="ml-1 h-4 w-4" />
+@@ -302,6 +1282,56 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
+             </CardContent>
+           </Card>
+ 
++          {/* Q&A section */}
++          <div className="rounded-xl border bg-background/60 p-4">
++            <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
++              <MessageSquare className="h-3.5 w-3.5" /> Ask {tutor.name} a follow-up
++            </p>
++            {slideQA[activeStep] && (
++              <div className="mt-3 space-y-2">
++                <div className="rounded-md bg-emerald-500/10 px-2.5 py-1.5 text-xs">
++                  <span className="font-semibold">You: </span>{slideQA[activeStep].q}
++                </div>
++                {slideQA[activeStep].loading ? (
++                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
++                    <Loader2 className="h-3 w-3 animate-spin" /> {tutor.name} is thinking...
++                  </div>
++                ) : (
++                  <div className="rounded-md bg-muted/50 px-2.5 py-1.5 text-xs">
++                    <span className="font-semibold">{tutor.name}: </span>{slideQA[activeStep].a}
++                  </div>
++                )}
++              </div>
++            )}
++            <div className="mt-3 flex gap-2">
++              <input value={qaInput} onChange={(e) => setQaInput(e.target.value)}
++                onKeyDown={(e) => { if (e.key === 'Enter') askQuestion(); }}
++                placeholder="Type your question..."
++                className="flex-1 rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500/50" />
++              <Button size="sm" onClick={askQuestion} disabled={!qaInput.trim()}>
++                <Send className="h-4 w-4" />
++              </Button>
++            </div>
++          </div>
++
++          {qaHistory.length > 0 && (
++            <Card>
++              <CardContent className="p-4">
++                <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
++                  <MessagesSquare className="h-3.5 w-3.5" /> Q&A History ({qaHistory.length})
++                </p>
++                <div className="mt-3 max-h-60 space-y-3 overflow-y-auto">
++                  {qaHistory.map((item, i) => (
++                    <div key={i} className="rounded-lg border p-3 text-xs">
++                      <p className="font-semibold text-emerald-700 dark:text-emerald-300">Q: {item.question}</p>
++                      <p className="mt-1 text-muted-foreground">{item.answer}</p>
++                    </div>
++                  ))}
++                </div>
++              </CardContent>
++            </Card>
++          )}
++
+           {/* Bottom navigation between lessons */}
+           <div className="flex items-center justify-between gap-3">
+             {prevLesson ? (
+@@ -335,64 +1365,214 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
+             )}
+           </div>
+         </div>
++      </div>
+ 
+-        {/* Sidebar: lesson outline */}
+-        <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
+-          <Card>
+-            <CardContent className="p-4">
+-              <h3 className="text-sm font-semibold">Lesson outline</h3>
+-              <ul className="mt-3 space-y-1">
+-                {lesson.steps.map((s, i) => (
+-                  <li key={i}>
+-                    <button
+-                      onClick={() => setActiveStep(i)}
+-                      className={`flex w-full items-start gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors ${
+-                        i === activeStep ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'hover:bg-muted'
+-                      }`}
+-                    >
+-                      <span className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full text-[10px] ${
+-                        i < activeStep ? 'bg-emerald-500 text-white' :
+-                        i === activeStep ? 'border border-emerald-500 text-emerald-600' :
+-                        'bg-muted text-muted-foreground'
+-                      }`}>
+-                        {i < activeStep ? '✓' : i + 1}
+-                      </span>
+-                      <span className="leading-tight">{s.title}</span>
+-                    </button>
+-                  </li>
+-                ))}
+-              </ul>
+-            </CardContent>
+-          </Card>
+-
+-          <Card className="bg-emerald-500/5 border-emerald-500/30">
+-            <CardContent className="p-4">
+-              <h3 className="flex items-center gap-1.5 text-sm font-semibold">
+-                <Sparkles className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> Stuck on this step?
+-              </h3>
+-              <p className="mt-1.5 text-xs text-muted-foreground">
+-                Ask the AI tutor — it knows you&apos;re on <span className="font-medium">{lesson.title}</span> and can explain with examples tailored to this course.
+-              </p>
+-              <Button
+-                size="sm"
+-                onClick={() => setTutorOpen(true)}
+-                className="mt-3 w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700"
+-              >
+-                <Sparkles className="mr-1.5 h-4 w-4" /> Open AI Tutor
+-              </Button>
+-            </CardContent>
+-          </Card>
++      {/* Mid-lesson question popup */}
++      <Dialog open={questionPopupOpen} onOpenChange={() => {}}>
++        <DialogContent className="max-w-lg">
++          <DialogHeader>
++            <DialogTitle className="flex items-center gap-2">
++              <div className={`grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br ${
++                tutor.gender === 'female' ? 'from-emerald-500 to-teal-600' : 'from-blue-500 to-indigo-600'
++              } text-white`}>
++                <span className="text-sm font-bold">{tutor.initial}</span>
++              </div>
++              Quick Check — Are you following?
++            </DialogTitle>
++            <DialogDescription>
++              {teachings[activeStep]?.checkQuestion.question ?? 'Loading question...'}
++            </DialogDescription>
++          </DialogHeader>
++          {teachings[activeStep] && (
++            <div className="space-y-3">
++              {teachings[activeStep].checkQuestion.options.map((opt, oi) => {
++                const picked = popupAnswer === oi;
++                const isCorrect = oi === teachings[activeStep].checkQuestion.correctAnswer;
++                const isWrongPick = popupRevealed && picked && !isCorrect;
++                return (
++                  <button key={oi} disabled={popupRevealed} onClick={() => setPopupAnswer(oi)}
++                    className={`flex w-full items-center gap-3 rounded-lg border p-3 text-left text-sm transition-colors ${
++                      popupRevealed ? isCorrect ? 'border-emerald-500/60 bg-emerald-500/10' : isWrongPick ? 'border-rose-500/60 bg-rose-500/10' : 'border-border'
++                        : picked ? 'border-emerald-500 bg-emerald-500/5' : 'border-border hover:bg-muted/50 cursor-pointer'
++                    } ${popupRevealed ? 'cursor-default' : 'cursor-pointer'}`}>
++                    <span className={`grid h-5 w-5 shrink-0 place-items-center rounded-full border ${picked ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-muted-foreground/40'}`}>
++                      {picked && <CheckCircle2 className="h-3 w-3" />}
++                    </span>
++                    <span className="flex-1">{opt}</span>
++                    {popupRevealed && isCorrect && <CheckCircle2 className="h-4 w-4 text-emerald-600" />}
++                    {popupRevealed && isWrongPick && <span className="h-4 w-4 text-rose-600">✕</span>}
++                  </button>
++                );
++              })}
++              {showWrongAnswerWarning && !popupWasCorrect && popupRevealed && (
++                <div className="rounded-lg border-2 border-rose-500/50 bg-rose-500/10 p-3 text-sm text-rose-900 dark:text-rose-200">
++                  <p className="flex items-center gap-1.5 font-semibold"><AlertTriangle className="h-4 w-4" /> Please listen carefully</p>
++                  <p className="mt-1 text-xs">That answer is not correct. {tutor.name} will walk you through a real-world example.</p>
++                </div>
++              )}
++              {popupWasCorrect && popupRevealed && (
++                <div className="rounded-lg border-2 border-emerald-500/50 bg-emerald-500/10 p-3 text-sm text-emerald-900 dark:text-emerald-200">
++                  <p className="flex items-center gap-1.5 font-semibold"><CheckCircle2 className="h-4 w-4" /> Correct!</p>
++                  <p className="mt-1 text-xs">{teachings[activeStep].checkQuestion.explanation}</p>
++                </div>
++              )}
++              {!popupRevealed ? (
++                <Button className="w-full bg-emerald-600 text-white hover:bg-emerald-700" disabled={popupAnswer === null} onClick={submitPopupAnswer}>
++                  Submit answer
++                </Button>
++              ) : (
++                <Button className="w-full bg-emerald-600 text-white hover:bg-emerald-700" onClick={continueAfterPopupAnswer}>
++                  Continue listening <ChevronRight className="ml-1 h-4 w-4" />
++                </Button>
++              )}
++            </div>
++          )}
++          {!teachings[activeStep] && (
++            <div className="flex items-center gap-2 py-6 text-sm text-muted-foreground">
++              <Loader2 className="h-4 w-4 animate-spin" /> Loading question...
++            </div>
++          )}
++        </DialogContent>
++      </Dialog>
+ 
+-          {isComplete && (
+-            <Card className="border-emerald-500/40 bg-emerald-500/5">
+-              <CardContent className="flex items-center gap-2 p-4 text-sm text-emerald-700 dark:text-emerald-300">
+-                <CheckCircle2 className="h-5 w-5" />
+-                <span>Lesson completed — quiz unlocked.</span>
+-              </CardContent>
+-            </Card>
++      {/* Chapter test popup */}
++      <Dialog open={testPopupOpen} onOpenChange={(open) => {
++        if (!open && !testSubmitted) { setTestPopupOpen(true); return; }
++        if (!open && testSubmitted) setTestPopupOpen(false);
++      }}>
++        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
++          <DialogHeader>
++            <DialogTitle className="flex items-center gap-2">
++              <span className={`grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br ${c.gradient} text-white`}>
++                <ListChecks className="h-4 w-4" />
++              </span>
++              Chapter Test · {lesson.title}
++            </DialogTitle>
++            <DialogDescription>
++              {testAlreadyPassed
++                ? 'You have already passed this test. You can retake it any time.'
++                : 'Pass with 60% or higher to unlock the next chapter.'}
++            </DialogDescription>
++          </DialogHeader>
++          {!testAlreadyPassed && (
++            <div className="rounded-lg border-2 border-amber-500/50 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-200">
++              <p className="flex items-center gap-1.5 font-semibold"><AlertTriangle className="h-4 w-4" /> Next chapter is locked</p>
++              <p className="mt-1 text-xs">You must pass this test ({totalQuestions} questions, pass mark 60%) before moving on.</p>
++            </div>
+           )}
+-        </aside>
+-      </div>
++          <div className="space-y-4 py-2">
++            {!testSubmitted ? (
++              <>
++                <div>
++                  <div className="flex items-center justify-between text-sm">
++                    <p className="font-medium">Progress</p>
++                    <p className="text-muted-foreground">{Object.keys(testAnswers).length} of {totalQuestions} answered</p>
++                  </div>
++                  <Progress value={totalQuestions ? (Object.keys(testAnswers).length / totalQuestions) * 100 : 0} className="mt-2 h-1.5" />
++                </div>
++                {lesson.quiz.map((q, qi) => (
++                  <div key={q.id} className="rounded-xl border p-4">
++                    <div className="flex items-start gap-3">
++                      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-muted text-xs font-bold">{qi + 1}</span>
++                      <div className="min-w-0 flex-1">
++                        <p className="font-medium leading-relaxed">{q.question}</p>
++                        <div className="mt-3 space-y-1.5">
++                          {q.options.map((opt, oi) => {
++                            const picked = testAnswers[q.id] === oi;
++                            return (
++                              <button key={oi} onClick={() => setTestAnswers((a) => ({ ...a, [q.id]: oi }))}
++                                className={`flex w-full cursor-pointer items-center gap-3 rounded-lg border p-3 text-left text-sm transition-colors ${picked ? 'border-emerald-500 bg-emerald-500/5' : 'border-border hover:bg-muted/50'}`}>
++                                <span className={`grid h-5 w-5 shrink-0 place-items-center rounded-full border ${picked ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-muted-foreground/40'}`}>
++                                  {picked && <CheckCircle2 className="h-3 w-3" />}
++                                </span>
++                                <span className="flex-1">{opt}</span>
++                              </button>
++                            );
++                          })}
++                        </div>
++                      </div>
++                    </div>
++                  </div>
++                ))}
++                <Button className="w-full bg-emerald-600 text-white hover:bg-emerald-700"
++                  disabled={Object.keys(testAnswers).length < totalQuestions} onClick={submitTest}>
++                  Submit test {Object.keys(testAnswers).length < totalQuestions && ` (${totalQuestions - Object.keys(testAnswers).length} left)`}
++                </Button>
++              </>
++            ) : (
++              <>
++                <div className={`flex items-center gap-4 rounded-xl border p-5 ${passed ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-amber-500/50 bg-amber-500/5'}`}>
++                  <span className={`grid h-14 w-14 place-items-center rounded-full ${passed ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'}`}>
++                    {passed ? <CheckCircle2 className="h-7 w-7" /> : <HelpCircle className="h-7 w-7" />}
++                  </span>
++                  <div className="flex-1">
++                    <p className="text-2xl font-bold">{score} / {totalQuestions} correct · {scorePct}%</p>
++                    <p className={`text-sm ${passed ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300'}`}>
++                      {passed ? `Chapter complete — ${tutor.name} says well done!` : 'Almost there — review and try again.'}
++                    </p>
++                  </div>
++                </div>
++                {lesson.quiz.map((q, qi) => {
++                  const userAnswer = testAnswers[q.id];
++                  const isCorrect = userAnswer === q.correctAnswer;
++                  const isWrong = userAnswer !== undefined && userAnswer !== q.correctAnswer;
++                  return (
++                    <div key={q.id} className={`rounded-xl border p-4 ${isCorrect ? 'border-emerald-500/40' : isWrong ? 'border-rose-500/40' : ''}`}>
++                      <div className="flex items-start gap-3">
++                        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-muted text-xs font-bold">{qi + 1}</span>
++                        <div className="min-w-0 flex-1">
++                          <p className="font-medium leading-relaxed">{q.question}</p>
++                          <div className="mt-3 space-y-1.5">
++                            {q.options.map((opt, oi) => {
++                              const isRight = oi === q.correctAnswer;
++                              const isWrongPick = userAnswer === oi && !isRight;
++                              return (
++                                <div key={oi} className={`flex items-center gap-3 rounded-lg border p-3 text-sm ${isRight ? 'border-emerald-500/50 bg-emerald-500/5' : isWrongPick ? 'border-rose-500/50 bg-rose-500/5' : 'border-border'}`}>
++                                  <span className="flex-1">{opt}</span>
++                                  {isRight && <CheckCircle2 className="h-4 w-4 text-emerald-600" />}
++                                  {isWrongPick && <span className="h-4 w-4 text-rose-600">✕</span>}
++                                </div>
++                              );
++                            })}
++                          </div>
++                          <div className={`mt-3 rounded-lg border p-3 text-sm ${isCorrect ? 'border-emerald-500/30 bg-emerald-500/5 text-emerald-900 dark:text-emerald-200' : 'border-border bg-muted/40 text-muted-foreground'}`}>
++                            <span className="font-semibold">{isCorrect ? 'Correct. ' : 'Explanation: '}</span>{q.explanation}
++                          </div>
++                        </div>
++                      </div>
++                    </div>
++                  );
++                })}
++                <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
++                  <Button variant="outline" size="sm" onClick={() => { setTestSubmitted(false); setTestAnswers({}); setTestPopupOpen(false); }}>
++                    <ArrowLeft className="mr-1.5 h-4 w-4" /> Back to lesson
++                  </Button>
++                  <div className="flex gap-2">
++                    <Button size="sm" variant="outline" onClick={() => setTutorOpen(true)}>
++                      <Sparkles className="mr-1.5 h-4 w-4" /> Ask {tutor.name}
++                    </Button>
++                    {passed && nextLesson ? (
++                      <Button size="sm" onClick={() => { setTestPopupOpen(false); useAppStore.getState().openLesson(nextLesson.courseId, nextLesson.moduleId, nextLesson.lessonId); }}
++                        className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700">
++                        Next chapter <ArrowRight className="ml-1.5 h-4 w-4" />
++                      </Button>
++                    ) : passed ? (
++                      <Button size="sm" onClick={() => setTestPopupOpen(false)} className="bg-emerald-600 text-white hover:bg-emerald-700">
++                        <CheckCircle2 className="mr-1.5 h-4 w-4" /> Done
++                      </Button>
++                    ) : (
++                      <Button size="sm" onClick={() => { setTestSubmitted(false); setTestAnswers({}); }}
++                        className="bg-amber-600 text-white hover:bg-amber-700">
++                        Retry test
++                      </Button>
++                    )}
++                  </div>
++                </div>
++              </>
++            )}
++          </div>
++        </DialogContent>
++      </Dialog>
+     </div>
+   );
+ }
