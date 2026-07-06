@@ -88,7 +88,6 @@ export default function Home() {
           {view.name === 'certificates' && <CertificatesPage />}
           {view.name === 'achievements' && <AchievementsPage />}
           {view.name === 'features' && <FeaturesPage />}
-          {view.name === 'corporate' && <CorporatePortal />}
         </ErrorBoundary>
       </main>
       <Footer />

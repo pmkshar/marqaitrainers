@@ -1,9 +1,10 @@
 'use client';
 
-import { ArrowRight, PlayCircle, Sparkles, BookOpen, Video, FileQuestion, MessageSquare, Users, CreditCard, Check } from 'lucide-react';
+import { ArrowRight, PlayCircle, Sparkles, BookOpen, Video, FileQuestion, MessageSquare, Users, CreditCard, Check, Search, Building2, Award, UserPlus, ClipboardCheck, Briefcase, Mic, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { useAppStore } from '@/lib/store';
 import { COURSES } from '@/lib/courses';
 import { PRICING_PLANS } from '@/lib/seed-data';
@@ -28,13 +29,13 @@ export function Hero() {
         <div className="grid items-center gap-12 lg:grid-cols-2">
           <div className="flex flex-col gap-6">
             <Badge variant="outline" className="w-fit border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
-              <Sparkles className="mr-1 h-3 w-3" /> Online Courses · AI Tutor · Certificates
+              <Sparkles className="mr-1 h-3 w-3" /> AI + Human Tutors · Voice Tutoring
             </Badge>
             <h1 className="text-4xl font-extrabold tracking-tight text-balance sm:text-5xl lg:text-6xl">
-              Learn in-demand skills with <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">marqaicourses</span>
+              Learn Software with <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">AI Voice Tutoring</span>
             </h1>
             <p className="max-w-xl text-lg text-muted-foreground text-pretty">
-              Explore 6 career-track courses in AI/ML, Full Stack Java, .NET, Mobile Development, Flutter, and Python. Step-wise lessons, video walkthroughs, graded tests, AI tutor 24/7, certificates, and corporate training plans.
+              AI Tutor, Full Stack, .NET, Mobile Dev, Flutter, Python — learn with AI-powered voice tutoring in English, Hindi, Spanish, and more!
             </p>
             <div className="flex flex-wrap items-center gap-3">
               {!user && (
@@ -43,20 +44,26 @@ export function Hero() {
                   className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg hover:from-emerald-600 hover:to-teal-700"
                   size="lg"
                 >
-                  Register Free <ArrowRight className="ml-2 h-4 w-4" />
+                  Start Learning Now <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               )}
               <Button onClick={() => openCourse(COURSES[0].id)} variant="outline" size="lg">
-                <PlayCircle className="mr-2 h-4 w-4" /> Browse Courses
+                <PlayCircle className="mr-2 h-4 w-4" /> View Courses
               </Button>
-              <Button onClick={openPricing} variant="outline" size="lg">
-                <CreditCard className="mr-2 h-4 w-4" /> See Pricing
+              <Button onClick={() => setTutorOpen(true)} variant="outline" size="lg" className="bg-purple-600 text-white hover:bg-purple-700 border-purple-600">
+                <Mic className="mr-2 h-4 w-4" /> Talk to AI
               </Button>
+            </div>
+            <div className="mt-2 max-w-lg">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input placeholder="Search courses — e.g., AI, Java, Flutter, Python..." className="pl-10" />
+              </div>
             </div>
             <div className="grid grid-cols-4 gap-3 pt-4">
               <Stat value="6" label="Career Tracks" />
-              <Stat value="100+" label="Lessons" />
-              <Stat value="12K+" label="Students" />
+              <Stat value="5+" label="Human Tutors" />
+              <Stat value="🎙️" label="AI Voice Tutor" />
               <Stat value="24/7" label="AI Tutor" />
             </div>
           </div>
@@ -371,6 +378,155 @@ export function CtaSection() {
                 <Sparkles className="mr-2 h-4 w-4" /> Talk to AI Tutor
               </Button>
             </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ---- Registration to Certification flow ----
+const STEPS = [
+  { icon: UserPlus, label: 'Sign Up', color: 'from-blue-500 to-blue-600' },
+  { icon: BookOpen, label: 'Enroll', color: 'from-emerald-500 to-teal-600' },
+  { icon: PlayCircle, label: 'Learn', color: 'from-purple-500 to-purple-600' },
+  { icon: ClipboardCheck, label: 'Practice', color: 'from-amber-500 to-orange-600' },
+  { icon: Check, label: 'Assess', color: 'from-rose-500 to-pink-600' },
+  { icon: Award, label: 'Certify', color: 'from-yellow-500 to-amber-600' },
+  { icon: Briefcase, label: 'Get Hired', color: 'from-teal-500 to-cyan-600' },
+];
+
+export function RegistrationToCertification() {
+  return (
+    <section className="bg-muted/30 py-12">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <h2 className="text-center text-2xl font-bold">From Registration to Certification</h2>
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          {STEPS.map((step, i) => (
+            <div key={step.label} className="flex items-center gap-3">
+              <div className="flex flex-col items-center gap-2">
+                <span className={`grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br ${step.color} text-white shadow-md`}>
+                  <step.icon className="h-5 w-5" />
+                </span>
+                <span className="text-xs font-medium text-muted-foreground">{step.label}</span>
+              </div>
+              {i < STEPS.length - 1 && <ArrowRight className="h-4 w-4 text-muted-foreground/40" />}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ---- Corporate Training section ----
+export function CorporateTraining() {
+  const { openCorporate } = useAppStore();
+  const corpFeatures = [
+    { icon: BookOpen, title: 'Customized Courses', description: 'Tailor courses to your team\'s specific skills and goals.', color: 'from-blue-500 to-blue-600' },
+    { icon: Users, title: 'AI Tutor for Employees', description: 'Provide 24/7 personalized support and feedback.', color: 'from-emerald-500 to-teal-600' },
+    { icon: ClipboardCheck, title: 'AI Assessments & Feedback', description: 'Engage learners with interactive quizzes and real-time feedback.', color: 'from-purple-500 to-purple-600' },
+    { icon: Award, title: 'Verified Certificates', description: 'Issue industry-recognized certificates upon completion.', color: 'from-amber-500 to-orange-600' },
+  ];
+  return (
+    <section className="py-16 lg:py-24">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <h2 className="text-center text-3xl font-bold">Customized AI-Powered Training for Your Team</h2>
+        <p className="mx-auto mt-4 max-w-2xl text-center text-muted-foreground">
+          We create custom training programs tailored to your team&apos;s unique needs. Our AI tutor provides personalized learning paths for every employee.
+        </p>
+        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {corpFeatures.map((f) => (
+            <Card key={f.title} className="text-center">
+              <CardContent className="flex flex-col items-center p-6">
+                <span className={`grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br ${f.color} text-white`}>
+                  <f.icon className="h-6 w-6" />
+                </span>
+                <h3 className="mt-3 font-semibold">{f.title}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{f.description}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <div className="mt-8 text-center">
+          <Button onClick={openCorporate} className="bg-purple-600 text-white hover:bg-purple-700">
+            <Building2 className="mr-2 h-4 w-4" /> Explore Corporate Training
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ---- Corporate Plans ----
+export function CorporatePlans() {
+  const { openCorporate } = useAppStore();
+  return (
+    <section className="bg-muted/30 py-16 lg:py-24">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <h2 className="text-center text-3xl font-bold">Flexible Corporate Plans</h2>
+        <div className="mt-10 grid gap-6 lg:grid-cols-3">
+          {PRICING_PLANS.map((plan) => (
+            <Card key={plan.id} className={`relative ${plan.highlighted ? 'border-2 border-purple-500 shadow-lg' : ''}`}>
+              {plan.highlighted && <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-purple-600">Most Popular</Badge>}
+              <CardContent className="p-6">
+                <h3 className="text-lg font-bold">{plan.name}</h3>
+                <p className="mt-2"><span className="text-3xl font-extrabold">${plan.price}</span><span className="text-muted-foreground">/{plan.period}</span></p>
+                <ul className="mt-4 space-y-2">
+                  {plan.features.map((f) => (
+                    <li key={f} className="flex items-start gap-2 text-sm"><Check className="mt-0.5 h-4 w-4 text-emerald-500 shrink-0" />{f}</li>
+                  ))}
+                </ul>
+                <Button onClick={openCorporate} className={`mt-6 w-full ${plan.highlighted ? 'bg-purple-600 text-white hover:bg-purple-700' : ''}`} variant={plan.highlighted ? 'default' : 'outline'}>
+                  Get Started
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <div className="mt-6 text-center">
+          <Button onClick={openCorporate} className="bg-purple-600 text-white hover:bg-purple-700">
+            <Building2 className="mr-2 h-4 w-4" /> Register Your Company
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ---- Trusted Companies ----
+const TRUSTED = ['Google', 'Microsoft', 'IBM', 'Salesforce', 'GitHub', 'Amazon', 'LinkedIn', 'Tech'];
+export function TrustedCompanies() {
+  const { openCorporate } = useAppStore();
+  return (
+    <section className="py-12">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <p className="text-center text-sm font-medium text-muted-foreground">Trusted by Leading Companies</p>
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-8">
+          {TRUSTED.map((name) => (
+            <span key={name} className="text-lg font-bold text-muted-foreground/40 hover:text-muted-foreground/70 transition-colors">{name}</span>
+          ))}
+        </div>
+        <div className="mt-6 text-center">
+          <button onClick={openCorporate} className="text-sm font-medium text-purple-600 hover:underline">Explore Corporate Portal →</button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ---- Mobile App Promo ----
+export function MobileAppPromo() {
+  return (
+    <section className="py-12 bg-muted/30">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col items-center gap-6 text-center md:flex-row md:text-left">
+          <span className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg">
+            <Smartphone className="h-8 w-8" />
+          </span>
+          <div>
+            <h2 className="text-2xl font-bold">Learn anywhere with the MarqAI Courses app</h2>
+            <p className="mt-2 text-muted-foreground">Download the app for iOS and Android. Access your courses, AI tutor, and certificates on the go.</p>
           </div>
         </div>
       </div>
