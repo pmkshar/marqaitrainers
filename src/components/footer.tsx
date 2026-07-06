@@ -1,24 +1,26 @@
 'use client';
 
-import { GraduationCap, Github, Twitter, Linkedin } from 'lucide-react';
+import { Github, Twitter, Linkedin } from 'lucide-react';
 import { COURSES } from '@/lib/courses';
 import { useAppStore } from '@/lib/store';
 
 export function Footer() {
-  const { openCourse, goHome, setTutorOpen, openPricing, openTutors, openAdmin, currentUser } = useAppStore();
+  const { openCourse, goHome, setTutorOpen, openPricing, openTutors, openAdmin, openCorporate, currentUser } = useAppStore();
   const user = currentUser();
   return (
     <footer className="mt-auto border-t border-border/60 bg-background">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-4 lg:px-8">
         <div className="space-y-3">
           <div className="flex items-center gap-2.5">
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white">
-              <GraduationCap className="h-4 w-4" />
-            </span>
-            <span className="text-base font-bold">marqai<span className="text-emerald-600 dark:text-emerald-400">courses</span></span>
+            <img 
+              src="/marqai-logo.svg" 
+              alt="MarqAI Courses Logo" 
+              className="h-9 w-9 rounded-lg"
+            />
+            <span className="text-base font-bold">MarqAI<span className="text-emerald-600 dark:text-emerald-400">Courses</span></span>
           </div>
           <p className="text-sm text-muted-foreground">
-            The complete online courses platform — AI tutor + human tutors, step-wise lessons, video walkthroughs, graded tests, and a Super Admin portal with full RBAC.
+            AI-powered online learning platform — AI voice tutor, step-wise lessons, video walkthroughs, graded tests, verified certificates, and corporate training with custom course curation.
           </p>
           <div className="flex gap-3 pt-2">
             <a href="#" aria-label="Twitter" className="grid h-9 w-9 place-items-center rounded-md border text-muted-foreground hover:text-foreground"><Twitter className="h-4 w-4" /></a>
@@ -42,7 +44,8 @@ export function Footer() {
             <li><button onClick={goHome} className="text-muted-foreground hover:text-foreground">Home</button></li>
             <li><button onClick={openPricing} className="text-muted-foreground hover:text-foreground">Pricing &amp; Subscriptions</button></li>
             <li><button onClick={openTutors} className="text-muted-foreground hover:text-foreground">Human Tutors</button></li>
-            <li><button onClick={() => setTutorOpen(true)} className="text-muted-foreground hover:text-foreground">AI Tutor</button></li>
+            <li><button onClick={() => setTutorOpen(true)} className="text-muted-foreground hover:text-foreground">Ask MarqAI</button></li>
+            <li><button onClick={openCorporate} className="text-muted-foreground hover:text-foreground">Corporate Training</button></li>
             <li><button onClick={() => useAppStore.getState().setAuthOpen(true, 'register', 'tutor')} className="text-muted-foreground hover:text-foreground">Become a Tutor</button></li>
           </ul>
         </div>
@@ -62,8 +65,8 @@ export function Footer() {
       </div>
       <div className="border-t border-border/60">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-4 text-xs text-muted-foreground sm:flex-row sm:px-6 lg:px-8">
-          <span>© {new Date().getFullYear()} marqaicourses. All rights reserved.</span>
-          <span>Powered by Z.ai · Built with Next.js</span>
+          <span>© {new Date().getFullYear()} MarqAI Tech Pvt Ltd. All rights reserved.</span>
+          <span>Powered by MarqAI · Built with Next.js</span>
         </div>
       </div>
     </footer>

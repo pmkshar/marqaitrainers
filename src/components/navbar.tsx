@@ -1,6 +1,6 @@
 'use client';
 
-import { GraduationCap, Menu, X, Sparkles, MessageCircle, LogIn, User as UserIcon, ShieldCheck, LayoutDashboard, BookOpen, LogOut, ChevronDown, BadgeCheck, Bell, Grid3x3, Building2 } from 'lucide-react';
+import { GraduationCap, Menu, X, Sparkles, LogIn, User as UserIcon, ShieldCheck, LayoutDashboard, BookOpen, LogOut, ChevronDown, BadgeCheck, Bell, Grid3x3, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -26,14 +26,16 @@ export function Navbar() {
           className="flex items-center gap-2.5 transition-opacity hover:opacity-80"
           aria-label="Go to homepage"
         >
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-sm">
-            <GraduationCap className="h-5 w-5" />
-          </span>
+          <img 
+            src="/marqai-logo.svg" 
+            alt="MarqAI Courses Logo" 
+            className="h-10 w-10 rounded-lg"
+          />
           <span className="flex flex-col leading-none">
             <span className="text-base font-bold tracking-tight">
-              marqai<span className="text-emerald-600 dark:text-emerald-400">courses</span>
+              MarqAI<span className="text-emerald-600 dark:text-emerald-400">Courses</span>
             </span>
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Online Courses Platform</span>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">AI-Powered Learning</span>
           </span>
         </button>
 
@@ -88,12 +90,12 @@ export function Navbar() {
             Features
           </button>
           <button
-            onClick={() => setTutorOpen(true)}
-            className="ml-2 inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            onClick={openCorporate}
+            className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${view.name === 'corporate' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
           >
-            <MessageCircle className="h-4 w-4" />
-            AI Tutor
+            Corporate
           </button>
+
         </nav>
 
         <div className="flex items-center gap-2">
@@ -218,7 +220,7 @@ export function Navbar() {
             <button onClick={openTutors} className="mt-1 rounded-md px-3 py-2 text-left text-sm font-medium hover:bg-accent">Human Tutors</button>
             <button onClick={openPricing} className="rounded-md px-3 py-2 text-left text-sm font-medium hover:bg-accent">Pricing</button>
             <button onClick={openFeatures} className="rounded-md px-3 py-2 text-left text-sm font-medium hover:bg-accent">Features</button>
-            <button onClick={() => setTutorOpen(true)} className="rounded-md px-3 py-2 text-left text-sm font-medium hover:bg-accent">AI Tutor</button>
+            <button onClick={openCorporate} className="rounded-md px-3 py-2 text-left text-sm font-medium hover:bg-accent">Corporate</button>
             <div className="mt-2 border-t pt-3">
               {user ? (
                 <>

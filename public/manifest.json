@@ -1,7 +1,7 @@
 {
-  "name": "marqaicourses Online Courses Platform",
-  "short_name": "marqaicourses",
-  "description": "AI + Human tutors · step-wise lessons · video walkthroughs · graded tests · Super Admin portal with RBAC.",
+  "name": "MarqAI Courses — AI-Powered Learning Platform",
+  "short_name": "MarqAI Courses",
+  "description": "AI voice tutor + verified certificates · step-wise lessons · video walkthroughs · graded tests · corporate training.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f172a",
@@ -12,7 +12,7 @@
   "categories": ["education", "productivity", "business"],
   "icons": [
     {
-      "src": "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+      "src": "/marqai-logo.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
@@ -38,16 +38,16 @@
       "url": "/?view=dashboard"
     },
     {
-      "name": "AI Tutor",
-      "short_name": "AI Tutor",
-      "description": "Ask the AI tutor a question",
+      "name": "Ask MarqAI",
+      "short_name": "MarqAI",
+      "description": "Ask MarqAI voice tutor a question",
       "url": "/?view=aitutor"
     },
     {
-      "name": "Pricing",
-      "short_name": "Pricing",
-      "description": "View subscription and per-course pricing",
-      "url": "/?view=pricing"
+      "name": "Corporate",
+      "short_name": "Corporate",
+      "description": "Corporate training solutions",
+      "url": "/?view=corporate"
     }
   ]
 }

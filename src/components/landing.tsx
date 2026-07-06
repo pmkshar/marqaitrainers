@@ -14,8 +14,8 @@ import { useEffect, useRef, useState } from 'react';
 const FEATURES = [
   { icon: BookOpen, title: 'Structured Courses', description: '6 career-track courses with step-wise lessons, code examples, tips, and detailed explanations. From beginner to expert level.', color: 'from-emerald-500 to-teal-600' },
   { icon: Video, title: 'Video Walkthroughs', description: 'Every lesson includes a guided video walkthrough so you can watch, pause, and code along at your own pace.', color: 'from-rose-500 to-pink-600' },
-  { icon: FileQuestion, title: 'Graded Quizzes & Tests', description: 'Auto-graded MCQ quizzes after every lesson with detailed explanations. Track your progress and earn certificates.', color: 'from-amber-500 to-orange-600' },
-  { icon: MessageSquare, title: 'AI Tutor Chat', description: 'Ask questions anytime — our AI tutor answers in seconds with code snippets, examples, and personalized follow-ups.', color: 'from-violet-500 to-purple-600' },
+  { icon: FileQuestion, title: 'Graded Quizzes & Tests', description: 'Auto-graded MCQ quizzes after every lesson with detailed explanations. Track your progress and earn verified certificates.', color: 'from-amber-500 to-orange-600' },
+  { icon: MessageSquare, title: 'MarqAI Tutor Chat', description: 'Ask questions anytime — MarqAI answers in seconds with code snippets, examples, and personalized follow-ups.', color: 'from-violet-500 to-purple-600' },
   { icon: Users, title: 'Human Tutors', description: 'Book 1:1 video sessions with vetted human experts for live mentoring, code reviews, and career guidance.', color: 'from-sky-500 to-cyan-600' },
   { icon: CreditCard, title: 'Flexible Pricing', description: 'Subscribe monthly or annually for all-access, or buy individual courses for lifetime access. Corporate plans available.', color: 'from-fuchsia-500 to-pink-600' },
 ];
@@ -39,7 +39,7 @@ const TRAINING_STEPS = [
   { 
     step: 3, 
     icon: MessageCircle, 
-    title: 'AI Tutor Teaches', 
+    title: 'MarqAI Teaches', 
     description: 'Learn with AI-powered voice tutoring and personalized explanations.',
     color: 'from-amber-500 to-orange-600'
   },
@@ -54,14 +54,14 @@ const TRAINING_STEPS = [
     step: 5, 
     icon: MessageSquare, 
     title: 'AI Interview', 
-    description: 'Practice mock interviews with AI to prepare for real job interviews.',
+    description: 'Practice mock interviews with MarqAI to prepare for real job interviews.',
     color: 'from-rose-500 to-pink-600'
   },
   { 
     step: 6, 
     icon: GraduationCap, 
     title: 'Get Certified', 
-    description: 'Earn industry-recognized certificates upon course completion.',
+    description: 'Earn verified certificates from MarqAI Tech Pvt Ltd upon completion.',
     color: 'from-teal-500 to-cyan-600'
   },
 ];
@@ -92,13 +92,13 @@ export function Hero() {
         <div className="grid items-center gap-12 lg:grid-cols-2">
           <div className="flex flex-col gap-6">
             <Badge variant="outline" className="w-fit border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
-              <Sparkles className="mr-1 h-3 w-3" /> AI + Human Tutors · Voice Tutoring
+              <Sparkles className="mr-1 h-3 w-3" /> Powered by MarqAI · Voice Tutoring
             </Badge>
             <h1 className="text-4xl font-extrabold tracking-tight text-balance sm:text-5xl lg:text-6xl">
-              Learn Software with <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">AI Voice Tutoring</span>
+              Learn Software with <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">MarqAI Voice Tutor</span>
             </h1>
             <p className="max-w-xl text-lg text-muted-foreground text-pretty">
-              AI Tutor, Full Stack, .NET, Mobile Dev, Flutter, Python — learn with AI-powered voice tutoring in English, Hindi, Spanish, and more!
+              MarqAI Courses — AI voice tutor guides you through Full Stack, .NET, Mobile, Flutter, Python, and AI/ML — with personalized learning in English, Hindi, and Indian languages!
             </p>
             <div className="flex flex-wrap items-center gap-3">
               {!user && (
@@ -114,7 +114,7 @@ export function Hero() {
                 <PlayCircle className="mr-2 h-4 w-4" /> View Courses
               </Button>
               <Button onClick={() => setTutorOpen(true)} variant="outline" size="lg" className="bg-purple-600 text-white hover:bg-purple-700 border-purple-600">
-                <Mic className="mr-2 h-4 w-4" /> Talk to AI
+                <Mic className="mr-2 h-4 w-4" /> Ask MarqAI
               </Button>
             </div>
             <div className="mt-2 max-w-lg">
@@ -126,8 +126,8 @@ export function Hero() {
             <div className="grid grid-cols-4 gap-3 pt-4">
               <Stat value="6" label="Career Tracks" />
               <Stat value="5+" label="Human Tutors" />
-              <Stat value="🎙️" label="AI Voice Tutor" />
-              <Stat value="24/7" label="AI Tutor" />
+              <Stat value="🎙️" label="MarqAI Voice" />
+              <Stat value="24/7" label="AI Support" />
             </div>
           </div>
 
@@ -138,7 +138,7 @@ export function Hero() {
                 <span className="h-3 w-3 rounded-full bg-rose-400" />
                 <span className="h-3 w-3 rounded-full bg-amber-400" />
                 <span className="h-3 w-3 rounded-full bg-emerald-400" />
-                <span className="ml-3 text-xs text-muted-foreground">marqai · Lesson 3 / Step 2</span>
+                <span className="ml-3 text-xs text-muted-foreground">MarqAI Courses · Lesson 3 / Step 2</span>
               </div>
               <CardContent className="space-y-4 p-5">
                 <div className="flex items-center gap-3">
@@ -162,11 +162,11 @@ for epoch in range(1000):
                 </pre>
                 <div className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3 text-xs text-emerald-800 dark:text-emerald-200">
                   <Sparkles className="h-4 w-4 shrink-0" />
-                  <span>Tip: Always shuffle your data and use mini-batches when datasets grow large.</span>
+                  <span>MarqAI Tip: Always shuffle your data and use mini-batches when datasets grow large.</span>
                 </div>
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>Step 2 of 3 · ~25 min remaining</span>
-                  <button onClick={() => setTutorOpen(true)} className="font-medium text-emerald-600 dark:text-emerald-400">Ask AI Tutor →</button>
+                  <button onClick={() => setTutorOpen(true)} className="font-medium text-emerald-600 dark:text-emerald-400">Ask MarqAI →</button>
                 </div>
               </CardContent>
             </Card>
@@ -634,7 +634,7 @@ export function CtaSection() {
           <div className="relative mx-auto max-w-2xl">
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Ready to start your journey?</h2>
             <p className="mt-4 text-emerald-50">
-              Join thousands of learners leveling up their careers with marqaicourses. Pick a course, follow the steps, ask the AI tutor, or book a human mentor.
+              Join thousands of learners leveling up their careers with MarqAI Courses. Pick a course, follow the steps, ask MarqAI voice tutor, or book a human mentor.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               {!user ? (
@@ -647,7 +647,7 @@ export function CtaSection() {
                 </Button>
               )}
               <Button onClick={() => setTutorOpen(true)} variant="outline" size="lg" className="border-white/40 bg-white/10 text-white hover:bg-white/20">
-                <Sparkles className="mr-2 h-4 w-4" /> Talk to AI Tutor
+                <Sparkles className="mr-2 h-4 w-4" /> Ask MarqAI
               </Button>
             </div>
           </div>
@@ -662,9 +662,9 @@ export function CorporateTraining() {
   const { openCorporate } = useAppStore();
   const corpFeatures = [
     { icon: BookOpen, title: 'Customized Courses', description: 'Tailor courses to your team\'s specific skills and goals.', color: 'from-blue-500 to-blue-600' },
-    { icon: Users, title: 'AI Tutor for Employees', description: 'Provide 24/7 personalized support and feedback.', color: 'from-emerald-500 to-teal-600' },
+    { icon: Mic, title: 'MarqAI Voice Tutor', description: 'Provide 24/7 personalized support and feedback in multiple languages.', color: 'from-emerald-500 to-teal-600' },
     { icon: ClipboardCheck, title: 'AI Assessments & Feedback', description: 'Engage learners with interactive quizzes and real-time feedback.', color: 'from-purple-500 to-purple-600' },
-    { icon: Award, title: 'Verified Certificates', description: 'Issue industry-recognized certificates upon completion.', color: 'from-amber-500 to-orange-600' },
+    { icon: Award, title: 'Verified Certificates', description: 'Issue certificates verified by MarqAI Tech Pvt Ltd upon completion.', color: 'from-amber-500 to-orange-600' },
   ];
   return (
     <section className="py-16 lg:py-24">
