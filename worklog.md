@@ -382,3 +382,35 @@ Stage Summary:
 - Auth modal supports 5 demo roles including corporate
 - Build compiles successfully
 - Pushed to GitHub (will auto-deploy to Vercel)
+---
+Task ID: fix-candidate-login-crash
+Agent: main (Super Z)
+Task: Fix candidate login "Something went wrong" error and deploy to Vercel
+
+Work Log:
+- Investigated the "Something went wrong" error that appeared after candidate login
+- Root cause identified: infinite re-render loop caused by uncached Zustand selectors
+  - Derived store functions like `currentUser()`, `myBadges()`, `myCertificates()` were called directly inside `useAppStore()` selectors
+  - These functions create new array/object references on every call, breaking React's `useSyncExternalStore` contract
+  - React sees different references → thinks state changed → triggers re-render → infinite loop → crash
+- Fixed by creating stable `useMemo`-based hooks across 10 component files:
+  - dashboard.tsx: `useCurrentUser()`, `useMyBadges()`, `useMyCertificates()`, `useMyActivities()`
+  - portal-pages.tsx: `useCurrentUser()`, `useMyCalendar()`, `useMyCertificates()`, `useMyBadges()`
+  - notifications-bell.tsx, greeting-card.tsx, settings-page.tsx, corporate-portal.tsx
+  - certificate-display.tsx, course-intro-overlay.tsx, ai-interview.tsx, resume-studio.tsx
+- Comprehensive browser testing verified all 5 login types work correctly:
+  - Admin (Maya Iyer) → Admin Portal ✅
+  - Tutor (Aisha Patel) → Tutor Portal ✅
+  - Candidate (Priya Nair) → Dashboard + My Learning ✅
+  - Corp Admin (Priya Sharma) → Corporate Portal ✅
+  - Corp Emp (Arjun Reddy) → Corporate Portal ✅
+- All major views tested and working: Home, Course Detail, AI Tutor, Pricing, Human Tutors
+- Build succeeds with no errors
+- Pushed to GitHub: commit db09432
+- Vercel auto-deployment triggered from GitHub integration
+
+Stage Summary:
+- Candidate login crash FIXED - infinite re-render loop from uncached Zustand selectors
+- All 5 login types verified working
+- All major views verified working
+- Code pushed to GitHub, Vercel deployment triggered
