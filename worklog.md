@@ -275,3 +275,29 @@ Stage Summary:
 - 5 control buttons with labels: Play, Pause, Stop, Record, Chat
 - Expandable details section
 - Deployed live at marqaitrainers.vercel.app
+---
+Task ID: locale-gps-autodetect
+Agent: Main Agent
+Task: Add GPS-based locale auto-detection, default to IN/INR/en, add locale switcher to navbar and settings
+
+Work Log:
+- Added CurrencyCode, LanguageCode, LocaleConfig types to types.ts
+- Added ResumeTemplateId, ResumeTemplate, RESUME_TEMPLATES to types.ts (fixes resume route build error)
+- Added locale state to store: language='en', currency='INR', country='IN', timezone='Asia/Kolkata'
+- Added store methods: setLanguage, setCurrency, setLocale, detectLocaleFromGps
+- GPS auto-detect: timezone-based detection first (no permission needed), then GPS geolocation with reverse geocoding fallback
+- Timezone mapping covers: India (Asia/Kolkata → INR/en), US, UK, Canada, France, Germany, Spain, Japan, Australia
+- Wired LanguageCurrencySwitcher into navbar (visible for both logged-in and non-logged-in users)
+- Settings page locale section now fully functional (language, currency, country, timezone)
+- Locale preferences persisted to localStorage
+- Auto-detect runs on first visit via page.tsx useEffect
+- Store version bumped to 4 for schema migration
+- Clean git history (removed accidentally committed secrets)
+- Pushed to GitHub and deployed to Vercel
+
+Stage Summary:
+- Default locale: Indian English, India, INR, Asia/Kolkata
+- On first visit, auto-detects user's timezone and adjusts country/currency/language accordingly
+- GPS fallback for more precise detection
+- Users can always override via navbar switcher or Settings page
+- All locale preferences persist across sessions
