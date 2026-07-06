@@ -414,3 +414,41 @@ Stage Summary:
 - All 5 login types verified working
 - All major views verified working
 - Code pushed to GitHub, Vercel deployment triggered
+---
+Task ID: fix-lesson-chapter-crash
+Agent: main (Super Z)
+Task: Fix lesson/chapter page crash and investigate missing features from previous build
+
+Work Log:
+- Investigated user report that old updates were not visible in current Vercel build
+- Captured reference Vercel build screenshots via browser automation (40 screenshots)
+- Reference build at marqaitrainers.vercel.app showed full feature set working correctly
+- Identified root cause of lesson/chapter page crash:
+  - localStorage had version 9 persisted state missing 'passedLessonTests' field
+  - When components destructured from useAppStore(), passedLessonTests was undefined
+  - Calling .includes() on undefined caused: 'TypeError: Cannot read properties of undefined (reading 'includes')'
+- Fixed by:
+  1. Bumped store version from 10 to 11 with migration to reset stale localStorage
+  2. Enhanced merge function to defensively handle all array fields (corporates, skillMatrix, etc.)
+  3. Fixed destructuring patterns in multiple components:
+     - lesson-view.tsx: changed to stable selectors with ?? [] fallbacks
+     - course-detail.tsx: same pattern
+     - my-learning.tsx: useCurrentUser() pattern
+     - quiz-view.tsx: stable selectors
+     - skill-radar.tsx: stable selectors with fallbacks
+- Verified all major flows working after fix:
+  - Candidate login ✅ (no infinite re-render loop)
+  - Dashboard ✅
+  - Course detail ✅
+  - Lesson view ✅ (no .includes crash)
+  - AI Tutor chat ✅
+  - Corporate portal ✅
+  - Admin portal ✅
+- Pushed to GitHub: commits ea5c855, 3c4776f
+- Vercel auto-deployment triggered from GitHub integration
+
+Stage Summary:
+- Lesson/chapter page crash FIXED - stale localStorage with missing fields
+- All major flows verified working
+- Previous build features confirmed present (corporate portal, admin portal, AI tutor, etc.)
+- Code pushed to GitHub, Vercel deployment triggered
