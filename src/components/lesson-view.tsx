@@ -6,6 +6,7 @@ import {
   Clock, FileQuestion, Lightbulb, ListChecks, Sparkles, Video,
   Pause, Play, Square, Volume2, Loader2, Bot, HelpCircle,
   AlertTriangle, MessageSquare, Send, MessagesSquare,
+  Menu, PanelLeftClose, PanelLeftOpen,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -21,6 +22,7 @@ import { findCourse, findLesson, getAllLessons } from '@/lib/courses';
 import { useAppStore } from '@/lib/store';
 import { getTutorForCourse, type TutorPersona } from '@/lib/tutor-personas';
 import { CourseIcon } from './navbar';
+import { SyllabusSidebar, SyllabusDrawer, SyllabusDrawerToggle } from './syllabus-sidebar';
 
 // ============================================================
 // TTS Helpers — with Google Translate fallback for Indian langs
@@ -403,6 +405,10 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
   const [testAnswers, setTestAnswers] = useState<Record<string, number>>({});
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testPopupOpen, setTestPopupOpen] = useState(false);
+
+  // Syllabus sidebar state
+  const [syllabusVisible, setSyllabusVisible] = useState(true);
+  const [syllabusDrawerOpen, setSyllabusDrawerOpen] = useState(false);
 
   // Refs
   const abortRef = useRef<AbortController | null>(null);
@@ -1028,42 +1034,80 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
 
   return (
     <div className="bg-background">
-      {/* Breadcrumb + header */}
-      <div className="border-b bg-muted/30">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-          <button
-            onClick={() => openCourse(courseId)}
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" /> {c.title}
-          </button>
-          <div className="mt-3 flex flex-wrap items-center gap-3">
-            <span className={`grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br ${c.gradient} text-white`}>
-              <CourseIcon name={c.icon} className="h-5 w-5" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">{mod.title}</p>
-              <h1 className="truncate text-xl font-bold sm:text-2xl">{lesson.title}</h1>
+      {/* Desktop Syllabus Sidebar - Fixed position */}
+      {syllabusVisible && (
+        <SyllabusSidebar
+          courseId={courseId}
+          currentModuleId={moduleId}
+          currentLessonId={lessonId}
+        />
+      )}
+
+      {/* Mobile Syllabus Drawer */}
+      <SyllabusDrawer
+        courseId={courseId}
+        currentModuleId={moduleId}
+        currentLessonId={lessonId}
+        open={syllabusDrawerOpen}
+        onOpenChange={setSyllabusDrawerOpen}
+      />
+
+      {/* Main content wrapper - shift right when syllabus is visible on desktop */}
+      <div className={`${syllabusVisible ? 'lg:ml-[280px]' : ''}`}>
+        {/* Breadcrumb + header */}
+        <div className="border-b bg-muted/30">
+          <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => openCourse(courseId)}
+                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+              >
+                <ArrowLeft className="h-4 w-4" /> {c.title}
+              </button>
+              {/* Mobile Syllabus Toggle */}
+              <div className="hidden lg:flex items-center gap-2 ml-auto">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSyllabusVisible(!syllabusVisible)}
+                  className="gap-1.5"
+                >
+                  {syllabusVisible ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
+                  <span className="hidden sm:inline">{syllabusVisible ? 'Hide' : 'Syllabus'}</span>
+                </Button>
+              </div>
+              {/* Mobile: Syllabus Drawer Toggle */}
+              <div className="lg:hidden ml-auto">
+                <SyllabusDrawerToggle onClick={() => setSyllabusDrawerOpen(true)} />
+              </div>
             </div>
-            <Badge variant="outline" className="gap-1">
-              <Clock className="h-3.5 w-3.5" /> {lesson.duration}
-            </Badge>
-            <Button
-              size="sm"
-              onClick={() => openQuiz(courseId, moduleId, lessonId)}
-              variant="outline"
-              className="border-emerald-500/40 text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
-            >
-              <FileQuestion className="mr-1.5 h-4 w-4" /> Take Test ({lesson.quiz.length})
-            </Button>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <span className={`grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br ${c.gradient} text-white`}>
+                <CourseIcon name={c.icon} className="h-5 w-5" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs uppercase tracking-wider text-muted-foreground">{mod.title}</p>
+                <h1 className="truncate text-xl font-bold sm:text-2xl">{lesson.title}</h1>
+              </div>
+              <Badge variant="outline" className="gap-1">
+                <Clock className="h-3.5 w-3.5" /> {lesson.duration}
+              </Badge>
+              <Button
+                size="sm"
+                onClick={() => openQuiz(courseId, moduleId, lessonId)}
+                variant="outline"
+                className="border-emerald-500/40 text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
+              >
+                <FileQuestion className="mr-1.5 h-4 w-4" /> Take Test ({lesson.quiz.length})
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Main layout: LEFT = AI Tutor Sidebar (always visible), RIGHT = Lesson Content */}
-      <div className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[260px_1fr] lg:px-8">
-        {/* LEFT: AI Tutor Sidebar — PERSISTENT, NEVER DISAPPEARS */}
-        <AITutorSidebar
+        {/* Main layout: LEFT = AI Tutor Sidebar (always visible), RIGHT = Lesson Content */}
+        <div className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[260px_1fr] lg:px-8">
+          {/* LEFT: AI Tutor Sidebar — PERSISTENT, NEVER DISAPPEARS */}
+          <AITutorSidebar
           tutor={tutor}
           isSpeaking={isSpeaking}
           voiceMode={voiceMode}
@@ -1579,6 +1623,7 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
           </div>
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 }

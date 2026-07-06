@@ -1,14 +1,17 @@
 'use client';
 
-import { ArrowLeft, ArrowRight, BookOpen, CheckCircle2, Clock, FileQuestion, PlayCircle, Star, Users, Video, Sparkles, Download } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowLeft, ArrowRight, BookOpen, CheckCircle2, Clock, FileQuestion, PlayCircle, Star, Users, Video, Sparkles, Download, ListChecks } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { findCourse, getAllLessons } from '@/lib/courses';
 import { useAppStore } from '@/lib/store';
 import { CourseIcon } from './navbar';
+import { CourseOutlineView } from './syllabus-sidebar';
 
 export function CourseDetail({ courseId }: { courseId: string }) {
   const course = findCourse(courseId);
@@ -225,76 +228,95 @@ export function CourseDetail({ courseId }: { courseId: string }) {
 
           {/* Curriculum */}
           <div className="lg:col-span-2">
-            <div className="flex items-baseline justify-between">
-              <h2 className="text-2xl font-bold tracking-tight">Course curriculum</h2>
-              <span className="text-sm text-muted-foreground">{course.modules.length} modules</span>
-            </div>
-            <p className="mt-1 text-sm text-muted-foreground">Click any lesson to start. Quizzes open after the lesson.</p>
+            <Tabs defaultValue="curriculum" className="w-full">
+              <TabsList className="mb-4">
+                <TabsTrigger value="curriculum" className="gap-1.5">
+                  <BookOpen className="h-4 w-4" /> Curriculum
+                </TabsTrigger>
+                <TabsTrigger value="outline" className="gap-1.5">
+                  <ListChecks className="h-4 w-4" /> Outline
+                </TabsTrigger>
+              </TabsList>
 
-            <Accordion type="multiple" defaultValue={[course.modules[0].id]} className="mt-6 space-y-3">
-              {course.modules.map((module, mi) => (
-                <AccordionItem key={module.id} value={module.id} className="overflow-hidden rounded-xl border bg-card">
-                  <AccordionTrigger className="px-5 py-4 hover:no-underline">
-                    <div className="flex w-full items-center gap-3 pr-4 text-left">
-                      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-muted text-sm font-bold text-muted-foreground">
-                        {String(mi + 1).padStart(2, '0')}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-semibold">{module.title}</p>
-                        <p className="truncate text-xs text-muted-foreground">{module.description}</p>
-                      </div>
-                      <Badge variant="secondary" className="shrink-0 text-xs">{module.lessons.length} lessons</Badge>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-2 pb-2">
-                    <ul className="divide-y">
-                      {module.lessons.map((lesson, li) => {
-                        const isComplete = completedLessons.includes(lesson.id);
-                        const isLast = mi === course.modules.length - 1 && li === module.lessons.length - 1;
-                        return (
-                          <li key={lesson.id} className="flex items-center gap-3 px-3 py-3">
-                            <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${
-                              isComplete
-                                ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
-                                : 'bg-muted text-muted-foreground'
-                            }`}>
-                              {isComplete ? <CheckCircle2 className="h-5 w-5" /> : <PlayCircle className="h-5 w-5" />}
-                            </span>
-                            <div className="min-w-0 flex-1">
-                              <button
-                                onClick={() => openLesson(course.id, module.id, lesson.id)}
-                                className="block w-full text-left"
-                              >
-                                <p className="text-sm font-medium hover:text-emerald-600 dark:hover:text-emerald-400">{lesson.title}</p>
-                                <p className="truncate text-xs text-muted-foreground">{lesson.description}</p>
-                              </button>
-                            </div>
-                            <div className="flex shrink-0 items-center gap-2">
-                              <span className="hidden text-xs text-muted-foreground sm:inline">{lesson.duration}</span>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => openQuiz(course.id, module.id, lesson.id)}
-                                className="text-xs"
-                              >
-                                <FileQuestion className="mr-1 h-3.5 w-3.5" /> Test
-                              </Button>
-                              <Button
-                                size="sm"
-                                onClick={() => openLesson(course.id, module.id, lesson.id)}
-                                className="bg-emerald-600 text-white hover:bg-emerald-700"
-                              >
-                                {isComplete ? 'Review' : 'Start'}
-                              </Button>
-                            </div>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
+              {/* Curriculum Tab */}
+              <TabsContent value="curriculum">
+                <div className="flex items-baseline justify-between">
+                  <h2 className="text-2xl font-bold tracking-tight">Course curriculum</h2>
+                  <span className="text-sm text-muted-foreground">{course.modules.length} modules</span>
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">Click any lesson to start. Quizzes open after the lesson.</p>
+
+                <Accordion type="multiple" defaultValue={[course.modules[0].id]} className="mt-6 space-y-3">
+                  {course.modules.map((module, mi) => (
+                    <AccordionItem key={module.id} value={module.id} className="overflow-hidden rounded-xl border bg-card">
+                      <AccordionTrigger className="px-5 py-4 hover:no-underline">
+                        <div className="flex w-full items-center gap-3 pr-4 text-left">
+                          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-muted text-sm font-bold text-muted-foreground">
+                            {String(mi + 1).padStart(2, '0')}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold">{module.title}</p>
+                            <p className="truncate text-xs text-muted-foreground">{module.description}</p>
+                          </div>
+                          <Badge variant="secondary" className="shrink-0 text-xs">{module.lessons.length} lessons</Badge>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="px-2 pb-2">
+                        <ul className="divide-y">
+                          {module.lessons.map((lesson, li) => {
+                            const isComplete = completedLessons.includes(lesson.id);
+                            const isLast = mi === course.modules.length - 1 && li === module.lessons.length - 1;
+                            return (
+                              <li key={lesson.id} className="flex items-center gap-3 px-3 py-3">
+                                <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${
+                                  isComplete
+                                    ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                                    : 'bg-muted text-muted-foreground'
+                                }`}>
+                                  {isComplete ? <CheckCircle2 className="h-5 w-5" /> : <PlayCircle className="h-5 w-5" />}
+                                </span>
+                                <div className="min-w-0 flex-1">
+                                  <button
+                                    onClick={() => openLesson(course.id, module.id, lesson.id)}
+                                    className="block w-full text-left"
+                                  >
+                                    <p className="text-sm font-medium hover:text-emerald-600 dark:hover:text-emerald-400">{lesson.title}</p>
+                                    <p className="truncate text-xs text-muted-foreground">{lesson.description}</p>
+                                  </button>
+                                </div>
+                                <div className="flex shrink-0 items-center gap-2">
+                                  <span className="hidden text-xs text-muted-foreground sm:inline">{lesson.duration}</span>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => openQuiz(course.id, module.id, lesson.id)}
+                                    className="text-xs"
+                                  >
+                                    <FileQuestion className="mr-1 h-3.5 w-3.5" /> Test
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    onClick={() => openLesson(course.id, module.id, lesson.id)}
+                                    className="bg-emerald-600 text-white hover:bg-emerald-700"
+                                  >
+                                    {isComplete ? 'Review' : 'Start'}
+                                  </Button>
+                                </div>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              </TabsContent>
+
+              {/* Outline Tab */}
+              <TabsContent value="outline">
+                <CourseOutlineView courseId={courseId} />
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
       </section>

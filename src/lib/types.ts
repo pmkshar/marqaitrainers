@@ -616,6 +616,129 @@ export interface AiInterviewReport {
 }
 
 // ============================================================
+// AI Video Interview types (Live Interview with Proctoring)
+// ============================================================
+
+export type InterviewQuestionType = 'conceptual' | 'applied' | 'code_walkthrough' | 'behavioural' | 'system_design';
+
+export interface InterviewQuestion {
+  id: string;
+  type: InterviewQuestionType;
+  prompt: string;
+  code?: string;
+  codeLanguage?: string;
+  assesses: string[];
+  suggestedSeconds?: number;
+  expectedKeyPoints: string[];
+}
+
+export interface InterviewTurn {
+  questionId: string;
+  questionPrompt: string;
+  transcript: string;
+  responseSeconds: number;
+  scorePct: number;
+  feedback: string;
+  coveredKeyPoints: string[];
+  missedKeyPoints: string[];
+}
+
+export type InterviewRecommendation = 'issue_certificate' | 'retry_interview' | 'fail';
+
+export interface InterviewReport {
+  id: string;
+  userId: string;
+  courseId: string;
+  courseTitle: string;
+  startedAt: number;
+  completedAt: number;
+  durationSeconds: number;
+  status: 'completed' | 'abandoned';
+  turns: InterviewTurn[];
+  overallScorePct: number;
+  passed: boolean;
+  skillScores: Record<string, number>;
+  strengths: string[];
+  improvements: string[];
+  summary: string;
+  recommendation: InterviewRecommendation;
+  // Proctoring data
+  proctoring?: ProctoringReport;
+}
+
+// ============================================================
+// AI Proctoring types
+// ============================================================
+
+export type GazeDirection = 'center' | 'left' | 'right' | 'up' | 'down';
+
+export interface ProctoringIncident {
+  id: string;
+  type: 'face_missing' | 'looking_away' | 'suspicious_behavior';
+  timestamp: number;
+  duration?: number; // seconds the incident lasted
+  gazeDirection?: GazeDirection;
+  note?: string;
+}
+
+export interface ProctoringSnapshot {
+  timestamp: number;
+  faceDetected: boolean;
+  facePresencePct: number;
+  gazeDirection: GazeDirection;
+  concentrationScore: number;
+}
+
+export interface ProctoringReport {
+  // Summary statistics
+  avgConcentrationScore: number;
+  minConcentrationScore: number;
+  maxConcentrationScore: number;
+  faceDetectedPct: number; // percentage of time face was detected
+  gazeCenterPct: number; // percentage of time looking center
+  // Incidents
+  incidents: ProctoringIncident[];
+  totalIncidents: number;
+  faceMissingIncidents: number;
+  lookingAwayIncidents: number;
+  // Snapshots (sampled every 5 seconds for report)
+  snapshots: ProctoringSnapshot[];
+  // Auto-pause events
+  autoPauseEvents: Array<{
+    timestamp: number;
+    duration: number;
+    reason: string;
+  }>;
+  // Overall assessment
+  proctoringPassed: boolean; // true if no critical incidents
+  proctoringNote: string;
+}
+
+export type InterviewSessionStatus = 'pending' | 'in_progress' | 'completed' | 'abandoned';
+
+export interface InterviewSession {
+  id: string;
+  userId: string;
+  courseId: string;
+  courseTitle: string;
+  status: InterviewSessionStatus;
+  questions: InterviewQuestion[];
+  currentQuestionIdx: number;
+  turns: InterviewTurn[];
+  startedAt: number;
+  completedAt?: number;
+  report?: InterviewReport;
+  // Proctoring session data
+  proctoringData?: {
+    snapshots: ProctoringSnapshot[];
+    incidents: ProctoringIncident[];
+    autoPauseCount: number;
+    lastFaceDetectedAt: number;
+    noFaceDuration: number;
+  };
+}
+
+// ============================================================
 // Resume Studio types
 // ============================================================
 

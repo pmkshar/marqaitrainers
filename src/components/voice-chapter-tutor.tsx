@@ -6,6 +6,7 @@ import {
   Clock, GraduationCap, HelpCircle, Lightbulb, Loader2, MessageSquare,
   Pause, Play, RefreshCw, Send, Sparkles, Volume2, XCircle,
   Captions, Lock, Trophy, ListChecks, MessagesSquare, Mic, Square,
+  Menu, PanelLeftClose, PanelLeftOpen,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -21,6 +22,7 @@ import type { Course, Lesson, Module } from '@/lib/types';
 import { getTutorForCourse, type TutorPersona } from '@/lib/tutor-personas';
 import { getAllLessons } from '@/lib/courses';
 import { useAppStore } from '@/lib/store';
+import { SyllabusSidebar, SyllabusDrawer, SyllabusDrawerToggle } from './syllabus-sidebar';
 
 // ============================================================
 // VoiceEnabledChapterTutor  (v3 — June 2026 redesign)
@@ -334,6 +336,10 @@ export function VoiceEnabledChapterTutor({
   const [testAnswers, setTestAnswers] = useState<Record<string, number>>({});
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testPopupOpen, setTestPopupOpen] = useState(false);
+
+  // Syllabus sidebar state
+  const [syllabusVisible, setSyllabusVisible] = useState(true);
+  const [syllabusDrawerOpen, setSyllabusDrawerOpen] = useState(false);
 
   const totalMinutes = parseDurationMinutes(lesson.duration);
   const slide = lesson.steps[slideIdx];
@@ -995,58 +1001,99 @@ export function VoiceEnabledChapterTutor({
     const isSpeaking = voiceMode && voicePlaying && !voicePaused;
 
     return (
-      <div ref={slideRef} className="space-y-5">
-        {/* Course progress */}
-        <Card className="overflow-hidden border-emerald-500/30">
-          <div className="bg-gradient-to-r from-emerald-500 to-teal-600 px-5 py-3 text-white">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <Trophy className="h-5 w-5" />
-                <p className="text-sm font-semibold">Course Progress</p>
-              </div>
-              <Badge className="border-white/30 bg-white/20 text-white">
-                {passedCourseLessons} / {totalCourseLessons} chapters passed
-              </Badge>
+      <>
+        {/* Desktop Syllabus Sidebar - Fixed position */}
+        {syllabusVisible && (
+          <SyllabusSidebar
+            courseId={course.id}
+            currentModuleId={mod.id}
+            currentLessonId={lesson.id}
+          />
+        )}
+
+        {/* Mobile Syllabus Drawer */}
+        <SyllabusDrawer
+          courseId={course.id}
+          currentModuleId={mod.id}
+          currentLessonId={lesson.id}
+          open={syllabusDrawerOpen}
+          onOpenChange={setSyllabusDrawerOpen}
+        />
+
+        {/* Main content wrapper - shift right when syllabus is visible on desktop */}
+        <div className={`${syllabusVisible ? 'lg:ml-[280px]' : ''}`}>
+          {/* Syllabus toggle buttons */}
+          <div className="flex items-center justify-end gap-2 mb-4">
+            {/* Mobile: Syllabus Drawer Toggle */}
+            <div className="lg:hidden">
+              <SyllabusDrawerToggle onClick={() => setSyllabusDrawerOpen(true)} />
             </div>
-            <div className="mt-2 flex items-center gap-3">
-              <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/20">
-                <div className="h-full rounded-full bg-white transition-all duration-500" style={{ width: `${courseProgressPct}%` }} />
-              </div>
-              <span className="text-xs font-medium tabular-nums">{courseProgressPct}%</span>
-            </div>
-            <div className="mt-2.5 flex flex-wrap gap-1">
-              {courseLessons.map((l, i) => {
-                const passedThis = passedLessonTests.includes(l.lessonId);
-                const isCurrent = l.lessonId === lesson.id;
-                return (
-                  <span key={l.lessonId} title={`Chapter ${i + 1}: ${l.title}${passedThis ? ' (passed)' : isCurrent ? ' (current)' : ''}`}
-                    className={`h-2 w-2 rounded-full transition-all ${passedThis ? 'bg-white' : isCurrent ? 'bg-yellow-300 ring-2 ring-white/60' : 'bg-white/30'}`}
-                  />
-                );
-              })}
+            {/* Desktop Syllabus Toggle */}
+            <div className="hidden lg:flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSyllabusVisible(!syllabusVisible)}
+                className="gap-1.5"
+              >
+                {syllabusVisible ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
+                <span className="hidden sm:inline">{syllabusVisible ? 'Hide' : 'Syllabus'}</span>
+              </Button>
             </div>
           </div>
-        </Card>
 
-        {/* TWO-PANEL LAYOUT */}
-        <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
-          {/* LEFT: Animated Tutor Avatar + Voice Controls */}
-          <div className="space-y-4 lg:sticky lg:top-6 lg:self-start">
-            <Card className="overflow-hidden border-2 border-emerald-500/30">
-              <CardContent className="flex flex-col items-center p-6">
-                <AnimatedTutorAvatar tutor={tutor} isSpeaking={isSpeaking} size="large" />
-                <div className="mt-4 text-center">
-                  <h3 className="text-xl font-bold">{tutor.name}</h3>
-                  <p className="text-xs text-muted-foreground">{tutor.title}</p>
-                  <p className="mt-1 text-xs text-emerald-600 dark:text-emerald-400 italic">{tutor.tagline}</p>
+          <div ref={slideRef} className="space-y-5">
+            {/* Course progress */}
+            <Card className="overflow-hidden border-emerald-500/30">
+              <div className="bg-gradient-to-r from-emerald-500 to-teal-600 px-5 py-3 text-white">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <Trophy className="h-5 w-5" />
+                    <p className="text-sm font-semibold">Course Progress</p>
+                  </div>
+                  <Badge className="border-white/30 bg-white/20 text-white">
+                    {passedCourseLessons} / {totalCourseLessons} chapters passed
+                  </Badge>
                 </div>
-                <div className="mt-3 flex items-center gap-2">
-                  {voiceMode && voicePlaying && !voicePaused && (
-                    <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 animate-pulse">
-                      <Volume2 className="mr-1 h-3 w-3" /> Speaking...
-                    </Badge>
-                  )}
-                  {voiceMode && voicePaused && (
+                <div className="mt-2 flex items-center gap-3">
+                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/20">
+                    <div className="h-full rounded-full bg-white transition-all duration-500" style={{ width: `${courseProgressPct}%` }} />
+                  </div>
+                  <span className="text-xs font-medium tabular-nums">{courseProgressPct}%</span>
+                </div>
+                <div className="mt-2.5 flex flex-wrap gap-1">
+                  {courseLessons.map((l, i) => {
+                    const passedThis = passedLessonTests.includes(l.lessonId);
+                    const isCurrent = l.lessonId === lesson.id;
+                    return (
+                      <span key={l.lessonId} title={`Chapter ${i + 1}: ${l.title}${passedThis ? ' (passed)' : isCurrent ? ' (current)' : ''}`}
+                        className={`h-2 w-2 rounded-full transition-all ${passedThis ? 'bg-white' : isCurrent ? 'bg-yellow-300 ring-2 ring-white/60' : 'bg-white/30'}`}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            </Card>
+
+            {/* TWO-PANEL LAYOUT */}
+            <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
+              {/* LEFT: Animated Tutor Avatar + Voice Controls */}
+              <div className="space-y-4 lg:sticky lg:top-6 lg:self-start">
+                <Card className="overflow-hidden border-2 border-emerald-500/30">
+                  <CardContent className="flex flex-col items-center p-6">
+                    <AnimatedTutorAvatar tutor={tutor} isSpeaking={isSpeaking} size="large" />
+                    <div className="mt-4 text-center">
+                      <h3 className="text-xl font-bold">{tutor.name}</h3>
+                      <p className="text-xs text-muted-foreground">{tutor.title}</p>
+                      <p className="mt-1 text-xs text-emerald-600 dark:text-emerald-400 italic">{tutor.tagline}</p>
+                    </div>
+                    <div className="mt-3 flex items-center gap-2">
+                      {voiceMode && voicePlaying && !voicePaused && (
+                        <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 animate-pulse">
+                          <Volume2 className="mr-1 h-3 w-3" /> Speaking...
+                        </Badge>
+                      )}
+                      {voiceMode && voicePaused && (
                     <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-300">
                       <Pause className="mr-1 h-3 w-3" /> Paused
                     </Badge>
@@ -1501,6 +1548,8 @@ export function VoiceEnabledChapterTutor({
           </DialogContent>
         </Dialog>
       </div>
+        </div>
+      </>
     );
   }
 

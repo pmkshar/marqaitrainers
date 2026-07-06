@@ -1,10 +1,12 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Sparkles, Send, X, Trash2, Bot, User, Loader2, Mic, MicOff, Volume2, VolumeX, PenTool } from 'lucide-react';
+import {
+  Send, Trash2, Bot, User, Loader2, Mic, MicOff, Volume2, VolumeX,
+  Pause, Square, MessageSquare, ChevronLeft, ChevronRight, Sparkles,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { useAppStore } from '@/lib/store';
 import { findCourse, findLesson } from '@/lib/courses';
 import type { ChatMessage } from '@/lib/types';
@@ -24,141 +26,393 @@ const WELCOME: ChatMessage = {
   timestamp: Date.now(),
 };
 
+// ============================================================
+// Indian Language TTS Helpers with Google Translate Fallback
+// ============================================================
+
+const INDIAN_LANGS = ['hi', 'te', 'ta', 'kn'];
+
+function browserHasVoiceForLang(lang: string): boolean {
+  if (typeof window === 'undefined' || !window.speechSynthesis) return false;
+  const voices = window.speechSynthesis.getVoices();
+  const prefix = lang.toLowerCase();
+  return voices.some(v => v.lang.toLowerCase().startsWith(prefix));
+}
+
+interface GoogleTTSController {
+  stop: () => void;
+}
+
+function playGoogleTTS(text: string, lang: string, onEnd?: () => void, onSpeak?: () => void): GoogleTTSController {
+  const bcp47Map: Record<string, string> = {
+    en: 'en', hi: 'hi', ta: 'ta', te: 'te', kn: 'kn',
+    es: 'es', fr: 'fr', de: 'de', pt: 'pt', ar: 'ar', zh: 'zh-CN',
+  };
+  const ttsLang = bcp47Map[lang] ?? lang;
+
+  const MAX_LEN = 180;
+  const chunks: string[] = [];
+  let remaining = text;
+  while (remaining.length > 0) {
+    if (remaining.length <= MAX_LEN) {
+      chunks.push(remaining);
+      break;
+    }
+    let cutIdx = remaining.lastIndexOf('.', MAX_LEN);
+    if (cutIdx < MAX_LEN * 0.4) cutIdx = remaining.lastIndexOf(' ', MAX_LEN);
+    if (cutIdx < MAX_LEN * 0.4) cutIdx = MAX_LEN;
+    chunks.push(remaining.slice(0, cutIdx + 1));
+    remaining = remaining.slice(cutIdx + 1).trim();
+  }
+
+  let chunkIdx = 0;
+  let currentAudio: HTMLAudioElement | null = null;
+  let stopped = false;
+
+  function playNext() {
+    if (stopped) { onEnd?.(); return; }
+    if (chunkIdx >= chunks.length) { onEnd?.(); return; }
+    const chunk = chunks[chunkIdx];
+    const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(chunk)}&tl=${ttsLang}&client=tw-ob`;
+    currentAudio = new Audio(url);
+    if (chunkIdx === 0) onSpeak?.();
+    currentAudio.onended = () => { chunkIdx++; playNext(); };
+    currentAudio.onerror = () => { onEnd?.(); };
+    currentAudio.play().catch(() => onEnd?.());
+  }
+
+  playNext();
+
+  return {
+    stop: () => {
+      stopped = true;
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio = null;
+      }
+      onEnd?.();
+    },
+  };
+}
+
+// ============================================================
+// Animated 3D-Style Avatar SVG with Breathing Animation
+// ============================================================
+
+function AnimatedTutorAvatar({ speaking, size = 100 }: { speaking: boolean; size?: number }) {
+  const [mouthOpen, setMouthOpen] = useState(false);
+  const [blink, setBlink] = useState(false);
+
+  // Animate mouth when speaking - use callback pattern to avoid lint issue
+  useEffect(() => {
+    if (!speaking) {
+      // Reset mouth when not speaking - this is acceptable
+      return;
+    }
+    const interval = setInterval(() => {
+      setMouthOpen(prev => !prev);
+    }, 180);
+    return () => clearInterval(interval);
+  }, [speaking]);
+
+  // Random blinking
+  useEffect(() => {
+    const blinkInterval = setInterval(() => {
+      setBlink(true);
+      setTimeout(() => setBlink(false), 150);
+    }, 3000 + Math.random() * 2000);
+    return () => clearInterval(blinkInterval);
+  }, []);
+
+  return (
+    <div className="relative">
+      {/* Glow ring around profile with emerald pulse */}
+      <div
+        className={`absolute inset-0 rounded-full ${speaking ? 'animate-pulse' : 'animate-breathing'} bg-gradient-to-r from-emerald-400 to-teal-500 opacity-60`}
+        style={{ animationDuration: speaking ? '1s' : '3s' }}
+      />
+
+      {/* Avatar SVG */}
+      <svg
+        viewBox="0 0 80 80"
+        width={size}
+        height={size}
+        role="img"
+        aria-label={`AI Tutor avatar${speaking ? ' speaking' : ''}`}
+        className={`relative z-10 ${speaking ? 'animate-head-bob' : ''}`}
+      >
+        {/* Background circle with gradient */}
+        <defs>
+          <linearGradient id="tutor-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#10b981" />
+            <stop offset="100%" stopColor="#0d9488" />
+          </linearGradient>
+          {/* 3D shadow effect */}
+          <filter id="shadow">
+            <feDropShadow dx="2" dy="4" stdDeviation="3" floodOpacity="0.3" />
+          </filter>
+        </defs>
+
+        {/* Head */}
+        <circle cx="40" cy="36" r="26" fill="url(#tutor-grad)" filter="url(#shadow)" />
+
+        {/* Hair / top of head detail */}
+        <ellipse cx="40" cy="16" rx="20" ry="8" fill="url(#tutor-grad)" opacity="0.8" />
+
+        {/* Face background */}
+        <circle cx="40" cy="38" r="20" fill="#FEF3C7" />
+
+        {/* Eyes */}
+        {blink ? (
+          <>
+            <line x1="32" y1="34" x2="36" y2="34" stroke="#1F2937" strokeWidth="2" strokeLinecap="round" />
+            <line x1="44" y1="34" x2="48" y2="34" stroke="#1F2937" strokeWidth="2" strokeLinecap="round" />
+          </>
+        ) : (
+          <>
+            <circle cx="34" cy="33" r="3" fill="#1F2937" />
+            <circle cx="46" cy="33" r="3" fill="#1F2937" />
+            {/* Eye highlights */}
+            <circle cx="35" cy="32" r="1" fill="white" />
+            <circle cx="47" cy="32" r="1" fill="white" />
+          </>
+        )}
+
+        {/* Eyebrows — slightly raised when speaking */}
+        <line x1="30" y1={speaking ? 27 : 28} x2="38" y2={speaking ? 27 : 28} stroke="#1F2937" strokeWidth="1.5" strokeLinecap="round" />
+        <line x1="42" y1={speaking ? 27 : 28} x2="50" y2={speaking ? 27 : 28} stroke="#1F2937" strokeWidth="1.5" strokeLinecap="round" />
+
+        {/* Nose */}
+        <ellipse cx="40" cy="38" rx="1.5" ry="2" fill="#D97706" opacity="0.5" />
+
+        {/* Mouth — animated when speaking */}
+        {speaking ? (
+          mouthOpen ? (
+            <ellipse cx="40" cy="46" rx="5" ry="4" fill="#DC2626" opacity="0.9" />
+          ) : (
+            <ellipse cx="40" cy="45" rx="4" ry="2" fill="#DC2626" opacity="0.8" />
+          )
+        ) : (
+          /* Smile when not speaking */
+          <path d="M35 44 Q40 49 45 44" fill="none" stroke="#DC2626" strokeWidth="1.5" strokeLinecap="round" />
+        )}
+
+        {/* Cheeks — blush when speaking */}
+        {speaking && (
+          <>
+            <circle cx="28" cy="41" r="4" fill="#FCA5A5" opacity="0.5" />
+            <circle cx="52" cy="41" r="4" fill="#FCA5A5" opacity="0.5" />
+          </>
+        )}
+      </svg>
+
+      {/* Sound wave indicators when speaking */}
+      {speaking && (
+        <div className="absolute -right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5 z-10">
+          <div className="w-0.5 h-2 rounded-full bg-emerald-500 animate-sound-wave-1" />
+          <div className="w-0.5 h-3 rounded-full bg-emerald-500 animate-sound-wave-2" />
+          <div className="w-0.5 h-2 rounded-full bg-emerald-500 animate-sound-wave-3" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
+// Main AI Tutor Sidebar Component
+// ============================================================
+
 export function TutorChat() {
   const {
-    isTutorOpen, setTutorOpen, chatMessages, addMessage, clearChat,
+    currentUserId,
     view,
+    chatMessages,
+    addMessage,
+    clearChat,
+    tutorSidebarExpanded,
+    setTutorSidebarExpanded,
+    tutorSidebarChatOpen,
+    setTutorSidebarChatOpen,
+    tutorVoiceLang,
+    setTutorVoiceLang,
+    tutorVoicePausedPosition,
+    tutorVoiceProgress,
+    tutorVoiceLastText,
+    setTutorVoiceState,
   } = useAppStore();
+
   const [input, setInput] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [isExplanationActive, setIsExplanationActive] = useState(false);
-  const [whiteboardNotes, setWhiteboardNotes] = useState<string[]>([]);
+  const [isPaused, setIsPaused] = useState(false);
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<any>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const googleTtsRef = useRef<GoogleTTSController | null>(null);
+
+  // Sidebar visibility - show only when logged in and not on home page
+  const isVisible = currentUserId !== null && view.name !== 'home';
+  const sidebarWidth = tutorSidebarExpanded ? 400 : 320;
 
   // Build a context string based on current view
   const courseContext = (() => {
     if (view.name === 'course') {
-      const c = findCourse(view.courseId);
+      const c = findCourse(view.courseId!);
       return c ? `${c.title} — ${c.subtitle}` : undefined;
     }
     if (view.name === 'lesson' || view.name === 'quiz') {
-      const r = findLesson(view.courseId, view.moduleId, view.lessonId);
+      const r = findLesson(view.courseId!, view.moduleId!, view.lessonId!);
       return r ? `${r.course.title} / ${r.module.title} / ${r.lesson.title}` : undefined;
     }
     return undefined;
   })();
 
-  // Contextual subtitle based on course
-  const headerSubtitle = (() => {
-    if (courseContext) return courseContext;
-    if (view.courseId) {
-      const c = findCourse(view.courseId);
-      if (c) return `AI & Machine Learning Tutor · ${c.title}`;
-    }
-    return 'AI & Machine Learning Tutor';
-  })();
-
   const messages = chatMessages.length > 0 ? chatMessages : [WELCOME];
-
-  // Extract whiteboard notes from conversation
-  useEffect(() => {
-    const assistantMessages = chatMessages.filter((m) => m.role === 'assistant' && m.id !== 'welcome');
-    if (assistantMessages.length === 0) {
-      setWhiteboardNotes([]);
-      return;
-    }
-    const notes: string[] = [];
-    const lastMsg = assistantMessages[assistantMessages.length - 1];
-    // Extract key points: headings, bold text, bullet points
-    const headingMatches = lastMsg.content.match(/^#{1,3}\s+(.+)$/gm);
-    if (headingMatches) {
-      headingMatches.forEach((h) => notes.push(h.replace(/^#+\s+/, '').trim()));
-    }
-    const boldMatches = lastMsg.content.match(/\*\*([^*]+)\*\*/g);
-    if (boldMatches) {
-      boldMatches.slice(0, 5).forEach((b) => notes.push(b.replace(/\*\*/g, '').trim()));
-    }
-    const bulletMatches = lastMsg.content.match(/^[-*]\s+(.+)$/gm);
-    if (bulletMatches) {
-      bulletMatches.slice(0, 5).forEach((b) => notes.push(b.replace(/^[-*]\s+/, '').trim()));
-    }
-    // Deduplicate and limit
-    const unique = [...new Set(notes)].slice(0, 8);
-    setWhiteboardNotes(unique);
-  }, [chatMessages]);
-
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [chatMessages, isTutorOpen]);
-
-  useEffect(() => {
-    if (isTutorOpen && inputRef.current) {
-      setTimeout(() => inputRef.current?.focus(), 100);
-    }
-  }, [isTutorOpen]);
 
   // Initialize Speech Synthesis
   useEffect(() => {
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       synthRef.current = window.speechSynthesis;
+      // Load voices
+      window.speechSynthesis.getVoices();
     }
   }, []);
 
-  // Speak the last assistant message when explanation is active
-  const speakText = useCallback((text: string) => {
-    if (!synthRef.current) return;
-    synthRef.current.cancel();
-    // Strip markdown for speech
-    const plain = text
-      .replace(/```[\s\S]*?```/g, ' code block ')
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [chatMessages]);
+
+  // Focus input when chat opens
+  useEffect(() => {
+    if (tutorSidebarChatOpen && inputRef.current) {
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+  }, [tutorSidebarChatOpen]);
+
+  // Convert markdown to spoken text
+  const toSpokenText = useCallback((md: string) => {
+    return md
+      .replace(/```[\s\S]*?```/g, ' (code block) ')
       .replace(/`([^`]+)`/g, '$1')
+      .replace(/^#{1,6}\s+/gm, '')
+      .replace(/^\s*[-*]\s+/gm, '')
       .replace(/\*\*([^*]+)\*\*/g, '$1')
-      .replace(/#{1,6}\s+/g, '')
-      .replace(/[-*]\s+/g, '')
-      .replace(/\n/g, '. ');
-    const utterance = new SpeechSynthesisUtterance(plain);
-    utterance.rate = 1;
-    utterance.pitch = 1;
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
-    synthRef.current.speak(utterance);
+      .replace(/\*([^*]+)\*/g, '$1')
+      .replace(/\n{2,}/g, '. ')
+      .replace(/\n/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
   }, []);
 
-  // Stop speaking
-  const stopSpeaking = useCallback(() => {
+  // Speak text using TTS with Indian language fallback
+  const speakText = useCallback((text: string) => {
+    if (!text) return;
+
+    const lang = tutorVoiceLang ?? 'en';
+    const plainText = toSpokenText(text);
+
+    // Check if we should use Google TTS fallback for Indian languages
+    if (INDIAN_LANGS.includes(lang) && !browserHasVoiceForLang(lang)) {
+      googleTtsRef.current = playGoogleTTS(
+        plainText,
+        lang,
+        () => {
+          setIsSpeaking(false);
+          setIsPaused(false);
+          setTutorVoiceState(0, 100, '');
+        },
+        () => {
+          setIsSpeaking(true);
+          setIsPaused(false);
+        }
+      );
+      return;
+    }
+
+    // Use browser speechSynthesis
+    if (!synthRef.current) return;
+
+    synthRef.current.cancel();
+    const utterance = new SpeechSynthesisUtterance(plainText);
+    utterance.lang = lang === 'en' ? 'en-IN' : lang;
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+
+    utterance.onstart = () => {
+      setIsSpeaking(true);
+      setIsPaused(false);
+    };
+    utterance.onend = () => {
+      setIsSpeaking(false);
+      setIsPaused(false);
+      setTutorVoiceState(0, 100, text);
+    };
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+      setIsPaused(false);
+    };
+
+    utteranceRef.current = utterance;
+    synthRef.current.speak(utterance);
+
+    // Save voice state for resume
+    setTutorVoiceState(0, 0, text);
+  }, [tutorVoiceLang, toSpokenText, setTutorVoiceState]);
+
+  // Pause speech
+  const pauseSpeech = useCallback(() => {
+    if (synthRef.current && isSpeaking) {
+      synthRef.current.pause();
+      setIsPaused(true);
+      setIsSpeaking(false);
+      // Save paused position
+      setTutorVoiceState(50, tutorVoiceProgress, tutorVoiceLastText);
+    }
+  }, [isSpeaking, tutorVoiceProgress, tutorVoiceLastText, setTutorVoiceState]);
+
+  // Resume speech
+  const resumeSpeech = useCallback(() => {
+    if (synthRef.current && isPaused) {
+      synthRef.current.resume();
+      setIsPaused(false);
+      setIsSpeaking(true);
+    } else if (tutorVoiceLastText && !isSpeaking) {
+      // Resume from saved state
+      speakText(tutorVoiceLastText);
+    }
+  }, [isPaused, isSpeaking, tutorVoiceLastText, speakText]);
+
+  // Stop speech
+  const stopSpeech = useCallback(() => {
     if (synthRef.current) {
       synthRef.current.cancel();
     }
-    setIsSpeaking(false);
-  }, []);
-
-  // Toggle explanation mode
-  const toggleExplanation = useCallback(() => {
-    if (isExplanationActive) {
-      stopSpeaking();
-      setIsExplanationActive(false);
-    } else {
-      setIsExplanationActive(true);
-      // Speak the last assistant message
-      const assistantMessages = chatMessages.filter((m) => m.role === 'assistant' && m.id !== 'welcome');
-      if (assistantMessages.length > 0) {
-        speakText(assistantMessages[assistantMessages.length - 1].content);
-      }
+    if (googleTtsRef.current) {
+      googleTtsRef.current.stop();
     }
-  }, [isExplanationActive, chatMessages, speakText, stopSpeaking]);
+    setIsSpeaking(false);
+    setIsPaused(false);
+    setTutorVoiceState(0, 0, '');
+  }, [setTutorVoiceState]);
+
+  // Play/Read aloud - speak last AI response
+  const playLastResponse = useCallback(() => {
+    const assistantMessages = chatMessages.filter(m => m.role === 'assistant' && m.id !== 'welcome');
+    if (assistantMessages.length > 0) {
+      speakText(assistantMessages[assistantMessages.length - 1].content);
+    }
+  }, [chatMessages, speakText]);
 
   // Voice input: start/stop listening
   const toggleListening = useCallback(() => {
     if (isListening) {
-      // Stop listening
       if (recognitionRef.current) {
         recognitionRef.current.stop();
       }
@@ -166,7 +420,6 @@ export function TutorChat() {
       return;
     }
 
-    // Start listening
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
       alert('Speech Recognition is not supported in this browser. Please try Chrome.');
@@ -176,7 +429,7 @@ export function TutorChat() {
     const recognition = new SpeechRecognition();
     recognition.continuous = false;
     recognition.interimResults = false;
-    recognition.lang = 'en-US';
+    recognition.lang = tutorVoiceLang === 'en' ? 'en-IN' : tutorVoiceLang ?? 'en-IN';
 
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript;
@@ -186,40 +439,26 @@ export function TutorChat() {
       setIsListening(false);
     };
 
-    recognition.onerror = () => {
-      setIsListening(false);
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-    };
+    recognition.onerror = () => setIsListening(false);
+    recognition.onend = () => setIsListening(false);
 
     recognitionRef.current = recognition;
     recognition.start();
     setIsListening(true);
-  }, [isListening]);
+  }, [isListening, tutorVoiceLang]);
 
-  // Auto-speak when explanation is active and new assistant message arrives
+  // Cleanup speech on logout or visibility change
   useEffect(() => {
-    if (!isExplanationActive) return;
-    const lastMsg = chatMessages[chatMessages.length - 1];
-    if (lastMsg && lastMsg.role === 'assistant' && lastMsg.id !== 'welcome') {
-      speakText(lastMsg.content);
-    }
-  }, [chatMessages, isExplanationActive, speakText]);
-
-  // Cleanup speech on close
-  useEffect(() => {
-    if (!isTutorOpen) {
-      stopSpeaking();
-      setIsExplanationActive(false);
+    if (!isVisible) {
+      stopSpeech();
       if (isListening && recognitionRef.current) {
         recognitionRef.current.stop();
         setIsListening(false);
       }
     }
-  }, [isTutorOpen, stopSpeaking, isListening]);
+  }, [isVisible, stopSpeech, isListening]);
 
+  // Send message function
   const send = async (text: string) => {
     const trimmed = text.trim();
     if (!trimmed || isSending) return;
@@ -234,10 +473,13 @@ export function TutorChat() {
     setInput('');
     setIsSending(true);
 
+    // Auto-open chat when user sends a message
+    setTutorSidebarChatOpen(true);
+
     try {
       const history = useAppStore.getState().chatMessages
-        .filter((m) => m.id !== 'welcome')
-        .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content }));
+        .filter(m => m.id !== 'welcome')
+        .map(m => ({ role: m.role as 'user' | 'assistant', content: m.content }));
 
       const res = await fetch('/api/tutor', {
         method: 'POST',
@@ -270,226 +512,292 @@ export function TutorChat() {
     }
   };
 
-  return (
-    <Sheet open={isTutorOpen} onOpenChange={setTutorOpen}>
-      <SheetContent
-        side="right"
-        className="w-full gap-0 p-0 sm:max-w-[480px] [&_[data-slot=sheet-close]]:hidden flex flex-col"
-      >
-        {/* ── Header ── */}
-        <SheetHeader className="border-b bg-gradient-to-r from-emerald-500 to-teal-600 p-4 text-white shrink-0">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/15 backdrop-blur">
-                <Sparkles className="h-5 w-5" />
-              </span>
-              <div>
-                <SheetTitle className="text-white text-lg font-bold tracking-wide">MARQ AI</SheetTitle>
-                <SheetDescription className="text-white/80 text-xs">
-                  {headerSubtitle}
-                </SheetDescription>
-              </div>
-            </div>
-            <div className="flex items-center gap-1">
-              {/* Voice Chat Button */}
-              <Button
-                size="sm"
-                className={`h-8 gap-1.5 rounded-full text-xs font-semibold ${
-                  isListening
-                    ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse'
-                    : 'bg-green-500 hover:bg-green-600 text-white'
-                }`}
-                onClick={toggleListening}
-                aria-label={isListening ? 'Stop voice chat' : 'Start voice chat'}
-              >
-                {isListening ? <MicOff className="h-3.5 w-3.5" /> : <Mic className="h-3.5 w-3.5" />}
-                {isListening ? 'Listening…' : 'Voice Chat'}
-              </Button>
-              {chatMessages.length > 0 && (
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-8 w-8 text-white hover:bg-white/20"
-                  onClick={() => {
-                    if (confirm('Clear the conversation?')) clearChat();
-                  }}
-                  aria-label="Clear chat"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              )}
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8 text-white hover:bg-white/20"
-                onClick={() => setTutorOpen(false)}
-                aria-label="Close"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </SheetHeader>
+  if (!isVisible) return null;
 
-        {/* ── Messages ── */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto">
-          <div className="space-y-4 p-4">
-            {messages.map((m) => (
-              <MessageBubble key={m.id} message={m} />
-            ))}
-            {isSending && (
-              <div className="flex items-center gap-2 px-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin text-emerald-600" />
-                <span>MARQ AI is thinking…</span>
-              </div>
+  return (
+    <>
+      {/* Left Sidebar */}
+      <aside
+        className={`fixed left-0 top-0 h-full z-40 bg-background border-r border-border shadow-lg transition-all duration-300 ease-in-out flex flex-col`}
+        style={{ width: `${sidebarWidth}px` }}
+      >
+        {/* Animated Profile Section (top) */}
+        <div className="p-4 border-b border-border bg-gradient-to-b from-emerald-50/50 to-background dark:from-emerald-950/20">
+          <div className="flex flex-col items-center">
+            {/* Avatar with breathing animation */}
+            <AnimatedTutorAvatar speaking={isSpeaking} size={100} />
+
+            {/* AI TUTOR badge */}
+            <Badge className="mt-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold tracking-wide text-xs px-3 py-1">
+              AI TUTOR
+            </Badge>
+
+            {/* Stats row */}
+            <p className="mt-2 text-xs text-muted-foreground font-medium">
+              10+ yrs | 2,500+ students | 4.9★
+            </p>
+
+            {/* Speaking/Paused status badges */}
+            {isSpeaking && (
+              <Badge className="mt-2 animate-pulse bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-[10px]">
+                <Volume2 className="mr-1 h-3 w-3" /> Speaking...
+              </Badge>
             )}
+            {isPaused && (
+              <Badge className="mt-2 bg-amber-500/10 text-amber-700 dark:text-amber-300 text-[10px]">
+                <Pause className="mr-1 h-3 w-3" /> Paused
+              </Badge>
+            )}
+          </div>
+
+          {/* Language selector */}
+          <div className="mt-4">
+            <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Language</label>
+            <select
+              value={tutorVoiceLang ?? 'en'}
+              onChange={e => setTutorVoiceLang(e.target.value)}
+              className="mt-1 w-full rounded-md border bg-background px-2 py-1.5 text-xs cursor-pointer"
+            >
+              <option value="en">English</option>
+              <option value="hi">हिन्दी (Hindi)</option>
+              <option value="te">తెలుగు (Telugu)</option>
+              <option value="ta">தமிழ் (Tamil)</option>
+              <option value="kn">ಕನ್ನಡ (Kannada)</option>
+            </select>
           </div>
         </div>
 
-        {/* ── Suggestions ── */}
-        {chatMessages.length === 0 && (
-          <div className="border-t bg-muted/30 p-3 shrink-0">
-            <p className="mb-2 px-1 text-xs font-medium text-muted-foreground">Try asking:</p>
-            <div className="flex flex-wrap gap-2">
-              {SUGGESTIONS.map((s) => (
-                <button
-                  key={s}
-                  onClick={() => send(s)}
-                  className="rounded-full border bg-card px-3 py-1.5 text-xs text-foreground transition-colors hover:border-emerald-500/50 hover:bg-emerald-500/5"
-                >
-                  {s}
-                </button>
+        {/* Control Buttons (5-column grid) */}
+        <div className="p-3 border-b border-border bg-muted/30">
+          <div className="grid grid-cols-5 gap-1">
+            {/* Play/Read Aloud */}
+            <Button
+              size="sm"
+              variant={isSpeaking ? 'default' : 'outline'}
+              className={`h-10 flex flex-col items-center justify-center gap-0.5 text-[10px] ${isSpeaking ? 'bg-emerald-600 text-white' : 'text-emerald-600 border-emerald-500/50'}`}
+              onClick={playLastResponse}
+              disabled={chatMessages.length === 0 || isSending}
+              title="Read aloud last AI response"
+            >
+              <Volume2 className="h-4 w-4" />
+              <span>Play</span>
+            </Button>
+
+            {/* Pause */}
+            <Button
+              size="sm"
+              variant={isPaused ? 'default' : 'outline'}
+              className={`h-10 flex flex-col items-center justify-center gap-0.5 text-[10px] ${isPaused ? 'bg-amber-600 text-white' : 'text-amber-600 border-amber-500/50'}`}
+              onClick={isPaused ? resumeSpeech : pauseSpeech}
+              disabled={!isSpeaking && !isPaused}
+              title={isPaused ? 'Resume speech' : 'Pause speech'}
+            >
+              <Pause className="h-4 w-4" />
+              <span>{isPaused ? 'Resume' : 'Pause'}</span>
+            </Button>
+
+            {/* Stop */}
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-10 flex flex-col items-center justify-center gap-0.5 text-[10px] text-rose-600 border-rose-500/50 hover:bg-rose-50"
+              onClick={stopSpeech}
+              disabled={!isSpeaking && !isPaused}
+              title="Stop speech"
+            >
+              <Square className="h-4 w-4" />
+              <span>Stop</span>
+            </Button>
+
+            {/* Record/Mic */}
+            <Button
+              size="sm"
+              variant={isListening ? 'default' : 'outline'}
+              className={`h-10 flex flex-col items-center justify-center gap-0.5 text-[10px] ${isListening ? 'bg-rose-600 text-white animate-pulse' : 'text-rose-600 border-rose-500/50'}`}
+              onClick={toggleListening}
+              title={isListening ? 'Stop voice input' : 'Start voice input'}
+            >
+              {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              <span>{isListening ? 'Stop' : 'Mic'}</span>
+            </Button>
+
+            {/* Chat toggle */}
+            <Button
+              size="sm"
+              variant={tutorSidebarChatOpen ? 'default' : 'outline'}
+              className={`h-10 flex flex-col items-center justify-center gap-0.5 text-[10px] ${tutorSidebarChatOpen ? 'bg-emerald-600 text-white' : 'text-emerald-600 border-emerald-500/50'}`}
+              onClick={() => setTutorSidebarChatOpen(!tutorSidebarChatOpen)}
+              title={tutorSidebarChatOpen ? 'Hide chat' : 'Show chat'}
+            >
+              <MessageSquare className="h-4 w-4" />
+              <span>Chat</span>
+            </Button>
+          </div>
+        </div>
+
+        {/* Expand/Collapse Toggle Button */}
+        <button
+          className="absolute -right-3 top-20 z-50 h-6 w-6 rounded-full bg-background border border-border shadow-md hover:bg-muted flex items-center justify-center"
+          onClick={() => setTutorSidebarExpanded(!tutorSidebarExpanded)}
+          title={tutorSidebarExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
+        >
+          {tutorSidebarExpanded ? <ChevronLeft className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+        </button>
+
+        {/* Chat Section (toggleable, bottom) */}
+        {tutorSidebarChatOpen && (
+          <div className="flex-1 flex flex-col min-h-0 border-t border-border">
+            {/* Messages */}
+            <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 space-y-3 max-h-[300px]">
+              {messages.map(m => (
+                <MessageBubble key={m.id} message={m} />
               ))}
+              {isSending && (
+                <div className="flex items-center gap-2 px-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin text-emerald-600" />
+                  <span>AI Tutor is thinking...</span>
+                </div>
+              )}
+            </div>
+
+            {/* Suggestions */}
+            {chatMessages.length === 0 && (
+              <div className="px-3 pb-2 border-t border-border bg-muted/20">
+                <p className="mb-1.5 text-[10px] font-medium text-muted-foreground">Try asking:</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {SUGGESTIONS.map(s => (
+                    <button
+                      key={s}
+                      onClick={() => send(s)}
+                      className="rounded-full border bg-background px-2.5 py-1 text-[11px] text-foreground transition-colors hover:border-emerald-500/50 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Composer */}
+            <div className="p-3 border-t border-border bg-background">
+              <div className="flex items-end gap-2">
+                <textarea
+                  ref={inputRef}
+                  value={input}
+                  onChange={e => setInput(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      send(input);
+                    }
+                  }}
+                  placeholder="Ask AI Tutor anything..."
+                  rows={1}
+                  className="max-h-24 min-h-[40px] flex-1 resize-none rounded-xl border bg-muted/40 px-2.5 py-2 text-sm outline-none transition-colors focus:border-emerald-500 focus:bg-background"
+                />
+                <Button
+                  onClick={() => send(input)}
+                  disabled={!input.trim() || isSending}
+                  className="h-10 shrink-0 bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700"
+                  size="icon"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {/* Clear chat */}
+              {chatMessages.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="mt-2 h-7 text-xs text-muted-foreground hover:text-rose-600"
+                  onClick={() => {
+                    if (confirm('Clear the conversation?')) clearChat();
+                  }}
+                >
+                  <Trash2 className="mr-1 h-3 w-3" /> Clear chat
+                </Button>
+              )}
             </div>
           </div>
         )}
 
-        {/* ── MARQ AI's Whiteboard ── */}
-        <div className="shrink-0 border-t-2 border-amber-700/30 bg-amber-50 dark:bg-amber-950/30 p-3">
-          <div className="flex items-center gap-2 mb-2">
-            <PenTool className="h-4 w-4 text-amber-700 dark:text-amber-400" />
-            <div>
-              <h4 className="text-sm font-semibold text-amber-900 dark:text-amber-200">MARQ AI&apos;s Whiteboard</h4>
-              <p className="text-[10px] text-amber-700/70 dark:text-amber-400/70">Visual notes while explaining</p>
-            </div>
-          </div>
-          {whiteboardNotes.length > 0 ? (
-            <ul className="space-y-1 pl-1">
-              {whiteboardNotes.map((note, i) => (
-                <li key={i} className="flex items-start gap-1.5 text-xs text-amber-800 dark:text-amber-300">
-                  <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-600 dark:bg-amber-400" />
-                  {note}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-xs text-amber-700/50 dark:text-amber-400/50 italic">Start a conversation to see notes here…</p>
-          )}
-        </div>
-
-        {/* ── MARQ AI's Explanation ── */}
-        <div className={`shrink-0 border-t-2 p-3 transition-colors ${
-          isExplanationActive
-            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30'
-            : 'border-emerald-500/30 bg-background'
-        }`}>
-          <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center gap-2">
-              <Volume2 className={`h-4 w-4 ${isExplanationActive ? 'text-emerald-600' : 'text-muted-foreground'}`} />
-              <div>
-                <h4 className={`text-sm font-semibold ${isExplanationActive ? 'text-emerald-700 dark:text-emerald-300' : 'text-foreground'}`}>
-                  MARQ AI&apos;s Explanation
-                </h4>
-                <p className="text-[10px] text-muted-foreground">
-                  {isExplanationActive ? (isSpeaking ? 'Speaking now…' : 'Ready to voice-over') : 'Ready to start voice-over'}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              {isExplanationActive && isSpeaking && (
-                <Badge className="bg-emerald-600 text-white text-[10px] px-2 py-0.5 animate-pulse">
-                  EXPLANATION · SPEAKING NOW
-                </Badge>
-              )}
-              <Button
-                size="sm"
-                variant={isExplanationActive ? 'default' : 'outline'}
-                className={`h-7 gap-1 text-xs ${
-                  isExplanationActive
-                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                    : 'border-emerald-500 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30'
-                }`}
-                onClick={toggleExplanation}
-                aria-label={isExplanationActive ? 'Stop explanation' : 'Start explanation'}
-              >
-                {isExplanationActive ? (
-                  <>
-                    <VolumeX className="h-3 w-3" />
-                    Stop
-                  </>
-                ) : (
-                  <>
-                    <Volume2 className="h-3 w-3" />
-                    Play
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Composer ── */}
-        <div className="border-t bg-background p-3 shrink-0">
-          <div className="flex items-end gap-2">
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  send(input);
-                }
-              }}
-              placeholder="Ask MARQ AI anything..."
-              rows={1}
-              className="max-h-32 min-h-[44px] flex-1 resize-none rounded-xl border bg-muted/40 px-3 py-2.5 text-sm outline-none transition-colors focus:border-emerald-500 focus:bg-background"
-            />
-            <Button
-              onClick={() => send(input)}
-              disabled={!input.trim() || isSending}
-              className="h-11 shrink-0 bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700"
-              size="icon"
-              aria-label="Send message"
+        {/* When chat is closed, show a button to open it */}
+        {!tutorSidebarChatOpen && (
+          <div className="flex-1 flex items-center justify-center p-4">
+            <button
+              className="flex flex-col items-center gap-2 text-muted-foreground hover:text-emerald-600 transition-colors"
+              onClick={() => setTutorSidebarChatOpen(true)}
             >
-              <Send className="h-4 w-4" />
-            </Button>
+              <MessageSquare className="h-8 w-8" />
+              <span className="text-xs">Open Chat</span>
+            </button>
           </div>
-          <p className="mt-1.5 px-1 text-[10px] text-muted-foreground">
-            Enter to send · Shift+Enter for new line · MARQ AI may make mistakes — verify important info.
-          </p>
-        </div>
-      </SheetContent>
-    </Sheet>
+        )}
+      </aside>
+
+      {/* CSS for animations */}
+      <style jsx global>{`
+        @keyframes breathing {
+          0%, 100% { transform: scale(1); opacity: 0.6; }
+          50% { transform: scale(1.03); opacity: 0.8; }
+          75% { transform: scale(0.98); opacity: 0.7; }
+        }
+        .animate-breathing {
+          animation: breathing 3s ease-in-out infinite;
+        }
+        @keyframes head-bob {
+          0%, 100% { transform: translateY(0) rotate(0deg); }
+          25% { transform: translateY(-2px) rotate(-1deg); }
+          75% { transform: translateY(2px) rotate(1deg); }
+        }
+        .animate-head-bob {
+          animation: head-bob 0.8s ease-in-out infinite;
+        }
+        @keyframes sound-wave-1 {
+          0%, 100% { height: 6px; }
+          50% { height: 12px; }
+        }
+        @keyframes sound-wave-2 {
+          0%, 100% { height: 8px; }
+          50% { height: 20px; }
+        }
+        @keyframes sound-wave-3 {
+          0%, 100% { height: 6px; }
+          50% { height: 12px; }
+        }
+        .animate-sound-wave-1 {
+          animation: sound-wave-1 0.4s ease-in-out infinite;
+        }
+        .animate-sound-wave-2 {
+          animation: sound-wave-2 0.4s ease-in-out infinite 0.1s;
+        }
+        .animate-sound-wave-3 {
+          animation: sound-wave-3 0.4s ease-in-out infinite 0.2s;
+        }
+      `}</style>
+    </>
   );
 }
+
+// ============================================================
+// Message Bubble Component
+// ============================================================
 
 function MessageBubble({ message }: { message: ChatMessage }) {
   const isUser = message.role === 'user';
   return (
     <div className={`flex gap-2.5 ${isUser ? 'flex-row-reverse' : ''}`}>
       <span
-        className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${
+        className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg ${
           isUser ? 'bg-muted text-muted-foreground' : 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white'
         }`}
       >
-        {isUser ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
+        {isUser ? <User className="h-3.5 w-3.5" /> : <Bot className="h-3.5 w-3.5" />}
       </span>
       <div
-        className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm ${
-          isUser
-            ? 'bg-emerald-600 text-white'
-            : 'bg-muted text-foreground'
+        className={`max-w-[85%] rounded-xl px-3 py-2 text-sm ${
+          isUser ? 'bg-emerald-600 text-white' : 'bg-muted text-foreground'
         }`}
       >
         <MarkdownLite content={message.content} />
@@ -498,37 +806,36 @@ function MessageBubble({ message }: { message: ChatMessage }) {
   );
 }
 
-// Tiny markdown renderer: code blocks, inline code, bold, headings, lists.
+// ============================================================
+// Markdown Lite Renderer
+// ============================================================
+
 function MarkdownLite({ content }: { content: string }) {
-  // Split by code blocks
   const parts = content.split(/```([\s\S]*?)```/g);
   return (
-    <div className="space-y-2">
+    <div className="space-y-1.5">
       {parts.map((part, i) => {
         if (i % 2 === 1) {
-          // code block
           const lines = part.split('\n');
           const lang = lines[0]?.trim() || '';
           const code = lines.slice(lang ? 1 : 0).join('\n').replace(/\n$/, '');
           return (
-            <pre key={i} className="overflow-x-auto rounded-lg bg-zinc-950 p-2.5 text-[12px] leading-relaxed text-emerald-200">
-              {lang && <div className="mb-1 text-[10px] uppercase tracking-wider text-zinc-500">{lang}</div>}
+            <pre key={i} className="overflow-x-auto rounded-lg bg-zinc-950 p-2 text-[12px] leading-relaxed text-emerald-200">
+              {lang && <div className="mb-0.5 text-[10px] uppercase tracking-wider text-zinc-500">{lang}</div>}
               <code>{code}</code>
             </pre>
           );
         }
-        // inline markdown
-        return <div key={i} className="whitespace-pre-wrap leading-relaxed" dangerouslySetInnerHTML={{ __html: renderInline(part) }} />;
+        return (
+          <div key={i} className="whitespace-pre-wrap leading-relaxed text-sm" dangerouslySetInnerHTML={{ __html: renderInline(part) }} />
+        );
       })}
     </div>
   );
 }
 
 function renderInline(text: string): string {
-  let html = text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+  let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   // inline code
   html = html.replace(/`([^`]+)`/g, '<code class="px-1 py-0.5 rounded bg-black/10 dark:bg-white/10 font-mono text-[12px]">$1</code>');
   // bold

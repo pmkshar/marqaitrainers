@@ -12,6 +12,8 @@ import type {
   LanguageCode, CurrencyCode, LocaleConfig,
   Corporate, CorporateSubscription, CorporatePlanModel, CorporatePlanTier, CorporateStatus,
   SkillLevel, SkillMatrixEntry, AiInterviewReport,
+  InterviewSession, InterviewQuestion, InterviewTurn, InterviewReport,
+  ProctoringSnapshot, ProctoringIncident,
 } from '@/lib/types';
 import {
   SEED_USERS, SEED_BOOKINGS, SEED_INTEGRATIONS, DEFAULT_ROLES, SEED_AUDIT_LOGS,
@@ -100,6 +102,18 @@ interface AppState {
 
   // Chat
   chatMessages: ChatMessage[];
+
+  // AI Tutor Sidebar State
+  tutorSidebarExpanded: boolean; // expanded (400px) vs collapsed (320px)
+  tutorSidebarChatOpen: boolean; // chat section visible
+  tutorVoicePausedPosition: number; // position in speech when paused
+  tutorVoiceProgress: number; // overall progress percentage
+  tutorVoiceLastText: string; // last spoken text for resume
+  tutorVoiceLang: string; // preferred TTS language
+  setTutorSidebarExpanded: (expanded: boolean) => void;
+  setTutorSidebarChatOpen: (open: boolean) => void;
+  setTutorVoiceState: (pausedPosition: number, progress: number, lastText: string) => void;
+  setTutorVoiceLang: (lang: string) => void;
 
   // Learning
   completedLessons: string[];
@@ -293,6 +307,18 @@ interface AppState {
   removeCorporateEmployee: (corpId: string, userId: string) => void;
   openCorporate: () => void;
 
+  // ---- AI Interview sessions ----
+  interviewSessions: InterviewSession[];
+  createInterviewSession: (userId: string, courseId: string, courseTitle: string, questions: InterviewQuestion[]) => string;
+  appendInterviewTurn: (sessionId: string, turn: InterviewTurn) => void;
+  advanceInterviewQuestion: (sessionId: string) => void;
+  completeInterviewSession: (sessionId: string, report: InterviewReport) => void;
+  abandonInterviewSession: (sessionId: string) => void;
+  openInterviewReport: (sessionId: string) => void;
+  addProctoringSnapshot: (sessionId: string, snapshot: ProctoringSnapshot) => void;
+  addProctoringIncident: (sessionId: string, incident: ProctoringIncident) => void;
+  updateProctoringData: (sessionId: string, data: { lastFaceDetectedAt: number; noFaceDuration: number; autoPauseCount: number }) => void;
+
   // ---- locale / i18n ----
   language: LanguageCode;
   currency: CurrencyCode;
@@ -319,6 +345,90 @@ function threadIdFor(a: string, b: string) {
   return [a, b].sort().join('__');
 }
 
+// Helper function to calculate proctoring report from session data
+function calculateProctoringReport(
+  proctoringData: InterviewSession['proctoringData'],
+  startedAt: number
+): import('@/lib/types').ProctoringReport {
+  const snapshots = proctoringData?.snapshots ?? [];
+  const incidents = proctoringData?.incidents ?? [];
+  
+  if (snapshots.length === 0) {
+    return {
+      avgConcentrationScore: 0,
+      minConcentrationScore: 0,
+      maxConcentrationScore: 0,
+      faceDetectedPct: 0,
+      gazeCenterPct: 0,
+      incidents: [],
+      totalIncidents: 0,
+      faceMissingIncidents: 0,
+      lookingAwayIncidents: 0,
+      snapshots: [],
+      autoPauseEvents: [],
+      proctoringPassed: false,
+      proctoringNote: 'No proctoring data available.',
+    };
+  }
+  
+  // Calculate averages
+  const avgConcentration = snapshots.reduce((s, sn) => s + sn.concentrationScore, 0) / snapshots.length;
+  const minConcentration = Math.min(...snapshots.map((sn) => sn.concentrationScore));
+  const maxConcentration = Math.max(...snapshots.map((sn) => sn.concentrationScore));
+  const faceDetectedCount = snapshots.filter((sn) => sn.faceDetected).length;
+  const faceDetectedPct = Math.round((faceDetectedCount / snapshots.length) * 100);
+  const gazeCenterCount = snapshots.filter((sn) => sn.gazeDirection === 'center').length;
+  const gazeCenterPct = Math.round((gazeCenterCount / snapshots.length) * 100);
+  
+  // Count incidents by type
+  const faceMissingIncidents = incidents.filter((i) => i.type === 'face_missing').length;
+  const lookingAwayIncidents = incidents.filter((i) => i.type === 'looking_away').length;
+  
+  // Build auto-pause events from incidents
+  const autoPauseEvents = incidents
+    .filter((i) => i.type === 'face_missing' && i.duration && i.duration >= 10)
+    .map((i) => ({
+      timestamp: i.timestamp,
+      duration: i.duration ?? 0,
+      reason: 'Face not detected for extended period',
+    }));
+  
+  // Determine if proctoring passed
+  const hasCriticalIncidents = faceMissingIncidents > 3 || autoPauseEvents.length > 0;
+  const avgScorePasses = avgConcentration >= 50;
+  const facePresencePasses = faceDetectedPct >= 80;
+  const proctoringPassed = !hasCriticalIncidents && avgScorePasses && facePresencePasses;
+  
+  // Generate note
+  let proctoringNote = '';
+  if (proctoringPassed) {
+    proctoringNote = `Candidate maintained good focus throughout the interview. Average concentration: ${Math.round(avgConcentration)}%. Face detected ${faceDetectedPct}% of the time.`;
+  } else {
+    const issues: string[] = [];
+    if (faceDetectedPct < 80) issues.push(`Face detected only ${faceDetectedPct}% of time`);
+    if (avgConcentration < 50) issues.push(`Average concentration only ${Math.round(avgConcentration)}%`);
+    if (faceMissingIncidents > 3) issues.push(`${faceMissingIncidents} face-missing incidents`);
+    if (autoPauseEvents.length > 0) issues.push('Interview was auto-paused due to missing face');
+    proctoringNote = `Proctoring concerns detected: ${issues.join(', ')}.`;
+  }
+  
+  return {
+    avgConcentrationScore: Math.round(avgConcentration),
+    minConcentrationScore: minConcentration,
+    maxConcentrationScore: maxConcentration,
+    faceDetectedPct,
+    gazeCenterPct,
+    incidents,
+    totalIncidents: incidents.length,
+    faceMissingIncidents,
+    lookingAwayIncidents,
+    snapshots: snapshots.slice(-20), // Keep last 20 snapshots for report
+    autoPauseEvents,
+    proctoringPassed,
+    proctoringNote,
+  };
+}
+
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
@@ -330,6 +440,12 @@ export const useAppStore = create<AppState>()(
       registerRole: 'candidate',
 
       chatMessages: [],
+      tutorSidebarExpanded: false, // default collapsed (320px)
+      tutorSidebarChatOpen: false, // chat section hidden by default
+      tutorVoicePausedPosition: 0,
+      tutorVoiceProgress: 0,
+      tutorVoiceLastText: '',
+      tutorVoiceLang: 'en',
       completedLessons: [],
       passedLessonTests: [],
 
@@ -368,6 +484,9 @@ export const useAppStore = create<AppState>()(
       corporates: SEED_CORPORATES,
       skillMatrix: SEED_SKILL_MATRIX,
       aiInterviewReports: SEED_AI_INTERVIEW_REPORTS,
+
+      // ---- AI Interview sessions ----
+      interviewSessions: [],
 
       // ---- locale defaults: Indian English, India, INR, Asia/Kolkata ----
       language: 'en',
@@ -620,6 +739,13 @@ export const useAppStore = create<AppState>()(
       addMessage: (msg) => set((s) => ({ chatMessages: [...s.chatMessages, msg] })),
       setMessages: (msgs) => set({ chatMessages: msgs }),
       clearChat: () => set({ chatMessages: [] }),
+
+      // ---------- AI Tutor Sidebar ----------
+      setTutorSidebarExpanded: (expanded) => set({ tutorSidebarExpanded: expanded }),
+      setTutorSidebarChatOpen: (open) => set({ tutorSidebarChatOpen: open }),
+      setTutorVoiceState: (pausedPosition, progress, lastText) =>
+        set({ tutorVoicePausedPosition: pausedPosition, tutorVoiceProgress: progress, tutorVoiceLastText: lastText }),
+      setTutorVoiceLang: (lang) => set({ tutorVoiceLang: lang }),
 
       // ---------- admin: users ----------
       addUser: (user) => {
@@ -1436,6 +1562,132 @@ export const useAppStore = create<AppState>()(
         get().logAction('Removed corporate employee', `${corpId}/${userId}`);
       },
 
+      // ---- AI Interview session methods ----
+      createInterviewSession: (userId, courseId, courseTitle, questions) => {
+        const id = `int-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+        const session: InterviewSession = {
+          id,
+          userId,
+          courseId,
+          courseTitle,
+          status: 'in_progress',
+          questions,
+          currentQuestionIdx: 0,
+          turns: [],
+          startedAt: Date.now(),
+          proctoringData: {
+            snapshots: [],
+            incidents: [],
+            autoPauseCount: 0,
+            lastFaceDetectedAt: Date.now(),
+            noFaceDuration: 0,
+          },
+        };
+        set((s) => ({ interviewSessions: [...s.interviewSessions, session] }));
+        get().logAction('Created interview session', `${courseId}/${userId}`);
+        return id;
+      },
+      appendInterviewTurn: (sessionId, turn) => {
+        set((s) => ({
+          interviewSessions: s.interviewSessions.map((sess) =>
+            sess.id === sessionId
+              ? { ...sess, turns: [...sess.turns, turn] }
+              : sess
+          ),
+        }));
+      },
+      advanceInterviewQuestion: (sessionId) => {
+        set((s) => ({
+          interviewSessions: s.interviewSessions.map((sess) =>
+            sess.id === sessionId
+              ? { ...sess, currentQuestionIdx: sess.currentQuestionIdx + 1 }
+              : sess
+          ),
+        }));
+      },
+      completeInterviewSession: (sessionId, report) => {
+        set((s) => ({
+          interviewSessions: s.interviewSessions.map((sess) =>
+            sess.id === sessionId
+              ? {
+                  ...sess,
+                  status: 'completed',
+                  completedAt: Date.now(),
+                  report,
+                  // Calculate proctoring report if we have proctoring data
+                  proctoring: sess.proctoringData ? calculateProctoringReport(sess.proctoringData, sess.startedAt) : undefined,
+                }
+              : sess
+          ),
+        }));
+        get().logAction('Completed interview session', sessionId);
+      },
+      abandonInterviewSession: (sessionId) => {
+        set((s) => ({
+          interviewSessions: s.interviewSessions.map((sess) =>
+            sess.id === sessionId
+              ? { ...sess, status: 'abandoned', completedAt: Date.now() }
+              : sess
+          ),
+        }));
+        get().logAction('Abandoned interview session', sessionId);
+      },
+      openInterviewReport: (sessionId) => {
+        // Navigate to a view showing the interview report
+        const session = get().interviewSessions.find((s) => s.id === sessionId);
+        if (session?.report) {
+          // For now, just log - could be expanded to open a dedicated report view
+          get().logAction('Opened interview report', sessionId);
+        }
+      },
+      addProctoringSnapshot: (sessionId, snapshot) => {
+        set((s) => ({
+          interviewSessions: s.interviewSessions.map((sess) =>
+            sess.id === sessionId && sess.proctoringData
+              ? {
+                  ...sess,
+                  proctoringData: {
+                    ...sess.proctoringData,
+                    snapshots: [...sess.proctoringData.snapshots, snapshot],
+                  },
+                }
+              : sess
+          ),
+        }));
+      },
+      addProctoringIncident: (sessionId, incident) => {
+        set((s) => ({
+          interviewSessions: s.interviewSessions.map((sess) =>
+            sess.id === sessionId && sess.proctoringData
+              ? {
+                  ...sess,
+                  proctoringData: {
+                    ...sess.proctoringData,
+                    incidents: [...sess.proctoringData.incidents, incident],
+                  },
+                }
+              : sess
+          ),
+        }));
+      },
+      updateProctoringData: (sessionId, data) => {
+        set((s) => ({
+          interviewSessions: s.interviewSessions.map((sess) =>
+            sess.id === sessionId && sess.proctoringData
+              ? {
+                  ...sess,
+                  proctoringData: {
+                    ...sess.proctoringData,
+                    lastFaceDetectedAt: data.lastFaceDetectedAt,
+                    noFaceDuration: data.noFaceDuration,
+                    autoPauseCount: data.autoPauseCount,
+                  },
+                }
+              : sess
+          ),
+        }));
+      },
+
       // ---- locale / i18n methods ----
       setLanguage: (lang) => set({ language: lang }),
       setCurrency: (cur) => set({ currency: cur }),
@@ -1574,12 +1826,21 @@ export const useAppStore = create<AppState>()(
         corporates: s.corporates,
         skillMatrix: s.skillMatrix,
         aiInterviewReports: s.aiInterviewReports,
+        // ---- AI Interview sessions ----
+        interviewSessions: s.interviewSessions.slice(-10), // Keep last 10 sessions
         // ---- locale preferences ----
         language: s.language,
         currency: s.currency,
         country: s.country,
         timezone: s.timezone,
         localeDetected: s.localeDetected,
+        // ---- AI Tutor sidebar state ----
+        tutorSidebarExpanded: s.tutorSidebarExpanded,
+        tutorSidebarChatOpen: s.tutorSidebarChatOpen,
+        tutorVoicePausedPosition: s.tutorVoicePausedPosition,
+        tutorVoiceProgress: s.tutorVoiceProgress,
+        tutorVoiceLastText: s.tutorVoiceLastText,
+        tutorVoiceLang: s.tutorVoiceLang,
       }),
       // Defensive merge — never let a corrupted persisted state crash the app
       merge: (persisted, current) => {
@@ -1617,6 +1878,8 @@ export const useAppStore = create<AppState>()(
           corporates: arr('corporates'),
           skillMatrix: arr('skillMatrix'),
           aiInterviewReports: arr('aiInterviewReports'),
+          // ---- AI Interview sessions ----
+          interviewSessions: arr('interviewSessions'),
           // ---- advanced ----
           certTemplates: arr('certTemplates'),
           registrationForms: arr('registrationForms'),
@@ -1632,6 +1895,13 @@ export const useAppStore = create<AppState>()(
           country: p.country ?? current.country,
           timezone: p.timezone ?? current.timezone,
           localeDetected: p.localeDetected ?? current.localeDetected,
+          // ---- AI Tutor sidebar state: fall back to defaults ----
+          tutorSidebarExpanded: p.tutorSidebarExpanded ?? current.tutorSidebarExpanded,
+          tutorSidebarChatOpen: p.tutorSidebarChatOpen ?? current.tutorSidebarChatOpen,
+          tutorVoicePausedPosition: p.tutorVoicePausedPosition ?? current.tutorVoicePausedPosition,
+          tutorVoiceProgress: p.tutorVoiceProgress ?? current.tutorVoiceProgress,
+          tutorVoiceLastText: p.tutorVoiceLastText ?? current.tutorVoiceLastText,
+          tutorVoiceLang: p.tutorVoiceLang ?? current.tutorVoiceLang,
         };
       },
     }

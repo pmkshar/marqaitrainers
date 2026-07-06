@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowRight, PlayCircle, Sparkles, BookOpen, Video, FileQuestion, MessageSquare, Users, CreditCard, Check, Search, Building2, Award, UserPlus, ClipboardCheck, Briefcase, Mic, Smartphone } from 'lucide-react';
+import { ArrowRight, PlayCircle, Sparkles, BookOpen, Video, FileQuestion, MessageSquare, Users, CreditCard, Check, Search, Building2, Award, UserPlus, ClipboardCheck, Briefcase, Mic, Smartphone, ShoppingCart, GraduationCap, MessageCircle, Target, Download, QrCode, Wifi, Bell, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,7 @@ import { useAppStore } from '@/lib/store';
 import { COURSES } from '@/lib/courses';
 import { PRICING_PLANS } from '@/lib/seed-data';
 import { CourseIcon } from './navbar';
+import { useEffect, useRef, useState } from 'react';
 
 const FEATURES = [
   { icon: BookOpen, title: 'Structured Courses', description: '6 career-track courses with step-wise lessons, code examples, tips, and detailed explanations. From beginner to expert level.', color: 'from-emerald-500 to-teal-600' },
@@ -17,6 +18,68 @@ const FEATURES = [
   { icon: MessageSquare, title: 'AI Tutor Chat', description: 'Ask questions anytime — our AI tutor answers in seconds with code snippets, examples, and personalized follow-ups.', color: 'from-violet-500 to-purple-600' },
   { icon: Users, title: 'Human Tutors', description: 'Book 1:1 video sessions with vetted human experts for live mentoring, code reviews, and career guidance.', color: 'from-sky-500 to-cyan-600' },
   { icon: CreditCard, title: 'Flexible Pricing', description: 'Subscribe monthly or annually for all-access, or buy individual courses for lifetime access. Corporate plans available.', color: 'from-fuchsia-500 to-pink-600' },
+];
+
+// Training Flow Steps (6 steps as requested)
+const TRAINING_STEPS = [
+  { 
+    step: 1, 
+    icon: UserPlus, 
+    title: 'Register', 
+    description: 'Create your free account in seconds. No credit card required to start.',
+    color: 'from-emerald-500 to-emerald-600'
+  },
+  { 
+    step: 2, 
+    icon: ShoppingCart, 
+    title: 'Buy Course', 
+    description: 'Choose individual courses or subscribe for unlimited access.',
+    color: 'from-sky-500 to-cyan-600'
+  },
+  { 
+    step: 3, 
+    icon: MessageCircle, 
+    title: 'AI Tutor Teaches', 
+    description: 'Learn with AI-powered voice tutoring and personalized explanations.',
+    color: 'from-amber-500 to-orange-600'
+  },
+  { 
+    step: 4, 
+    icon: Target, 
+    title: 'Practice & Quiz', 
+    description: 'Test your knowledge with graded quizzes and hands-on practice.',
+    color: 'from-violet-500 to-purple-600'
+  },
+  { 
+    step: 5, 
+    icon: MessageSquare, 
+    title: 'AI Interview', 
+    description: 'Practice mock interviews with AI to prepare for real job interviews.',
+    color: 'from-rose-500 to-pink-600'
+  },
+  { 
+    step: 6, 
+    icon: GraduationCap, 
+    title: 'Get Certified', 
+    description: 'Earn industry-recognized certificates upon course completion.',
+    color: 'from-teal-500 to-cyan-600'
+  },
+];
+
+// Corporate Clients for ticker
+const CORPORATE_CLIENTS = [
+  { name: 'TCS', shortName: 'TCS' },
+  { name: 'Infosys', shortName: 'INFY' },
+  { name: 'Wipro', shortName: 'WIPRO' },
+  { name: 'HCL', shortName: 'HCL' },
+  { name: 'Accenture', shortName: 'ACC' },
+  { name: 'IBM', shortName: 'IBM' },
+  { name: 'Microsoft', shortName: 'MSFT' },
+  { name: 'Google', shortName: 'GOOG' },
+  { name: 'Amazon', shortName: 'AMZN' },
+  { name: 'Cognizant', shortName: 'CTSH' },
+  { name: 'Capgemini', shortName: 'CAP' },
+  { name: 'Tech Mahindra', shortName: 'TECHM' },
 ];
 
 export function Hero() {
@@ -123,6 +186,214 @@ function Stat({ value, label }: { value: string; label: string }) {
   );
 }
 
+// Training Flow Section - 6 Steps
+export function TrainingFlow() {
+  return (
+    <section className="bg-gradient-to-b from-background to-muted/30 py-16 lg:py-24">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-2xl text-center">
+          <Badge variant="outline" className="mb-3 border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+            <GraduationCap className="mr-1 h-3 w-3" /> How It Works
+          </Badge>
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Your Path to Certification</h2>
+          <p className="mt-4 text-muted-foreground">
+            Follow our proven 6-step training flow from registration to certification with AI-powered learning.
+          </p>
+        </div>
+
+        {/* Desktop: Horizontal layout */}
+        <div className="mt-12 hidden lg:block">
+          <div className="flex items-center justify-center gap-2">
+            {TRAINING_STEPS.map((step, index) => (
+              <div key={step.step} className="flex items-center">
+                <div className="flex flex-col items-center text-center" style={{ minWidth: '160px' }}>
+                  <div className={`relative grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br ${step.color} text-white shadow-lg`}>
+                    <step.icon className="h-7 w-7" />
+                    <span className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-white text-xs font-bold shadow-md dark:bg-zinc-900">
+                      {step.step}
+                    </span>
+                  </div>
+                  <h3 className="mt-3 text-sm font-semibold">{step.title}</h3>
+                  <p className="mt-1 max-w-[140px] text-xs text-muted-foreground">{step.description}</p>
+                </div>
+                {index < TRAINING_STEPS.length - 1 && (
+                  <div className="mx-2 flex items-center">
+                    <div className="h-0.5 w-8 bg-gradient-to-r from-muted to-muted-foreground/20" />
+                    <ArrowRight className="h-4 w-4 text-muted-foreground/40" />
+                    <div className="h-0.5 w-8 bg-gradient-to-l from-muted to-muted-foreground/20" />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Mobile/Tablet: Vertical layout */}
+        <div className="mt-8 lg:hidden">
+          <div className="grid gap-4 sm:grid-cols-2">
+            {TRAINING_STEPS.map((step, index) => (
+              <div key={step.step} className="relative flex items-start gap-4 rounded-xl border bg-card p-4 shadow-sm">
+                <div className="flex flex-col items-center">
+                  <div className={`relative grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${step.color} text-white shadow-md`}>
+                    <step.icon className="h-6 w-6" />
+                    <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-white text-[10px] font-bold shadow-md dark:bg-zinc-900">
+                      {step.step}
+                    </span>
+                  </div>
+                  {index < TRAINING_STEPS.length - 1 && (
+                    <div className="mt-2 h-8 w-0.5 bg-gradient-to-b from-muted-foreground/30 to-transparent sm:hidden" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-sm font-semibold">{step.title}</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">{step.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// Course Carousel Section
+export function CourseCarousel() {
+  const { openCourse, setTutorOpen, setAuthOpen, currentUser } = useAppStore();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [isPaused, setIsPaused] = useState(false);
+
+  useEffect(() => {
+    if (isPaused) return;
+    
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const scroll = () => {
+      if (container.scrollLeft >= container.scrollWidth - container.clientWidth) {
+        container.scrollLeft = 0;
+      } else {
+        container.scrollLeft += 1;
+      }
+    };
+
+    const interval = setInterval(scroll, 30);
+    return () => clearInterval(interval);
+  }, [isPaused]);
+
+  const handlePrev = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollLeft -= 350;
+    }
+  };
+
+  const handleNext = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollLeft += 350;
+    }
+  };
+
+  return (
+    <section className="bg-muted/30 py-16 lg:py-24">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Explore our courses</h2>
+            <p className="mt-2 max-w-xl text-muted-foreground">
+              Six on-demand career tracks with certificates. Buy individually, subscribe for all-access, or get corporate training plans for your team.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="icon" onClick={handlePrev} className="h-10 w-10">
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+            <Button variant="outline" size="icon" onClick={handleNext} className="h-10 w-10">
+              <ChevronRight className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Carousel with fade edges */}
+        <div className="relative mt-10">
+          {/* Left fade */}
+          <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-24 bg-gradient-to-r from-muted/30 to-transparent" />
+          {/* Right fade */}
+          <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-24 bg-gradient-to-l from-muted/30 to-transparent" />
+          
+          <div
+            ref={scrollContainerRef}
+            className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide"
+            style={{ scrollBehavior: 'smooth' }}
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+          >
+            {COURSES.map((course) => (
+              <Card 
+                key={course.id} 
+                onClick={() => openCourse(course.id)} 
+                className="group relative w-72 flex-shrink-0 cursor-pointer overflow-hidden border-border/60 transition-all hover:-translate-y-1 hover:shadow-xl"
+              >
+                <div className={`relative h-32 bg-gradient-to-br ${course.gradient}`}>
+                  <div className="absolute inset-0 bg-grid-pattern opacity-20" />
+                  <span className="absolute right-4 top-4 grid h-14 w-14 place-items-center rounded-xl bg-white/15 text-white backdrop-blur">
+                    <CourseIcon name={course.icon} className="h-7 w-7" />
+                  </span>
+                  <Badge className="absolute left-4 top-4 bg-white/20 text-white hover:bg-white/30" variant="secondary">
+                    {course.level}
+                  </Badge>
+                  {course.onDemand && (
+                    <Badge className="absolute left-4 bottom-3 bg-emerald-500/80 text-white hover:bg-emerald-500" variant="secondary">
+                      On-Demand
+                    </Badge>
+                  )}
+                </div>
+                <CardContent className="flex flex-1 flex-col p-5">
+                  <h3 className="text-lg font-semibold leading-tight">{course.title}</h3>
+                  <p className="mt-1.5 line-clamp-2 text-sm text-muted-foreground">{course.subtitle}</p>
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {course.tags.slice(0, 3).map((t) => (
+                      <Badge key={t} variant="outline" className="text-[10px] font-medium">{t}</Badge>
+                    ))}
+                    {course.tags.length > 3 && (<Badge variant="outline" className="text-[10px] font-medium">+{course.tags.length - 3}</Badge>)}
+                  </div>
+                  <div className="mt-4 flex items-center gap-3 text-xs text-muted-foreground">
+                    <span className="inline-flex items-center gap-1"><PlayCircle className="h-3.5 w-3.5" /> {course.lessonsCount} lessons</span>
+                    <span>·</span><span>{course.duration}</span>
+                    <span>·</span><span>★ {course.rating}</span>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between border-t pt-3">
+                    <div className="text-sm">
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400">${course.oneTimePrice}</span>
+                      <span className="text-xs text-muted-foreground"> one-time · </span>
+                      <span className="font-medium">${course.monthlyPrice}/mo</span>
+                    </div>
+                    <span className="text-sm font-semibold text-emerald-600 transition-transform group-hover:translate-x-1 dark:text-emerald-400">View →</span>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            
+            {/* Ask AI Card */}
+            <Card className="flex w-72 flex-shrink-0 flex-col items-center justify-center border-dashed border-emerald-500/40 bg-emerald-500/5 p-8 text-center">
+              <span className="grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white">
+                <Sparkles className="h-6 w-6" />
+              </span>
+              <h3 className="mt-4 text-lg font-semibold">Not sure where to start?</h3>
+              <p className="mt-2 text-sm text-muted-foreground">Ask our AI tutor for a personalized recommendation.</p>
+              <div className="mt-4 flex flex-col gap-2">
+                <Button onClick={() => setTutorOpen(true)} className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700">
+                  <Sparkles className="mr-1.5 h-4 w-4" /> AI Tutor
+                </Button>
+                <Button onClick={() => useAppStore.getState().openTutors()} variant="outline">Human Tutors</Button>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function Features() {
   return (
     <section className="border-t bg-background py-16 lg:py-24">
@@ -151,6 +422,7 @@ export function Features() {
   );
 }
 
+// Keep the original CourseGrid as an alternative
 export function CourseGrid() {
   const { openCourse, setTutorOpen, setAuthOpen, currentUser } = useAppStore();
   return (
@@ -385,40 +657,6 @@ export function CtaSection() {
   );
 }
 
-// ---- Registration to Certification flow ----
-const STEPS = [
-  { icon: UserPlus, label: 'Sign Up', color: 'from-blue-500 to-blue-600' },
-  { icon: BookOpen, label: 'Enroll', color: 'from-emerald-500 to-teal-600' },
-  { icon: PlayCircle, label: 'Learn', color: 'from-purple-500 to-purple-600' },
-  { icon: ClipboardCheck, label: 'Practice', color: 'from-amber-500 to-orange-600' },
-  { icon: Check, label: 'Assess', color: 'from-rose-500 to-pink-600' },
-  { icon: Award, label: 'Certify', color: 'from-yellow-500 to-amber-600' },
-  { icon: Briefcase, label: 'Get Hired', color: 'from-teal-500 to-cyan-600' },
-];
-
-export function RegistrationToCertification() {
-  return (
-    <section className="bg-muted/30 py-12">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <h2 className="text-center text-2xl font-bold">From Registration to Certification</h2>
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          {STEPS.map((step, i) => (
-            <div key={step.label} className="flex items-center gap-3">
-              <div className="flex flex-col items-center gap-2">
-                <span className={`grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br ${step.color} text-white shadow-md`}>
-                  <step.icon className="h-5 w-5" />
-                </span>
-                <span className="text-xs font-medium text-muted-foreground">{step.label}</span>
-              </div>
-              {i < STEPS.length - 1 && <ArrowRight className="h-4 w-4 text-muted-foreground/40" />}
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 // ---- Corporate Training section ----
 export function CorporateTraining() {
   const { openCorporate } = useAppStore();
@@ -452,6 +690,68 @@ export function CorporateTraining() {
           <Button onClick={openCorporate} className="bg-purple-600 text-white hover:bg-purple-700">
             <Building2 className="mr-2 h-4 w-4" /> Explore Corporate Training
           </Button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ---- Corporate Clients Ticker ----
+export function CorporateClientsTicker() {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [isPaused, setIsPaused] = useState(false);
+
+  useEffect(() => {
+    if (isPaused) return;
+    
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const scroll = () => {
+      if (container.scrollLeft >= container.scrollWidth / 2) {
+        container.scrollLeft = 0;
+      } else {
+        container.scrollLeft += 0.5;
+      }
+    };
+
+    const interval = setInterval(scroll, 20);
+    return () => clearInterval(interval);
+  }, [isPaused]);
+
+  // Duplicate clients for seamless loop
+  const duplicatedClients = [...CORPORATE_CLIENTS, ...CORPORATE_CLIENTS];
+
+  return (
+    <section className="py-12 bg-muted/50">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <p className="text-center text-sm font-medium text-muted-foreground mb-6">
+          Trusted by leading companies
+        </p>
+        <div className="relative">
+          {/* Left gradient fade */}
+          <div className="pointer-events-none absolute left-0 top-0 z-10 h-16 w-32 bg-gradient-to-r from-muted/50 to-transparent" />
+          {/* Right gradient fade */}
+          <div className="pointer-events-none absolute right-0 top-0 z-10 h-16 w-32 bg-gradient-to-l from-muted/50 to-transparent" />
+          
+          <div
+            ref={scrollContainerRef}
+            className="flex items-center gap-12 overflow-x-hidden"
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+          >
+            {duplicatedClients.map((client, index) => (
+              <div 
+                key={`${client.name}-${index}`} 
+                className="flex flex-shrink-0 items-center gap-3 px-6 py-3 rounded-lg bg-background/50 border border-border/50 shadow-sm hover:border-emerald-500/30 hover:shadow-md transition-all cursor-pointer"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 text-sm font-bold text-slate-600 dark:text-slate-300">
+                  {client.shortName.slice(0, 2)}
+                </div>
+                <span className="text-sm font-semibold text-muted-foreground whitespace-nowrap">{client.name}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
@@ -494,6 +794,164 @@ export function CorporatePlans() {
   );
 }
 
+// ---- Mobile App Promo (Enhanced) ----
+export function MobileAppPromo() {
+  return (
+    <section className="py-16 lg:py-24 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid items-center gap-12 lg:grid-cols-2">
+          {/* Left side - Content */}
+          <div className="flex flex-col gap-6">
+            <Badge variant="outline" className="w-fit border-emerald-500/40 bg-emerald-500/10 text-emerald-300">
+              <Smartphone className="mr-1 h-3 w-3" /> Mobile App
+            </Badge>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Get the App</h2>
+            <p className="max-w-xl text-lg text-slate-300">
+              Learn anywhere, anytime. Download the MarqAI Courses app for iOS and Android. Access your courses, AI tutor, and certificates on the go.
+            </p>
+            
+            {/* Feature pills */}
+            <div className="flex flex-wrap gap-3 mt-2">
+              <div className="flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-sm">
+                <Wifi className="h-4 w-4 text-emerald-400" />
+                <span>Offline Learning</span>
+              </div>
+              <div className="flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-sm">
+                <Mic className="h-4 w-4 text-emerald-400" />
+                <span>AI Voice Tutor</span>
+              </div>
+              <div className="flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-sm">
+                <Bell className="h-4 w-4 text-emerald-400" />
+                <span>Push Notifications</span>
+              </div>
+            </div>
+
+            {/* Store buttons */}
+            <div className="flex flex-wrap gap-4 mt-4">
+              {/* Google Play Button */}
+              <button className="flex items-center gap-3 rounded-lg bg-black px-5 py-3 transition-transform hover:scale-105">
+                <svg viewBox="0 0 24 24" className="h-8 w-8" fill="currentColor">
+                  <path d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 0 1-.61-.92V2.734a1 1 0 0 1 .609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-3.198l2.807 1.626a1 1 0 0 1 0 1.73l-2.808 1.626L15.206 12l2.492-2.491zM5.864 2.658L16.8 8.99l-2.302 2.302-8.634-8.634z" />
+                </svg>
+                <div className="text-left">
+                  <div className="text-[10px] text-slate-400">GET IT ON</div>
+                  <div className="text-sm font-semibold">Google Play</div>
+                </div>
+              </button>
+              
+              {/* App Store Button */}
+              <button className="flex items-center gap-3 rounded-lg bg-black px-5 py-3 transition-transform hover:scale-105">
+                <svg viewBox="0 0 24 24" className="h-8 w-8" fill="currentColor">
+                  <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
+                </svg>
+                <div className="text-left">
+                  <div className="text-[10px] text-slate-400">Download on the</div>
+                  <div className="text-sm font-semibold">App Store</div>
+                </div>
+              </button>
+
+              {/* PWA Install Button */}
+              <button className="flex items-center gap-3 rounded-lg border border-emerald-500/50 bg-emerald-500/10 px-5 py-3 transition-all hover:bg-emerald-500/20 hover:scale-105">
+                <Download className="h-6 w-6 text-emerald-400" />
+                <div className="text-left">
+                  <div className="text-[10px] text-emerald-300">INSTALL NOW</div>
+                  <div className="text-sm font-semibold">PWA App</div>
+                </div>
+              </button>
+            </div>
+
+            {/* QR Code hint */}
+            <div className="flex items-center gap-3 mt-4 text-sm text-slate-400">
+              <QrCode className="h-5 w-5" />
+              <span>Scan the QR code on the right to download the app</span>
+            </div>
+          </div>
+
+          {/* Right side - Phone mockup and QR */}
+          <div className="relative flex items-center justify-center">
+            {/* Phone mockup */}
+            <div className="relative">
+              <div className="absolute -inset-4 rounded-[3rem] bg-gradient-to-tr from-emerald-500/20 via-teal-500/10 to-transparent blur-2xl" />
+              <div className="relative rounded-[2.5rem] border-8 border-slate-700 bg-slate-900 p-1 shadow-2xl">
+                {/* Phone notch */}
+                <div className="absolute left-1/2 top-2 h-6 w-24 -translate-x-1/2 rounded-full bg-slate-900" />
+                {/* Phone screen */}
+                <div className="h-[420px] w-[220px] overflow-hidden rounded-[2rem] bg-gradient-to-br from-emerald-500 to-teal-600">
+                  <div className="flex h-full flex-col items-center justify-center p-6 text-center text-white">
+                    <div className="grid h-16 w-16 place-items-center rounded-2xl bg-white/20 backdrop-blur">
+                      <BookOpen className="h-8 w-8" />
+                    </div>
+                    <h3 className="mt-4 text-lg font-bold">MarqAI Courses</h3>
+                    <p className="mt-2 text-sm text-white/80">Learn on the go with AI-powered tutoring</p>
+                    <div className="mt-6 space-y-2 text-sm">
+                      <div className="flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2">
+                        <PlayCircle className="h-4 w-4" />
+                        <span>Video Lessons</span>
+                      </div>
+                      <div className="flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2">
+                        <Mic className="h-4 w-4" />
+                        <span>Voice Tutor</span>
+                      </div>
+                      <div className="flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2">
+                        <Award className="h-4 w-4" />
+                        <span>Certificates</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* QR Code */}
+            <div className="absolute -right-4 bottom-8 hidden lg:block">
+              <div className="rounded-xl border border-white/20 bg-white p-3 shadow-xl">
+                <div className="grid h-24 w-24 place-items-center rounded bg-slate-100 text-slate-400">
+                  <QrCode className="h-16 w-16" />
+                </div>
+                <p className="mt-2 text-center text-[10px] font-medium text-slate-500">Scan to download</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ---- Registration to Certification flow (original, smaller version) ----
+const STEPS = [
+  { icon: UserPlus, label: 'Sign Up', color: 'from-blue-500 to-blue-600' },
+  { icon: BookOpen, label: 'Enroll', color: 'from-emerald-500 to-teal-600' },
+  { icon: PlayCircle, label: 'Learn', color: 'from-purple-500 to-purple-600' },
+  { icon: ClipboardCheck, label: 'Practice', color: 'from-amber-500 to-orange-600' },
+  { icon: Check, label: 'Assess', color: 'from-rose-500 to-pink-600' },
+  { icon: Award, label: 'Certify', color: 'from-yellow-500 to-amber-600' },
+  { icon: Briefcase, label: 'Get Hired', color: 'from-teal-500 to-cyan-600' },
+];
+
+export function RegistrationToCertification() {
+  return (
+    <section className="bg-muted/30 py-12">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <h2 className="text-center text-2xl font-bold">From Registration to Certification</h2>
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          {STEPS.map((step, i) => (
+            <div key={step.label} className="flex items-center gap-3">
+              <div className="flex flex-col items-center gap-2">
+                <span className={`grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br ${step.color} text-white shadow-md`}>
+                  <step.icon className="h-5 w-5" />
+                </span>
+                <span className="text-xs font-medium text-muted-foreground">{step.label}</span>
+              </div>
+              {i < STEPS.length - 1 && <ArrowRight className="h-4 w-4 text-muted-foreground/40" />}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ---- Trusted Companies ----
 const TRUSTED = ['Google', 'Microsoft', 'IBM', 'Salesforce', 'GitHub', 'Amazon', 'LinkedIn', 'Tech'];
 export function TrustedCompanies() {
@@ -509,25 +967,6 @@ export function TrustedCompanies() {
         </div>
         <div className="mt-6 text-center">
           <button onClick={openCorporate} className="text-sm font-medium text-purple-600 hover:underline">Explore Corporate Portal →</button>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ---- Mobile App Promo ----
-export function MobileAppPromo() {
-  return (
-    <section className="py-12 bg-muted/30">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col items-center gap-6 text-center md:flex-row md:text-left">
-          <span className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg">
-            <Smartphone className="h-8 w-8" />
-          </span>
-          <div>
-            <h2 className="text-2xl font-bold">Learn anywhere with the MarqAI Courses app</h2>
-            <p className="mt-2 text-muted-foreground">Download the app for iOS and Android. Access your courses, AI tutor, and certificates on the go.</p>
-          </div>
         </div>
       </div>
     </section>

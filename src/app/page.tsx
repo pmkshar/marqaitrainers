@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
-import { Hero, Features, RegistrationToCertification, CourseGrid, CorporateTraining, CorporatePlans, TrustedCompanies, MobileAppPromo, PricingSection, TutorsPreview, CtaSection } from '@/components/landing';
+import { Hero, Features, TrainingFlow, CourseCarousel, CorporateTraining, CorporateClientsTicker, CorporatePlans, TrustedCompanies, MobileAppPromo, PricingSection, TutorsPreview, CtaSection } from '@/components/landing';
 import { CourseDetail } from '@/components/course-detail';
 import { LessonView } from '@/components/lesson-view';
 import { QuizView } from '@/components/quiz-view';
@@ -25,6 +25,12 @@ import { useAppStore } from '@/lib/store';
 
 export default function Home() {
   const view = useAppStore((s) => s.view);
+  const currentUserId = useAppStore((s) => s.currentUserId);
+  const tutorSidebarExpanded = useAppStore((s) => s.tutorSidebarExpanded);
+
+  // Sidebar visibility - show only when logged in and not on home page
+  const showTutorSidebar = currentUserId !== null && view.name !== 'home';
+  const sidebarWidth = tutorSidebarExpanded ? 400 : 320;
 
   // Scroll to top whenever the view changes
   useEffect(() => {
@@ -49,48 +55,56 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
-      <Navbar />
-      <main className="flex-1">
-        <ErrorBoundary label={`view:${view.name}`}>
-          {view.name === 'home' && (
-            <>
-              <Hero />
-              <Features />
-              <RegistrationToCertification />
-              <CourseGrid />
-              <CorporateTraining />
-              <CorporatePlans />
-              <TrustedCompanies />
-              <MobileAppPromo />
-              <PricingSection />
-              <TutorsPreview />
-              <CtaSection />
-            </>
-          )}
-          {view.name === 'course' && <CourseDetail courseId={view.courseId!} />}
-          {view.name === 'lesson' && (
-            <LessonView key={view.lessonId} courseId={view.courseId!} moduleId={view.moduleId!} lessonId={view.lessonId!} />
-          )}
-          {view.name === 'quiz' && (
-            <QuizView key={view.lessonId} courseId={view.courseId!} moduleId={view.moduleId!} lessonId={view.lessonId!} />
-          )}
-          {view.name === 'pricing' && <PricingPage />}
-          {view.name === 'tutors' && <TutorMarketplace />}
-          {view.name === 'tutor_portal' && <TutorPortal />}
-          {view.name === 'admin' && <AdminPortal />}
-          {view.name === 'corporate' && <CorporatePortal />}
-          {view.name === 'my_learning' && <MyLearning />}
-          {view.name === 'dashboard' && <Dashboard />}
-          {view.name === 'calendar' && <CalendarPage />}
-          {view.name === 'members' && <MembersPage />}
-          {view.name === 'groups' && <GroupsPage />}
-          {view.name === 'messages' && <MessagesPage />}
-          {view.name === 'certificates' && <CertificatesPage />}
-          {view.name === 'achievements' && <AchievementsPage />}
-          {view.name === 'features' && <FeaturesPage />}
-        </ErrorBoundary>
-      </main>
-      <Footer />
+      {/* Wrap Navbar, Main, and Footer in a container that shifts when sidebar is visible */}
+      <div 
+        className="flex flex-col min-h-screen transition-all duration-300"
+        style={{ marginLeft: showTutorSidebar ? `${sidebarWidth}px` : 0 }}
+      >
+        <Navbar />
+        <main className="flex-1">
+          <ErrorBoundary label={`view:${view.name}`}>
+            {view.name === 'home' && (
+              <>
+                <Hero />
+                <TrainingFlow />
+                <Features />
+                <CourseCarousel />
+                <CorporateTraining />
+                <CorporateClientsTicker />
+                <CorporatePlans />
+                <TrustedCompanies />
+                <MobileAppPromo />
+                <PricingSection />
+                <TutorsPreview />
+                <CtaSection />
+              </>
+            )}
+            {view.name === 'course' && <CourseDetail courseId={view.courseId!} />}
+            {view.name === 'lesson' && (
+              <LessonView key={view.lessonId} courseId={view.courseId!} moduleId={view.moduleId!} lessonId={view.lessonId!} />
+            )}
+            {view.name === 'quiz' && (
+              <QuizView key={view.lessonId} courseId={view.courseId!} moduleId={view.moduleId!} lessonId={view.lessonId!} />
+            )}
+            {view.name === 'pricing' && <PricingPage />}
+            {view.name === 'tutors' && <TutorMarketplace />}
+            {view.name === 'tutor_portal' && <TutorPortal />}
+            {view.name === 'admin' && <AdminPortal />}
+            {view.name === 'corporate' && <CorporatePortal />}
+            {view.name === 'my_learning' && <MyLearning />}
+            {view.name === 'dashboard' && <Dashboard />}
+            {view.name === 'calendar' && <CalendarPage />}
+            {view.name === 'members' && <MembersPage />}
+            {view.name === 'groups' && <GroupsPage />}
+            {view.name === 'messages' && <MessagesPage />}
+            {view.name === 'certificates' && <CertificatesPage />}
+            {view.name === 'achievements' && <AchievementsPage />}
+            {view.name === 'features' && <FeaturesPage />}
+          </ErrorBoundary>
+        </main>
+        <Footer />
+      </div>
+      {/* Sidebar is fixed positioned, so it doesn't need to be inside the shifted container */}
       <TutorChat />
       <AuthModal />
     </div>
