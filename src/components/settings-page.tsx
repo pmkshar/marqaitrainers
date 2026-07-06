@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useState, useMemo } from 'react';
 import { useAppStore } from '@/lib/store';
 import { useT } from '@/components/language-currency-switcher';
 import {
@@ -32,11 +32,20 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { SUPPORTED_LANGUAGES } from '@/lib/i18n';
 import { SUPPORTED_CURRENCIES as CURRENCIES, COUNTRY_TIMEZONES as TZS } from '@/lib/currency';
-import type { LanguageCode, CurrencyCode } from '@/lib/types';
+import type { LanguageCode, CurrencyCode, User } from '@/lib/types';
+
+function useCurrentUser(): User | null {
+  const currentUserId = useAppStore((s) => s.currentUserId);
+  const users = useAppStore((s) => s.users);
+  return useMemo(
+    () => (currentUserId ? users.find((u) => u.id === currentUserId) ?? null : null),
+    [currentUserId, users],
+  );
+}
 
 export function SettingsPage() {
   const t = useT();
-  const currentUser = useAppStore((s) => s.currentUser());
+  const currentUser = useCurrentUser();
   const language = useAppStore((s) => s.language);
   const currency = useAppStore((s) => s.currency);
   const timezone = useAppStore((s) => s.timezone);

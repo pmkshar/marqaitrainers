@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   ArrowLeft, ArrowRight, BookOpen, Clock, Award, Sparkles, Calendar, Video,
   TrendingUp, Users, MessageSquare, Bell, CheckCircle2, PlayCircle, FileQuestion,
@@ -22,7 +22,64 @@ import { COURSES, findCourse, getAllLessons } from '@/lib/courses';
 import { SUPPORTED_LANGUAGES } from '@/lib/i18n';
 import { SUPPORTED_CURRENCIES, COUNTRY_TIMEZONES } from '@/lib/currency';
 import { CourseIcon } from './navbar';
-import type { LanguageCode, CurrencyCode } from '@/lib/types';
+import type { LanguageCode, CurrencyCode, User, UserBadge, Badge, Certificate, ActivityEntry } from '@/lib/types';
+
+// ============================================================
+// Stable selectors — avoid calling derived store functions inside
+// useAppStore selectors because they create new references on
+// every call, causing useSyncExternalStore to infinite-loop.
+// Instead, select raw primitives/arrays and derive with useMemo.
+// ============================================================
+
+/** Select the current user object with a stable reference. */
+function useCurrentUser() {
+  const currentUserId = useAppStore((s) => s.currentUserId);
+  const users = useAppStore((s) => s.users);
+  return useMemo(
+    () => (currentUserId ? users.find((u) => u.id === currentUserId) ?? null : null),
+    [currentUserId, users],
+  );
+}
+
+/** Select badges for the current user with a stable reference. */
+function useMyBadges(): (UserBadge & { badge: Badge })[] {
+  const currentUserId = useAppStore((s) => s.currentUserId);
+  const userBadges = useAppStore((s) => s.userBadges);
+  const badges = useAppStore((s) => s.badges);
+  return useMemo(() => {
+    if (!currentUserId) return [];
+    return userBadges
+      .filter((ub) => ub.userId === currentUserId)
+      .map((ub) => {
+        const badge = badges.find((b) => b.slug === ub.badgeSlug);
+        return { ...ub, badge: badge! };
+      })
+      .filter((ub) => ub.badge);
+  }, [currentUserId, userBadges, badges]);
+}
+
+/** Select certificates for the current user with a stable reference. */
+function useMyCertificates(): Certificate[] {
+  const currentUserId = useAppStore((s) => s.currentUserId);
+  const certificates = useAppStore((s) => s.certificates);
+  return useMemo(
+    () => (currentUserId ? certificates.filter((c) => c.userId === currentUserId) : []),
+    [currentUserId, certificates],
+  );
+}
+
+/** Select recent activities for the current user with a stable reference. */
+function useMyActivities(limit?: number): ActivityEntry[] {
+  const currentUserId = useAppStore((s) => s.currentUserId);
+  const activities = useAppStore((s) => s.activities);
+  return useMemo(() => {
+    if (!currentUserId) return [];
+    const list = activities
+      .filter((a) => a.userId === currentUserId)
+      .sort((a, b) => b.createdAt - a.createdAt);
+    return limit ? list.slice(0, limit) : list;
+  }, [currentUserId, activities, limit]);
+}
 
 // ============================================================
 // Helpers
@@ -50,7 +107,7 @@ function formatDateTime(ts: number) {
 // ============================================================
 
 export function Dashboard() {
-  const user = useAppStore((s) => s.currentUser());
+  const user = useCurrentUser();
   const goHome = useAppStore((s) => s.goHome);
 
   if (!user) {
@@ -91,7 +148,7 @@ export function Dashboard() {
 // ============================================================
 
 function DashboardHeader() {
-  const user = useAppStore((s) => s.currentUser());
+  const user = useCurrentUser();
   const completedLessons = useAppStore((s) => s.completedLessons);
   if (!user) return null;
 
@@ -208,10 +265,10 @@ function CandidateDashboard() {
 }
 
 function CandidateQuickStats() {
-  const user = useAppStore((s) => s.currentUser());
+  const user = useCurrentUser();
   const completedLessons = useAppStore((s) => s.completedLessons);
-  const myBadges = useAppStore((s) => s.myBadges());
-  const myCerts = useAppStore((s) => s.myCertificates());
+  const myBadges = useMyBadges();
+  const myCerts = useMyCertificates();
   const bookings = useAppStore((s) => s.bookings);
   if (!user) return null;
   const enrolledCourseIds = user.enrolledCourseIds ?? [];
@@ -262,7 +319,7 @@ function QuickAction({ icon: Icon, label, desc, color, onClick }: {
 }
 
 function CoursesInProgressPanel() {
-  const user = useAppStore((s) => s.currentUser());
+  const user = useCurrentUser();
   const completedLessons = useAppStore((s) => s.completedLessons);
   const openLesson = useAppStore((s) => s.openLesson);
   const openCourse = useAppStore((s) => s.openCourse);
@@ -337,7 +394,7 @@ function CoursesInProgressPanel() {
 }
 
 function UpcomingSessionsPanel() {
-  const user = useAppStore((s) => s.currentUser());
+  const user = useCurrentUser();
   const bookings = useAppStore((s) => s.bookings);
   const users = useAppStore((s) => s.users);
   if (!user) return null;
@@ -384,7 +441,7 @@ function UpcomingSessionsPanel() {
 }
 
 function AssignmentsPanel() {
-  const user = useAppStore((s) => s.currentUser());
+  const user = useCurrentUser();
   const assignments = useAppStore((s) => s.assignments);
 
   if (!user) return null;
@@ -433,7 +490,7 @@ function AssignmentsPanel() {
 }
 
 function ActivityPanel() {
-  const activities = useAppStore((s) => s.myActivities(8));
+  const activities = useMyActivities(8);
 
   return (
     <Card>
@@ -462,8 +519,8 @@ function ActivityPanel() {
 }
 
 function MiniAchievementsPanel() {
-  const myBadges = useAppStore((s) => s.myBadges());
-  const myCerts = useAppStore((s) => s.myCertificates());
+  const myBadges = useMyBadges();
+  const myCerts = useMyCertificates();
 
   return (
     <Card>
@@ -516,7 +573,7 @@ function MiniAchievementsPanel() {
 }
 
 function RecommendationsPanel() {
-  const user = useAppStore((s) => s.currentUser());
+  const user = useCurrentUser();
   const openCourse = useAppStore((s) => s.openCourse);
   if (!user) return null;
   const enrolledCourseIds = user.enrolledCourseIds ?? [];
@@ -574,7 +631,7 @@ function TutorDashboard() {
 }
 
 function TutorQuickStats() {
-  const user = useAppStore((s) => s.currentUser());
+  const user = useCurrentUser();
   const bookings = useAppStore((s) => s.bookings);
   if (!user) return null;
   const myUpcoming = bookings.filter((b) => b.tutorId === user.id && b.status === 'upcoming');
@@ -605,7 +662,7 @@ function TutorQuickStats() {
 }
 
 function TutorSessionsPanel() {
-  const user = useAppStore((s) => s.currentUser());
+  const user = useCurrentUser();
   const bookings = useAppStore((s) => s.bookings);
   const users = useAppStore((s) => s.users);
   if (!user) return null;
@@ -648,7 +705,7 @@ function TutorSessionsPanel() {
 }
 
 function TutorStudentsPanel() {
-  const user = useAppStore((s) => s.currentUser());
+  const user = useCurrentUser();
   const bookings = useAppStore((s) => s.bookings);
   const users = useAppStore((s) => s.users);
   if (!user) return null;
@@ -689,7 +746,7 @@ function TutorStudentsPanel() {
 }
 
 function TutorEarningsPanel() {
-  const user = useAppStore((s) => s.currentUser());
+  const user = useCurrentUser();
   const bookings = useAppStore((s) => s.bookings);
   if (!user) return null;
   const completed = bookings.filter((b) => b.tutorId === user.id && b.status === 'completed');
@@ -725,7 +782,7 @@ function TutorEarningsPanel() {
 }
 
 function TutorProfilePanel() {
-  const user = useAppStore((s) => s.currentUser());
+  const user = useCurrentUser();
   if (!user) return null;
   const tp = user.tutorProfile;
   if (!tp) return null;
@@ -963,7 +1020,7 @@ function AdminIntegrationsPanel() {
 // ============================================================
 
 function CorporateUserDashboard() {
-  const user = useAppStore((s) => s.currentUser());
+  const user = useCurrentUser();
   const corporates = useAppStore((s) => s.corporates);
   const openCorporate = useAppStore((s) => s.openCorporate);
 

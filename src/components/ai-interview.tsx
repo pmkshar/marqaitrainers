@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import {
   ArrowLeft, Video, VideoOff, Mic, MicOff, Phone, PhoneOff, Clock, Loader2,
   AlertTriangle, CheckCircle2, XCircle, Sparkles, ChevronRight, FileText,
@@ -12,7 +12,16 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useAppStore } from '@/lib/store';
 import { findCourse } from '@/lib/courses';
-import type { InterviewQuestion, InterviewReport, InterviewTurn } from '@/lib/types';
+import type { InterviewQuestion, InterviewReport, InterviewTurn, User } from '@/lib/types';
+
+function useCurrentUser(): User | null {
+  const currentUserId = useAppStore((s) => s.currentUserId);
+  const users = useAppStore((s) => s.users);
+  return useMemo(
+    () => (currentUserId ? users.find((u) => u.id === currentUserId) ?? null : null),
+    [currentUserId, users],
+  );
+}
 
 // ============================================================
 // AIInterview — live AI video interview
@@ -37,7 +46,7 @@ interface AiInterviewProps {
 }
 
 export function AIInterview({ interviewId }: AiInterviewProps) {
-  const user = useAppStore((s) => s.currentUser());
+  const user = useCurrentUser();
   const session = useAppStore((s) =>
     s.interviewSessions.find((x) => x.id === interviewId),
   );

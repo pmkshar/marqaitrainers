@@ -11,7 +11,16 @@ import { Badge } from '@/components/ui/badge';
 import { findCourse, getAllLessons } from '@/lib/courses';
 import { useAppStore } from '@/lib/store';
 import { getTutorForCourse } from '@/lib/tutor-personas';
-import type { Course, Lesson, Module } from '@/lib/types';
+import type { Course, Lesson, Module, User } from '@/lib/types';
+
+function useCurrentUser(): User | null {
+  const currentUserId = useAppStore((s) => s.currentUserId);
+  const users = useAppStore((s) => s.users);
+  return useMemo(
+    () => (currentUserId ? users.find((u) => u.id === currentUserId) ?? null : null),
+    [currentUserId, users],
+  );
+}
 
 // ============================================================
 // CourseIntroOverlay
@@ -121,7 +130,7 @@ interface CourseIntroOverlayProps {
 
 export function CourseIntroOverlay({ courseId, onStart }: CourseIntroOverlayProps) {
   const course = findCourse(courseId);
-  const currentUser = useAppStore((s) => s.currentUser());
+  const currentUser = useCurrentUser();
   const tutor = getTutorForCourse(courseId);
 
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);

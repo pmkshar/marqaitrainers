@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import type { SkillLevel, CurrencyCode, CorporatePlanModel } from '@/lib/types';
+import type { SkillLevel, CurrencyCode, CorporatePlanModel, User } from '@/lib/types';
 import { formatPrice } from '@/lib/currency';
 import { COURSES, findCourse } from '@/lib/courses';
 
@@ -33,9 +33,18 @@ const LEVEL_COLORS: Record<SkillLevel, string> = {
   expert: 'bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-300',
 };
 
+function useCurrentUser(): User | null {
+  const currentUserId = useAppStore((s) => s.currentUserId);
+  const users = useAppStore((s) => s.users);
+  return useMemo(
+    () => (currentUserId ? users.find((u) => u.id === currentUserId) ?? null : null),
+    [currentUserId, users],
+  );
+}
+
 export function CorporatePortal() {
   const t = useT();
-  const currentUser = useAppStore((s) => s.currentUser());
+  const currentUser = useCurrentUser();
   const corporates = useAppStore((s) => s.corporates);
   const users = useAppStore((s) => s.users);
   const skillMatrix = useAppStore((s) => s.skillMatrix);

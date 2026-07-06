@@ -11,7 +11,16 @@ import { Badge } from '@/components/ui/badge';
 import { useAppStore } from '@/lib/store';
 import { COURSES, findCourse } from '@/lib/courses';
 import { RESUME_TEMPLATES } from '@/lib/types';
-import type { ResumeTemplateId } from '@/lib/types';
+import type { ResumeTemplateId, User } from '@/lib/types';
+
+function useCurrentUser(): User | null {
+  const currentUserId = useAppStore((s) => s.currentUserId);
+  const users = useAppStore((s) => s.users);
+  return useMemo(
+    () => (currentUserId ? users.find((u) => u.id === currentUserId) ?? null : null),
+    [currentUserId, users],
+  );
+}
 
 // ============================================================
 // ResumeStudio
@@ -29,7 +38,7 @@ import type { ResumeTemplateId } from '@/lib/types';
 // ============================================================
 
 export function ResumeStudio() {
-  const user = useAppStore((s) => s.currentUser());
+  const user = useCurrentUser();
   const completedLessons = useAppStore((s) => s.completedLessons);
   const certificates = useAppStore((s) => s.certificates);
   const saveOriginalResume = useAppStore((s) => s.saveOriginalResume);

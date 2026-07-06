@@ -1,13 +1,22 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Bell, CheckCheck, X, Sparkles, Calendar, Users, MessageSquare, Award, AlertTriangle, Info, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAppStore } from '@/lib/store';
-import type { AppNotification } from '@/lib/types';
+import type { AppNotification, User } from '@/lib/types';
+
+function useCurrentUser(): User | null {
+  const currentUserId = useAppStore((s) => s.currentUserId);
+  const users = useAppStore((s) => s.users);
+  return useMemo(
+    () => (currentUserId ? users.find((u) => u.id === currentUserId) ?? null : null),
+    [currentUserId, users],
+  );
+}
 
 function timeAgo(ts: number) {
   const diff = Date.now() - ts;
@@ -36,8 +45,11 @@ function notifIcon(n: AppNotification) {
 }
 
 export function NotificationsBell() {
-  const user = useAppStore((s) => s.currentUser());
-  const unreadCount = useAppStore((s) => s.unreadNotificationCount());
+  const user = useCurrentUser();
+  const unreadCount = useAppStore((s) => {
+    const uid = s.currentUserId;
+    return uid ? s.notifications.filter((n) => n.userId === uid && !n.read).length : 0;
+  });
   const notifications = useAppStore((s) => s.notifications);
   const markRead = useAppStore((s) => s.markNotificationRead);
   const markAllRead = useAppStore((s) => s.markAllNotificationsRead);

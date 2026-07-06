@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   ArrowLeft, Calendar as CalIcon, Video, Clock, FileText, Bell, Users, Plus, Check,
   Trophy, Award, Search, MessageSquare, Send, UserPlus, CheckCheck, Star,
@@ -18,6 +18,49 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAppStore } from '@/lib/store';
 import { COURSES, findCourse, getAllLessons } from '@/lib/courses';
 import { CourseIcon } from './navbar';
+import type { User, CalendarEvent, Certificate, UserBadge, Badge } from '@/lib/types';
+
+// Stable selectors — avoid calling derived store functions inside
+// useAppStore selectors (causes infinite re-render loops)
+function useCurrentUser(): User | null {
+  const currentUserId = useAppStore((s) => s.currentUserId);
+  const users = useAppStore((s) => s.users);
+  return useMemo(
+    () => (currentUserId ? users.find((u) => u.id === currentUserId) ?? null : null),
+    [currentUserId, users],
+  );
+}
+function useMyCalendar(): CalendarEvent[] {
+  const currentUserId = useAppStore((s) => s.currentUserId);
+  const calendarEvents = useAppStore((s) => s.calendarEvents);
+  return useMemo(() => {
+    if (!currentUserId) return [];
+    return calendarEvents.filter((e) => e.userId === currentUserId).sort((a, b) => a.startsAt - b.startsAt);
+  }, [currentUserId, calendarEvents]);
+}
+function useMyCertificates(): Certificate[] {
+  const currentUserId = useAppStore((s) => s.currentUserId);
+  const certificates = useAppStore((s) => s.certificates);
+  return useMemo(
+    () => (currentUserId ? certificates.filter((c) => c.userId === currentUserId) : []),
+    [currentUserId, certificates],
+  );
+}
+function useMyBadges(): (UserBadge & { badge: Badge })[] {
+  const currentUserId = useAppStore((s) => s.currentUserId);
+  const userBadges = useAppStore((s) => s.userBadges);
+  const badges = useAppStore((s) => s.badges);
+  return useMemo(() => {
+    if (!currentUserId) return [];
+    return userBadges
+      .filter((ub) => ub.userId === currentUserId)
+      .map((ub) => {
+        const badge = badges.find((b) => b.slug === ub.badgeSlug);
+        return { ...ub, badge: badge! };
+      })
+      .filter((ub) => ub.badge);
+  }, [currentUserId, userBadges, badges]);
+}
 
 function fmtDate(ts: number) {
   return new Date(ts).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
@@ -49,7 +92,7 @@ function BackToDashboard() {
 // ============================================================
 
 export function CalendarPage() {
-  const events = useAppStore((s) => s.myCalendar());
+  const events = useMyCalendar();
   const openTutors = useAppStore((s) => s.openTutors);
 
   // Group events by date
@@ -146,7 +189,7 @@ export function CalendarPage() {
 
 export function MembersPage() {
   const users = useAppStore((s) => s.users);
-  const currentUser = useAppStore((s) => s.currentUser())!;
+  const currentUser = useCurrentUser()!;
   const friendships = useAppStore((s) => s.friendships);
   const addFriend = useAppStore((s) => s.addFriend);
   const openMessages = useAppStore((s) => s.openMessages);
@@ -255,7 +298,7 @@ export function MembersPage() {
 export function GroupsPage() {
   const groups = useAppStore((s) => s.groups);
   const users = useAppStore((s) => s.users);
-  const currentUser = useAppStore((s) => s.currentUser())!;
+  const currentUser = useCurrentUser()!;
   const joinGroup = useAppStore((s) => s.joinGroup);
   const leaveGroup = useAppStore((s) => s.leaveGroup);
   const openMembers = useAppStore((s) => s.openMembers);
@@ -335,7 +378,7 @@ export function GroupsPage() {
 // ============================================================
 
 export function MessagesPage() {
-  const currentUser = useAppStore((s) => s.currentUser())!;
+  const currentUser = useCurrentUser()!;
   const users = useAppStore((s) => s.users);
   const messages = useAppStore((s) => s.messages);
   const friendships = useAppStore((s) => s.friendships);
@@ -511,7 +554,7 @@ export function MessagesPage() {
 // ============================================================
 
 export function CertificatesPage() {
-  const certs = useAppStore((s) => s.myCertificates());
+  const certs = useMyCertificates();
 
   return (
     <div className="bg-background">
@@ -587,7 +630,7 @@ export function CertificatesPage() {
 // ============================================================
 
 export function AchievementsPage() {
-  const myBadges = useAppStore((s) => s.myBadges());
+  const myBadges = useMyBadges();
   const allBadges = useAppStore((s) => s.badges);
   const earnedSlugs = new Set(myBadges.map((b) => b.badgeSlug));
 

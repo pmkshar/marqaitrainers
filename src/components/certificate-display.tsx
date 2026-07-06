@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useState, useMemo } from 'react';
 import {
   Award, Download, Share2, Loader2, AlertTriangle, CheckCircle2, XCircle,
   Clock, ShieldCheck,
@@ -10,7 +10,16 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAppStore } from '@/lib/store';
 import { findCourse } from '@/lib/courses';
-import type { Certificate } from '@/lib/types';
+import type { Certificate, User } from '@/lib/types';
+
+function useCurrentUser(): User | null {
+  const currentUserId = useAppStore((s) => s.currentUserId);
+  const users = useAppStore((s) => s.users);
+  return useMemo(
+    () => (currentUserId ? users.find((u) => u.id === currentUserId) ?? null : null),
+    [currentUserId, users],
+  );
+}
 
 // ============================================================
 // CertificateDisplay — fully graphical certificate
@@ -43,7 +52,7 @@ interface CertificateDisplayProps {
 }
 
 export function CertificateDisplay({ certificate, fullPage = false }: CertificateDisplayProps) {
-  const user = useAppStore((s) => s.currentUser());
+  const user = useCurrentUser();
   const users = useAppStore((s) => s.users);
   const certUser = users.find((u) => u.id === certificate.userId) ?? user;
   const course = findCourse(certificate.courseId);

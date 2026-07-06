@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useAppStore } from '@/lib/store';
 import { getGreetingTemplate } from '@/lib/i18n';
 import { Sparkles, GraduationCap, BookOpen, Trophy, ArrowRight, X } from 'lucide-react';
@@ -11,9 +12,19 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import type { User } from '@/lib/types';
+
+function useCurrentUser(): User | null {
+  const currentUserId = useAppStore((s) => s.currentUserId);
+  const users = useAppStore((s) => s.users);
+  return useMemo(
+    () => (currentUserId ? users.find((u) => u.id === currentUserId) ?? null : null),
+    [currentUserId, users],
+  );
+}
 
 export function GreetingCard() {
-  const currentUser = useAppStore((s) => s.currentUser());
+  const currentUser = useCurrentUser();
   const greetingSeen = useAppStore((s) => s.greetingSeen);
   const markGreetingSeen = useAppStore((s) => s.markGreetingSeen);
   const language = useAppStore((s) => s.language);
