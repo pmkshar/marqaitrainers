@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import {
   ArrowLeft, ShieldCheck, Users, BookOpen, CreditCard, Plug, KeyRound, ScrollText,
-  LayoutDashboard, Check, X, Trash2, Edit3, Save, Plus, TrendingUp, DollarSign,
-  Star, Clock, UserCheck, AlertTriangle, Award, FileText, Mail, BarChart3, Lock,
+  LayoutDashboard, Check, X, Trash2, Edit3, Save, Plus,
+  UserCheck, AlertTriangle, Award, FileText, Mail, BarChart3, Lock,
+  Building2, Zap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -23,7 +24,7 @@ import {
   CertificateBuilderTab, RegistrationFormsTab, EmailSchedulingTab,
   AnalyticsTab, GdprTab,
 } from './advanced-portal';
-import type { AdminTab, RoleKey, PermissionKey, Role, User, Integration } from '@/lib/types';
+import type { AdminTab, RoleKey, PermissionKey, Role, User, Integration, CorporateAccount } from '@/lib/types';
 
 const TABS: { key: AdminTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -34,6 +35,7 @@ const TABS: { key: AdminTab; label: string; icon: React.ComponentType<{ classNam
   { key: 'integrations', label: 'Integrations', icon: Plug },
   { key: 'roles', label: 'Roles & Permissions', icon: KeyRound },
   { key: 'audit', label: 'Audit Log', icon: ScrollText },
+  { key: 'corporate', label: 'Corporate', icon: Building2 },
   { key: 'certificate_builder', label: 'Certificate Builder', icon: Award },
   { key: 'registration_forms', label: 'Registration Forms', icon: FileText },
   { key: 'email_scheduling', label: 'Email Scheduling', icon: Mail },
@@ -70,28 +72,95 @@ export function AdminPortal() {
 
   return (
     <div className="bg-background">
-      {/* Header */}
-      <section className="border-b bg-gradient-to-br from-rose-50/60 to-background dark:from-rose-950/20">
+      {/* Pink/Rose Admin Header */}
+      <section className="bg-gradient-to-r from-rose-500 to-pink-600 text-white">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          <button onClick={store.goHome} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
+          <button onClick={store.goHome} className="inline-flex items-center gap-1.5 text-sm text-white/70 hover:text-white">
             <ArrowLeft className="h-4 w-4" /> Home
           </button>
-          <div className="mt-3 flex items-center gap-3">
-            <span className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 text-white">
-              <ShieldCheck className="h-5 w-5" />
-            </span>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">Super Admin Portal</h1>
-              <p className="text-sm text-muted-foreground">Full platform control · {user.name}</p>
+          <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-4">
+              <Avatar className="h-14 w-14 border-2 border-white/30">
+                <AvatarFallback className="bg-white/20 text-xl font-bold text-white">M</AvatarFallback>
+              </Avatar>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-2xl font-bold tracking-tight">MARQ AI Admin</h1>
+                  <Badge className="border-white/30 bg-white/20 text-xs text-white">Super Admin</Badge>
+                </div>
+                <p className="mt-0.5 text-sm text-white/80">{user.email}</p>
+                <p className="text-xs text-white/60">Joined {new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</p>
+              </div>
             </div>
+            <Button className="border-white/30 bg-white/20 text-white hover:bg-white/30" onClick={() => store.openAdmin('dashboard')}>
+              <ShieldCheck className="mr-2 h-4 w-4" /> Admin Portal
+            </Button>
           </div>
+        </div>
+      </section>
+
+      {/* Admin Stats Cards */}
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 -mt-6">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Card className="border-rose-200 bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-950/30 dark:to-pink-950/30">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <span className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-br from-rose-500 to-pink-600 text-white">
+                  <Users className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="text-2xl font-bold">{store.users.filter((u) => u.role === 'candidate').length}</p>
+                  <p className="text-xs text-muted-foreground">Candidates</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-rose-200 bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-950/30 dark:to-pink-950/30">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <span className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-br from-rose-500 to-pink-600 text-white">
+                  <UserCheck className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="text-2xl font-bold">{store.users.filter((u) => u.role === 'tutor').length}</p>
+                  <p className="text-xs text-muted-foreground">Tutors</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-rose-200 bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-950/30 dark:to-pink-950/30">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <span className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-br from-rose-500 to-pink-600 text-white">
+                  <Calendar2 className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="text-2xl font-bold">{store.bookings.filter((b) => b.status === 'upcoming').length}</p>
+                  <p className="text-xs text-muted-foreground">Live Sessions</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-rose-200 bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-950/30 dark:to-pink-950/30">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <span className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-br from-rose-500 to-pink-600 text-white">
+                  <Plug className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="text-2xl font-bold">{store.integrations.filter((i) => i.connected).length}</p>
+                  <p className="text-xs text-muted-foreground">Integrations</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as AdminTab)} className="space-y-6">
           <div className="overflow-x-auto">
-            <TabsList className="grid h-auto w-full grid-cols-4 lg:grid-cols-[repeat(13,minmax(0,1fr))]">
+            <TabsList className="grid h-auto w-full grid-cols-4 lg:grid-cols-[repeat(14,minmax(0,1fr))]">
               {TABS.map((t) => (
                 <TabsTrigger key={t.key} value={t.key} className="flex flex-col gap-1 py-2 text-[11px] sm:flex-row sm:text-sm">
                   <t.icon className="h-4 w-4" />
@@ -109,6 +178,7 @@ export function AdminPortal() {
           <TabsContent value="integrations"><IntegrationsTab /></TabsContent>
           <TabsContent value="roles"><RolesTab /></TabsContent>
           <TabsContent value="audit"><AuditTab /></TabsContent>
+          <TabsContent value="corporate"><CorporateTab /></TabsContent>
           <TabsContent value="certificate_builder"><CertificateBuilderTab /></TabsContent>
           <TabsContent value="registration_forms"><RegistrationFormsTab /></TabsContent>
           <TabsContent value="email_scheduling"><EmailSchedulingTab /></TabsContent>
@@ -128,10 +198,20 @@ function DashboardTab() {
   const candidates = users.filter((u) => u.role === 'candidate');
   const tutors = users.filter((u) => u.role === 'tutor');
   const pendingTutors = tutors.filter((t) => !t.tutorProfile?.approved);
-  const connectedIntegrations = integrations.filter((i) => i.connected);
   const upcomingBookings = bookings.filter((b) => b.status === 'upcoming');
   const completedBookings = bookings.filter((b) => b.status === 'completed');
   const revenue = completedBookings.reduce((s, b) => s + b.price, 0);
+
+  const dashboardCards = [
+    { icon: Users, title: 'Users', subtitle: `${users.length} total · ${candidates.length} candidates`, color: 'from-emerald-500 to-teal-600', tab: 'users' as AdminTab },
+    { icon: BookOpen, title: 'Courses', subtitle: `${COURSES.length} on-demand courses`, color: 'from-sky-500 to-cyan-600', tab: 'courses' as AdminTab },
+    { icon: CreditCard, title: 'Pricing', subtitle: `$${revenue} revenue · ${completedBookings.length} completed`, color: 'from-amber-500 to-orange-600', tab: 'pricing' as AdminTab },
+    { icon: UserCheck, title: 'Tutors', subtitle: `${tutors.filter((t) => t.tutorProfile?.approved).length} approved · ${pendingTutors.length} pending`, color: 'from-violet-500 to-purple-600', tab: 'tutors' as AdminTab },
+    { icon: Plug, title: 'Integrations', subtitle: `${integrations.filter((i) => i.connected).length} of ${integrations.length} connected`, color: 'from-rose-500 to-pink-600', tab: 'integrations' as AdminTab },
+    { icon: KeyRound, title: 'Roles & Permissions', subtitle: 'Full RBAC management', color: 'from-slate-500 to-slate-700', tab: 'roles' as AdminTab },
+    { icon: ScrollText, title: 'Audit Log', subtitle: 'Platform activity trail', color: 'from-indigo-500 to-blue-600', tab: 'audit' as AdminTab },
+    { icon: Zap, title: 'Features', subtitle: 'Toggle platform features', color: 'from-fuchsia-500 to-pink-600', tab: 'dashboard' as AdminTab },
+  ];
 
   return (
     <div className="space-y-6">
@@ -140,11 +220,27 @@ function DashboardTab() {
         <p className="text-sm text-muted-foreground">Platform overview at a glance.</p>
       </div>
 
+      {/* 8-card grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={Users} label="Candidates" value={String(candidates.length)} sub="active learners" color="from-emerald-500 to-teal-600" />
-        <StatCard icon={UserCheck} label="Human tutors" value={String(tutors.filter((t) => t.tutorProfile?.approved).length)} sub={`${pendingTutors.length} pending`} color="from-sky-500 to-cyan-600" />
-        <StatCard icon={Calendar2} label="Upcoming sessions" value={String(upcomingBookings.length)} sub="next 7 days" color="from-violet-500 to-purple-600" />
-        <StatCard icon={DollarSign} label="Session revenue" value={`$${revenue}`} sub={`${completedBookings.length} completed`} color="from-amber-500 to-orange-600" />
+        {dashboardCards.map((card) => (
+          <Card
+            key={card.title}
+            className="cursor-pointer transition-shadow hover:shadow-md"
+            onClick={() => useAppStore.getState().openAdmin(card.tab)}
+          >
+            <CardContent className="p-5">
+              <div className="flex items-start gap-3">
+                <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-gradient-to-br ${card.color} text-white`}>
+                  <card.icon className="h-5 w-5" />
+                </span>
+                <div className="min-w-0">
+                  <p className="font-semibold">{card.title}</p>
+                  <p className="text-xs text-muted-foreground line-clamp-2">{card.subtitle}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {pendingTutors.length > 0 && (
@@ -789,6 +885,150 @@ function AuditTab() {
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+// ============================================================
+// Corporate
+// ============================================================
+function CorporateTab() {
+  const { corporates, approveCorporate, rejectCorporate } = useAppStore();
+  const pending = corporates.filter((c) => c.status === 'pending');
+  const approved = corporates.filter((c) => c.status === 'approved');
+  const rejected = corporates.filter((c) => c.status === 'rejected');
+
+  const statusBadge = (status: CorporateAccount['status']) => {
+    const styles: Record<string, string> = {
+      pending: 'border-amber-500/40 text-amber-700 dark:text-amber-300',
+      approved: 'border-emerald-500/40 text-emerald-700 dark:text-emerald-300',
+      rejected: 'border-rose-500/40 text-rose-700 dark:text-rose-300',
+      suspended: 'border-slate-500/40 text-slate-700 dark:text-slate-300',
+    };
+    return (
+      <Badge variant="outline" className={styles[status] ?? ''}>
+        {status.charAt(0).toUpperCase() + status.slice(1)}
+      </Badge>
+    );
+  };
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight">Corporate Management</h2>
+        <p className="text-sm text-muted-foreground">{corporates.length} registered corporates · {pending.length} pending review</p>
+      </div>
+
+      {pending.length > 0 && (
+        <Card className="border-amber-500/40">
+          <CardContent className="p-5">
+            <h3 className="text-sm font-semibold text-amber-700 dark:text-amber-300">Pending registrations</h3>
+            <p className="text-xs text-muted-foreground">Review and approve or reject corporate registrations.</p>
+            <div className="mt-3 space-y-3">
+              {pending.map((corp) => (
+                <div key={corp.id} className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-rose-500 to-pink-600 text-white">
+                      <Building2 className="h-5 w-5" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-medium truncate">{corp.name}</p>
+                      <p className="text-xs text-muted-foreground">{corp.industry} · {corp.country}</p>
+                      <p className="text-xs text-muted-foreground">{corp.contactName} ({corp.contactEmail})</p>
+                      <p className="text-xs text-muted-foreground">{corp.employeeCount} employees · {corp.plan} plan</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Button size="sm" onClick={() => approveCorporate(corp.id)} className="bg-emerald-600 text-white hover:bg-emerald-700">
+                      <Check className="mr-1 h-3.5 w-3.5" /> Approve
+                    </Button>
+                    <Button size="sm" variant="outline" className="text-rose-600 hover:bg-rose-50" onClick={() => rejectCorporate(corp.id)}>
+                      <X className="mr-1 h-3.5 w-3.5" /> Reject
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {approved.length > 0 && (
+        <Card>
+          <CardContent className="p-5">
+            <h3 className="text-sm font-semibold">Approved corporates</h3>
+            <div className="mt-3 overflow-x-auto rounded-xl border">
+              <table className="w-full text-sm">
+                <thead className="border-b bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
+                  <tr>
+                    <th className="px-4 py-3 text-left">Company</th>
+                    <th className="px-4 py-3 text-left">Industry</th>
+                    <th className="px-4 py-3 text-center">Employees</th>
+                    <th className="px-4 py-3 text-center">Plan</th>
+                    <th className="px-4 py-3 text-left">Contact</th>
+                    <th className="px-4 py-3 text-center">Status</th>
+                    <th className="px-4 py-3 text-right">Joined</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {approved.map((corp) => (
+                    <tr key={corp.id} className="hover:bg-muted/30">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <span className="grid h-8 w-8 place-items-center rounded bg-gradient-to-br from-rose-500 to-pink-600 text-white">
+                            <Building2 className="h-4 w-4" />
+                          </span>
+                          <span className="font-medium">{corp.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">{corp.industry}</td>
+                      <td className="px-4 py-3 text-center">{corp.employeeCount}</td>
+                      <td className="px-4 py-3 text-center capitalize">{corp.plan}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{corp.contactName}</td>
+                      <td className="px-4 py-3 text-center">{statusBadge(corp.status)}</td>
+                      <td className="px-4 py-3 text-right text-muted-foreground">{new Date(corp.createdAt).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {rejected.length > 0 && (
+        <Card>
+          <CardContent className="p-5">
+            <h3 className="text-sm font-semibold text-muted-foreground">Rejected corporates</h3>
+            <div className="mt-3 space-y-2">
+              {rejected.map((corp) => (
+                <div key={corp.id} className="flex items-center justify-between rounded-lg border p-3">
+                  <div className="flex items-center gap-3">
+                    <span className="grid h-8 w-8 place-items-center rounded bg-muted text-muted-foreground">
+                      <Building2 className="h-4 w-4" />
+                    </span>
+                    <div>
+                      <p className="text-sm font-medium">{corp.name}</p>
+                      <p className="text-xs text-muted-foreground">{corp.industry} · {corp.country}</p>
+                    </div>
+                  </div>
+                  {statusBadge(corp.status)}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {corporates.length === 0 && (
+        <Card className="border-dashed">
+          <CardContent className="p-8 text-center">
+            <Building2 className="mx-auto h-10 w-10 text-muted-foreground" />
+            <p className="mt-3 font-medium">No corporate registrations yet</p>
+            <p className="text-sm text-muted-foreground">Corporate accounts will appear here when they register.</p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

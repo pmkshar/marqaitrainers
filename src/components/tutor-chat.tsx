@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { Sparkles, Send, X, Trash2, Bot, User, Loader2 } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Sparkles, Send, X, Trash2, Bot, User, Loader2, Mic, MicOff, Volume2, VolumeX, PenTool } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { useAppStore } from '@/lib/store';
 import { findCourse, findLesson } from '@/lib/courses';
@@ -10,16 +11,16 @@ import type { ChatMessage } from '@/lib/types';
 
 const SUGGESTIONS = [
   'Explain gradient descent in simple terms',
-  'What is the difference between Spring and Spring Boot?',
-  'How do I center a div in Flutter?',
-  'Help me choose between React Native and Flutter',
+  'What is the difference between supervised and unsupervised learning?',
+  'How does a neural network learn?',
+  'What is backpropagation?',
 ];
 
 const WELCOME: ChatMessage = {
   id: 'welcome',
   role: 'assistant',
   content:
-    "Hi! I'm **TutorAI**, your personal software engineering tutor. \n\nI can help you with **AI/ML, Full Stack Java, .NET, Mobile App Development, and Flutter** — explaining concepts, writing code snippets, debugging errors, and guiding your learning path.\n\nWhat would you like to learn today?",
+    "Hi! I'm MARQ AI — your AI tutor. I can help you understand concepts, write and debug code, and guide your learning path. What would you like to learn today?",
   timestamp: Date.now(),
 };
 
@@ -30,8 +31,14 @@ export function TutorChat() {
   } = useAppStore();
   const [input, setInput] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isExplanationActive, setIsExplanationActive] = useState(false);
+  const [whiteboardNotes, setWhiteboardNotes] = useState<string[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const recognitionRef = useRef<any>(null);
+  const synthRef = useRef<SpeechSynthesis | null>(null);
 
   // Build a context string based on current view
   const courseContext = (() => {
@@ -46,7 +53,44 @@ export function TutorChat() {
     return undefined;
   })();
 
+  // Contextual subtitle based on course
+  const headerSubtitle = (() => {
+    if (courseContext) return courseContext;
+    if (view.courseId) {
+      const c = findCourse(view.courseId);
+      if (c) return `AI & Machine Learning Tutor · ${c.title}`;
+    }
+    return 'AI & Machine Learning Tutor';
+  })();
+
   const messages = chatMessages.length > 0 ? chatMessages : [WELCOME];
+
+  // Extract whiteboard notes from conversation
+  useEffect(() => {
+    const assistantMessages = chatMessages.filter((m) => m.role === 'assistant' && m.id !== 'welcome');
+    if (assistantMessages.length === 0) {
+      setWhiteboardNotes([]);
+      return;
+    }
+    const notes: string[] = [];
+    const lastMsg = assistantMessages[assistantMessages.length - 1];
+    // Extract key points: headings, bold text, bullet points
+    const headingMatches = lastMsg.content.match(/^#{1,3}\s+(.+)$/gm);
+    if (headingMatches) {
+      headingMatches.forEach((h) => notes.push(h.replace(/^#+\s+/, '').trim()));
+    }
+    const boldMatches = lastMsg.content.match(/\*\*([^*]+)\*\*/g);
+    if (boldMatches) {
+      boldMatches.slice(0, 5).forEach((b) => notes.push(b.replace(/\*\*/g, '').trim()));
+    }
+    const bulletMatches = lastMsg.content.match(/^[-*]\s+(.+)$/gm);
+    if (bulletMatches) {
+      bulletMatches.slice(0, 5).forEach((b) => notes.push(b.replace(/^[-*]\s+/, '').trim()));
+    }
+    // Deduplicate and limit
+    const unique = [...new Set(notes)].slice(0, 8);
+    setWhiteboardNotes(unique);
+  }, [chatMessages]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -59,6 +103,122 @@ export function TutorChat() {
       setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [isTutorOpen]);
+
+  // Initialize Speech Synthesis
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      synthRef.current = window.speechSynthesis;
+    }
+  }, []);
+
+  // Speak the last assistant message when explanation is active
+  const speakText = useCallback((text: string) => {
+    if (!synthRef.current) return;
+    synthRef.current.cancel();
+    // Strip markdown for speech
+    const plain = text
+      .replace(/```[\s\S]*?```/g, ' code block ')
+      .replace(/`([^`]+)`/g, '$1')
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/#{1,6}\s+/g, '')
+      .replace(/[-*]\s+/g, '')
+      .replace(/\n/g, '. ');
+    const utterance = new SpeechSynthesisUtterance(plain);
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+    synthRef.current.speak(utterance);
+  }, []);
+
+  // Stop speaking
+  const stopSpeaking = useCallback(() => {
+    if (synthRef.current) {
+      synthRef.current.cancel();
+    }
+    setIsSpeaking(false);
+  }, []);
+
+  // Toggle explanation mode
+  const toggleExplanation = useCallback(() => {
+    if (isExplanationActive) {
+      stopSpeaking();
+      setIsExplanationActive(false);
+    } else {
+      setIsExplanationActive(true);
+      // Speak the last assistant message
+      const assistantMessages = chatMessages.filter((m) => m.role === 'assistant' && m.id !== 'welcome');
+      if (assistantMessages.length > 0) {
+        speakText(assistantMessages[assistantMessages.length - 1].content);
+      }
+    }
+  }, [isExplanationActive, chatMessages, speakText, stopSpeaking]);
+
+  // Voice input: start/stop listening
+  const toggleListening = useCallback(() => {
+    if (isListening) {
+      // Stop listening
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      setIsListening(false);
+      return;
+    }
+
+    // Start listening
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('Speech Recognition is not supported in this browser. Please try Chrome.');
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      if (transcript.trim()) {
+        send(transcript);
+      }
+      setIsListening(false);
+    };
+
+    recognition.onerror = () => {
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsListening(true);
+  }, [isListening]);
+
+  // Auto-speak when explanation is active and new assistant message arrives
+  useEffect(() => {
+    if (!isExplanationActive) return;
+    const lastMsg = chatMessages[chatMessages.length - 1];
+    if (lastMsg && lastMsg.role === 'assistant' && lastMsg.id !== 'welcome') {
+      speakText(lastMsg.content);
+    }
+  }, [chatMessages, isExplanationActive, speakText]);
+
+  // Cleanup speech on close
+  useEffect(() => {
+    if (!isTutorOpen) {
+      stopSpeaking();
+      setIsExplanationActive(false);
+      if (isListening && recognitionRef.current) {
+        recognitionRef.current.stop();
+        setIsListening(false);
+      }
+    }
+  }, [isTutorOpen, stopSpeaking, isListening]);
 
   const send = async (text: string) => {
     const trimmed = text.trim();
@@ -114,22 +274,37 @@ export function TutorChat() {
     <Sheet open={isTutorOpen} onOpenChange={setTutorOpen}>
       <SheetContent
         side="right"
-        className="w-full gap-0 p-0 sm:max-w-[480px] [&_[data-slot=sheet-close]]:hidden"
+        className="w-full gap-0 p-0 sm:max-w-[480px] [&_[data-slot=sheet-close]]:hidden flex flex-col"
       >
-        <SheetHeader className="border-b bg-gradient-to-r from-emerald-500 to-teal-600 p-4 text-white">
+        {/* ── Header ── */}
+        <SheetHeader className="border-b bg-gradient-to-r from-emerald-500 to-teal-600 p-4 text-white shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/15 backdrop-blur">
                 <Sparkles className="h-5 w-5" />
               </span>
               <div>
-                <SheetTitle className="text-white">TutorAI</SheetTitle>
-                <SheetDescription className="text-white/80">
-                  {courseContext ? `Context: ${courseContext}` : 'Your 24/7 AI software tutor'}
+                <SheetTitle className="text-white text-lg font-bold tracking-wide">MARQ AI</SheetTitle>
+                <SheetDescription className="text-white/80 text-xs">
+                  {headerSubtitle}
                 </SheetDescription>
               </div>
             </div>
             <div className="flex items-center gap-1">
+              {/* Voice Chat Button */}
+              <Button
+                size="sm"
+                className={`h-8 gap-1.5 rounded-full text-xs font-semibold ${
+                  isListening
+                    ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse'
+                    : 'bg-green-500 hover:bg-green-600 text-white'
+                }`}
+                onClick={toggleListening}
+                aria-label={isListening ? 'Stop voice chat' : 'Start voice chat'}
+              >
+                {isListening ? <MicOff className="h-3.5 w-3.5" /> : <Mic className="h-3.5 w-3.5" />}
+                {isListening ? 'Listening…' : 'Voice Chat'}
+              </Button>
               {chatMessages.length > 0 && (
                 <Button
                   size="icon"
@@ -156,7 +331,7 @@ export function TutorChat() {
           </div>
         </SheetHeader>
 
-        {/* Messages */}
+        {/* ── Messages ── */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto">
           <div className="space-y-4 p-4">
             {messages.map((m) => (
@@ -165,15 +340,15 @@ export function TutorChat() {
             {isSending && (
               <div className="flex items-center gap-2 px-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin text-emerald-600" />
-                <span>TutorAI is thinking…</span>
+                <span>MARQ AI is thinking…</span>
               </div>
             )}
           </div>
         </div>
 
-        {/* Suggestions */}
+        {/* ── Suggestions ── */}
         {chatMessages.length === 0 && (
-          <div className="border-t bg-muted/30 p-3">
+          <div className="border-t bg-muted/30 p-3 shrink-0">
             <p className="mb-2 px-1 text-xs font-medium text-muted-foreground">Try asking:</p>
             <div className="flex flex-wrap gap-2">
               {SUGGESTIONS.map((s) => (
@@ -189,8 +364,82 @@ export function TutorChat() {
           </div>
         )}
 
-        {/* Composer */}
-        <div className="border-t bg-background p-3">
+        {/* ── MARQ AI's Whiteboard ── */}
+        <div className="shrink-0 border-t-2 border-amber-700/30 bg-amber-50 dark:bg-amber-950/30 p-3">
+          <div className="flex items-center gap-2 mb-2">
+            <PenTool className="h-4 w-4 text-amber-700 dark:text-amber-400" />
+            <div>
+              <h4 className="text-sm font-semibold text-amber-900 dark:text-amber-200">MARQ AI&apos;s Whiteboard</h4>
+              <p className="text-[10px] text-amber-700/70 dark:text-amber-400/70">Visual notes while explaining</p>
+            </div>
+          </div>
+          {whiteboardNotes.length > 0 ? (
+            <ul className="space-y-1 pl-1">
+              {whiteboardNotes.map((note, i) => (
+                <li key={i} className="flex items-start gap-1.5 text-xs text-amber-800 dark:text-amber-300">
+                  <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-600 dark:bg-amber-400" />
+                  {note}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-xs text-amber-700/50 dark:text-amber-400/50 italic">Start a conversation to see notes here…</p>
+          )}
+        </div>
+
+        {/* ── MARQ AI's Explanation ── */}
+        <div className={`shrink-0 border-t-2 p-3 transition-colors ${
+          isExplanationActive
+            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30'
+            : 'border-emerald-500/30 bg-background'
+        }`}>
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-2">
+              <Volume2 className={`h-4 w-4 ${isExplanationActive ? 'text-emerald-600' : 'text-muted-foreground'}`} />
+              <div>
+                <h4 className={`text-sm font-semibold ${isExplanationActive ? 'text-emerald-700 dark:text-emerald-300' : 'text-foreground'}`}>
+                  MARQ AI&apos;s Explanation
+                </h4>
+                <p className="text-[10px] text-muted-foreground">
+                  {isExplanationActive ? (isSpeaking ? 'Speaking now…' : 'Ready to voice-over') : 'Ready to start voice-over'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {isExplanationActive && isSpeaking && (
+                <Badge className="bg-emerald-600 text-white text-[10px] px-2 py-0.5 animate-pulse">
+                  EXPLANATION · SPEAKING NOW
+                </Badge>
+              )}
+              <Button
+                size="sm"
+                variant={isExplanationActive ? 'default' : 'outline'}
+                className={`h-7 gap-1 text-xs ${
+                  isExplanationActive
+                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                    : 'border-emerald-500 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30'
+                }`}
+                onClick={toggleExplanation}
+                aria-label={isExplanationActive ? 'Stop explanation' : 'Start explanation'}
+              >
+                {isExplanationActive ? (
+                  <>
+                    <VolumeX className="h-3 w-3" />
+                    Stop
+                  </>
+                ) : (
+                  <>
+                    <Volume2 className="h-3 w-3" />
+                    Play
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Composer ── */}
+        <div className="border-t bg-background p-3 shrink-0">
           <div className="flex items-end gap-2">
             <textarea
               ref={inputRef}
@@ -202,7 +451,7 @@ export function TutorChat() {
                   send(input);
                 }
               }}
-              placeholder="Ask anything about your course…"
+              placeholder="Ask MARQ AI anything..."
               rows={1}
               className="max-h-32 min-h-[44px] flex-1 resize-none rounded-xl border bg-muted/40 px-3 py-2.5 text-sm outline-none transition-colors focus:border-emerald-500 focus:bg-background"
             />
@@ -217,7 +466,7 @@ export function TutorChat() {
             </Button>
           </div>
           <p className="mt-1.5 px-1 text-[10px] text-muted-foreground">
-            Enter to send · Shift+Enter for new line · TutorAI may make mistakes — verify important info.
+            Enter to send · Shift+Enter for new line · MARQ AI may make mistakes — verify important info.
           </p>
         </div>
       </SheetContent>
