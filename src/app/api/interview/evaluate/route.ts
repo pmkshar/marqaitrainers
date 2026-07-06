@@ -35,7 +35,7 @@ interface EvaluateRequestBody {
   }>;
 }
 
-const SYSTEM_PROMPT = `You are a senior technical interviewer at Marq AI Tech Pvt Ltd evaluating a candidate's recorded interview answers. For each answer, you must:
+const SYSTEM_PROMPT = `You are a senior technical interviewer at marqaicourses evaluating a candidate's recorded interview answers. For each answer, you must:
 1. Score it 0-100 based on technical accuracy, depth, and communication.
 2. List which expected key points the candidate covered (coveredKeyPoints) and which they missed (missedKeyPoints).
 3. Write 1-2 sentences of qualitative feedback.

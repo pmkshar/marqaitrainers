@@ -478,7 +478,7 @@ export const SEED_INTEGRATIONS: Integration[] = [
 export const PRICING_PLANS: PricingPlan[] = [
   {
     id: 'plan-monthly',
-    name: 'Marq All-Access · Monthly',
+    name: 'marqaicourses All-Access · Monthly',
     model: 'subscription_monthly',
     price: 39,
     period: 'month',
@@ -496,7 +496,7 @@ export const PRICING_PLANS: PricingPlan[] = [
   },
   {
     id: 'plan-annual',
-    name: 'Marq All-Access · Annual',
+    name: 'marqaicourses All-Access · Annual',
     model: 'subscription_annual',
     price: 349,
     period: 'year',
@@ -536,7 +536,7 @@ export const PRICING_PLANS: PricingPlan[] = [
 
 export const SEED_AUDIT_LOGS: AuditLog[] = [
   { id: 'a-1', actorId: 'u-admin-1', actorName: 'Maya Iyer', action: 'Approved tutor application', target: 'Aisha Patel', timestamp: now - 30 * day },
-  { id: 'a-2', actorId: 'u-admin-1', actorName: 'Maya Iyer', action: 'Updated pricing', target: 'Marq Annual → $349', timestamp: now - 21 * day },
+  { id: 'a-2', actorId: 'u-admin-1', actorName: 'Maya Iyer', action: 'Updated pricing', target: 'marqaicourses Annual → $349', timestamp: now - 21 * day },
   { id: 'a-3', actorId: 'u-admin-1', actorName: 'Maya Iyer', action: 'Connected integration', target: 'Slack', timestamp: now - 14 * day },
   { id: 'a-4', actorId: 'u-admin-1', actorName: 'Maya Iyer', action: 'Suspended user', target: 'spam@example.com', timestamp: now - 7 * day },
   { id: 'a-5', actorId: 'u-admin-1', actorName: 'Maya Iyer', action: 'Edited role permissions', target: 'Tutor role', timestamp: now - 2 * day },

@@ -234,7 +234,7 @@ export function ResumeStudio() {
             <div>
               <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Resume Studio</h1>
               <p className="text-sm text-muted-foreground">
-                Upload your resume · Pick a format · AI reforms it with your latest skills + Marq AI certifications
+                Upload your resume · Pick a format · AI reforms it with your latest skills + marqaicourses certifications
               </p>
             </div>
           </div>

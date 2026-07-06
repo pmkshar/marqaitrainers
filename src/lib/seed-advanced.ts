@@ -14,7 +14,7 @@ const hour = 60 * 60 * 1000;
 export const SEED_CERT_TEMPLATES: CertificateTemplate[] = [
   {
     id: 'tpl-default',
-    name: 'Default — Marq Classic',
+    name: 'Default — marqaicourses Classic',
     background: 'linear-gradient(135deg, #fafafa 0%, #f0f4ff 100%)',
     borderColor: '#6366f1',
     width: 1200,
@@ -22,7 +22,7 @@ export const SEED_CERT_TEMPLATES: CertificateTemplate[] = [
     createdAt: now - 60 * day,
     updatedAt: now - 14 * day,
     elements: [
-      { id: 'e1', type: 'logo', x: 8, y: 8, w: 18, fontSize: 14, fontWeight: 700, color: '#6366f1', text: 'MARQ AI', align: 'left' },
+      { id: 'e1', type: 'logo', x: 8, y: 8, w: 18, fontSize: 14, fontWeight: 700, color: '#6366f1', text: 'MARQAICOURSES', align: 'left' },
       { id: 'e2', type: 'title', x: 50, y: 22, w: 80, fontSize: 48, fontWeight: 700, color: '#1e293b', text: 'Certificate of Completion', align: 'center' },
       { id: 'e3', type: 'subtitle', x: 50, y: 32, w: 80, fontSize: 18, fontWeight: 400, color: '#64748b', text: 'This certifies that', align: 'center' },
       { id: 'e4', type: 'recipient_name', x: 50, y: 42, w: 80, fontSize: 36, fontWeight: 600, color: '#4f46e5', align: 'center' },
@@ -145,8 +145,8 @@ export const SEED_EMAIL_SCHEDULES: EmailSchedule[] = [
     name: 'Welcome onboarding',
     trigger: 'New user registers',
     delayHours: 0,
-    subject: 'Welcome to Marq AI Software Tutor, {{name}}! 🎓',
-    bodyTemplate: 'Hi {{name}},\n\nWelcome aboard! Your Marq AI account is ready. Here are 3 things to do first:\n1. Browse the course catalog\n2. Take a free preview lesson\n3. Say hi to your AI tutor\n\nHappy learning,\nThe Marq AI Team',
+    subject: 'Welcome to marqaicourses Online Courses Platform, {{name}}! 🎓',
+    bodyTemplate: 'Hi {{name}},\n\nWelcome aboard! Your marqaicourses account is ready. Here are 3 things to do first:\n1. Browse the course catalog\n2. Take a free preview lesson\n3. Say hi to your AI tutor\n\nHappy learning,\nThe marqaicourses Team',
     enabled: true,
     updatedAt: now - 14 * day,
   },

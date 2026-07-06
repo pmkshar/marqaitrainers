@@ -57,7 +57,7 @@ export default function GlobalError({
                 <AlertTriangle className="h-6 w-6" />
               </span>
               <div className="min-w-0 flex-1">
-                <h1 className="text-xl font-bold">MarqAI hit a snag</h1>
+                <h1 className="text-xl font-bold">marqaicourses hit a snag</h1>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {isDev
                     ? 'An uncaught client-side error occurred. Details below.'

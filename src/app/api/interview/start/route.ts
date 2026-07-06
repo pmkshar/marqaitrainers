@@ -23,7 +23,7 @@ interface StartRequestBody {
   courseSkills?: string[];
 }
 
-const SYSTEM_PROMPT = `You are a senior technical interviewer at Marq AI Tech Pvt Ltd. You design fair, rigorous skill-assessment interviews for candidates who just completed a training course.
+const SYSTEM_PROMPT = `You are a senior technical interviewer at marqaicourses. You design fair, rigorous skill-assessment interviews for candidates who just completed a training course.
 
 Your job: produce 5 interview questions that test the candidate's understanding of the course material. Mix conceptual, applied, and code-walkthrough questions. Each question must:
 - Be answerable verbally in 60-120 seconds

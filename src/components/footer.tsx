@@ -15,10 +15,10 @@ export function Footer() {
             <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white">
               <GraduationCap className="h-4 w-4" />
             </span>
-            <span className="text-base font-bold">Marq<span className="text-emerald-600 dark:text-emerald-400">AI</span></span>
+            <span className="text-base font-bold">marqai<span className="text-emerald-600 dark:text-emerald-400">courses</span></span>
           </div>
           <p className="text-sm text-muted-foreground">
-            The complete software training platform — AI tutor + human tutors, step-wise lessons, video walkthroughs, graded tests, and a Super Admin portal with full RBAC.
+            The complete online courses platform — AI tutor + human tutors, step-wise lessons, video walkthroughs, graded tests, and a Super Admin portal with full RBAC.
           </p>
           <div className="flex gap-3 pt-2">
             <a href="#" aria-label="Twitter" className="grid h-9 w-9 place-items-center rounded-md border text-muted-foreground hover:text-foreground"><Twitter className="h-4 w-4" /></a>
@@ -62,7 +62,7 @@ export function Footer() {
       </div>
       <div className="border-t border-border/60">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-4 text-xs text-muted-foreground sm:flex-row sm:px-6 lg:px-8">
-          <span>© {new Date().getFullYear()} Marq AI Software Tutor. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} marqaicourses. All rights reserved.</span>
           <span>Powered by Z.ai · Built with Next.js</span>
         </div>
       </div>

@@ -1,5 +1,5 @@
 // ============================================================
-// Core domain types for Marq AI Software Tutor
+// Core domain types for marqaicourses Online Courses Platform
 // ============================================================
 
 // ============================================================

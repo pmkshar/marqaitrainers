@@ -345,7 +345,7 @@ export function AITutorIntro({ lessonTitle, courseTitle, onStart, allowDisable =
               <Sparkles className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-xs uppercase tracking-wider text-white/80">Marq AI Software Tutor</p>
+              <p className="text-xs uppercase tracking-wider text-white/80">marqaicourses Online Courses</p>
               <h2 className="text-xl font-bold">TutorAI Introduction</h2>
             </div>
           </div>

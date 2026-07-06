@@ -591,7 +591,7 @@ export function AIInterview({ interviewId }: AiInterviewProps) {
                   <span className="grid h-5 w-5 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-600">
                     <Sparkles className="h-3 w-3" />
                   </span>
-                  Marq AI Interviewer
+                  marqaicourses Interviewer
                 </div>
                 {/* Live indicator */}
                 <div className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-rose-600 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white">
@@ -801,7 +801,7 @@ function InterviewReportView({ report, onContinue }: { report: InterviewReport; 
                   <h3 className="font-semibold text-emerald-900 dark:text-emerald-200">Certificate queued for Super Admin approval</h3>
                   <p className="mt-1 text-sm text-emerald-800 dark:text-emerald-300">
                     You scored {report.overallScorePct}% which is above the 60% pass threshold.
-                    A certificate from <strong>Marq AI Tech Pvt Ltd</strong> has been queued and
+                    A certificate from <strong>marqaicourses</strong> has been queued and
                     will be released to your account once a Super Admin approves it. You will
                     receive an in-app notification when it is ready to download.
                   </p>

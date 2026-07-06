@@ -31,9 +31,9 @@ export function Navbar() {
           </span>
           <span className="flex flex-col leading-none">
             <span className="text-base font-bold tracking-tight">
-              Marq<span className="text-emerald-600 dark:text-emerald-400">AI</span>
+              marqai<span className="text-emerald-600 dark:text-emerald-400">courses</span>
             </span>
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Software Tutor</span>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Online Courses Platform</span>
           </span>
         </button>
 

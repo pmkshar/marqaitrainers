@@ -20,7 +20,7 @@ export const maxDuration = 60;
 //
 // Calls the LLM to rewrite the candidate's uploaded resume in the
 // chosen template style, augmented with their newly-acquired skills
-// and Marq AI certifications.
+// and marqaicourses certifications.
 // ============================================================
 
 interface ReformRequestBody {
@@ -33,15 +33,15 @@ interface ReformRequestBody {
 }
 
 function buildSystemPrompt(styleHint: string): string {
-  return `You are an expert resume writer who rewrites candidate resumes to maximize hiring outcomes. You are given the candidate's original resume text plus a list of courses they completed on the Marq AI Software Tutor platform (with associated skills and certification scores).
+  return `You are an expert resume writer who rewrites candidate resumes to maximize hiring outcomes. You are given the candidate's original resume text plus a list of courses they completed on the marqaicourses online courses platform (with associated skills and certification scores).
 
 Your job: produce a single, ready-to-use resume in PLAIN TEXT (not HTML, not Markdown) using a ${styleHint}. The resume MUST:
 
 1. Open with the candidate's name and contact info at the top.
 2. Include a 2-3 line professional summary that reflects their training and target role.
-3. List skills as chips / comma-separated tags, derived from BOTH the original resume AND the Marq AI course skills (deduplicate, prioritise the most relevant).
-4. Include a "Certifications" section listing each Marq AI certificate with: course title, "Marq AI Tech Pvt Ltd", score %, validation code, issue date.
-5. Include a "Marq AI Training" section listing each completed course with: title, skills covered, score %.
+3. List skills as chips / comma-separated tags, derived from BOTH the original resume AND the marqaicourses course skills (deduplicate, prioritise the most relevant).
+4. Include a "Certifications" section listing each marqaicourses certificate with: course title, "marqaicourses", score %, validation code, issue date.
+5. Include a "marqaicourses Training" section listing each completed course with: title, skills covered, score %.
 6. Preserve the candidate's prior work experience, education, and projects from the original resume — but rephrase for impact (action verbs, quantified outcomes where possible).
 7. Use clear section headers (uppercase, on their own line).
 8. Be honest — do not invent jobs, degrees, or skills the candidate did not mention.
@@ -85,7 +85,7 @@ function fallbackReform(body: ReformRequestBody): string {
     lines.push('');
     lines.push('PROFESSIONAL SUMMARY');
     lines.push(SEP);
-    lines.push(`A motivated software engineer with practical training from Marq AI Tech Pvt Ltd in ${courses.length} course(s)${certs.length > 0 ? ` and ${certs.length} industry-recognized certification(s)` : ''}. Skilled in ${skills.slice(0, 6).join(', ')}. Eager to apply structured, project-based learning to real-world engineering teams.`);
+    lines.push(`A motivated software engineer with practical training from marqaicourses in ${courses.length} course(s)${certs.length > 0 ? ` and ${certs.length} industry-recognized certification(s)` : ''}. Skilled in ${skills.slice(0, 6).join(', ')}. Eager to apply structured, project-based learning to real-world engineering teams.`);
     lines.push('');
     if (skills.length > 0) {
       lines.push('SKILLS');
@@ -97,13 +97,13 @@ function fallbackReform(body: ReformRequestBody): string {
       lines.push('CERTIFICATIONS');
       lines.push(SEP);
       for (const c of certs) {
-        lines.push(`• ${c.courseTitle} — Marq AI Tech Pvt Ltd`);
+        lines.push(`• ${c.courseTitle} — marqaicourses`);
         lines.push(`  Score: ${c.scorePct}% · Code: ${c.code} · Issued: ${new Date(c.issuedAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short' })}`);
       }
       lines.push('');
     }
     if (courses.length > 0) {
-      lines.push('MARQ AI TRAINING');
+      lines.push('MARQAICOURSES TRAINING');
       lines.push(SEP);
       for (const c of courses) {
         lines.push(`• ${c.title} — ${c.scorePct}% score`);
@@ -121,7 +121,7 @@ function fallbackReform(body: ReformRequestBody): string {
     if (body.candidateEmail) lines.push(`  ${body.candidateEmail}`);
     lines.push('');
     lines.push('► PROFESSIONAL SUMMARY');
-    lines.push(body.candidateName + ' is a software engineer with hands-on training from Marq AI Tech Pvt Ltd. Completed ' + courses.length + ' structured course(s)' + (certs.length > 0 ? ` and earned ${certs.length} certification(s)` : '') + '. Strengths: ' + skills.slice(0, 6).join(', ') + '.');
+    lines.push(body.candidateName + ' is a software engineer with hands-on training from marqaicourses. Completed ' + courses.length + ' structured course(s)' + (certs.length > 0 ? ` and earned ${certs.length} certification(s)` : '') + '. Strengths: ' + skills.slice(0, 6).join(', ') + '.');
     lines.push('');
     if (skills.length > 0) {
       lines.push('► SKILLS');
@@ -132,12 +132,12 @@ function fallbackReform(body: ReformRequestBody): string {
       lines.push('► CERTIFICATIONS');
       for (const c of certs) {
         lines.push(`★ ${c.courseTitle}`);
-        lines.push(`  Marq AI Tech Pvt Ltd · ${c.scorePct}% · ${c.code} · ${new Date(c.issuedAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short' })}`);
+        lines.push(`  marqaicourses · ${c.scorePct}% · ${c.code} · ${new Date(c.issuedAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short' })}`);
       }
       lines.push('');
     }
     if (courses.length > 0) {
-      lines.push('► MARQ AI TRAINING');
+      lines.push('► MARQAICOURSES TRAINING');
       for (const c of courses) {
         lines.push(`▸ ${c.title} — ${c.scorePct}% score`);
         if (c.skills.length > 0) lines.push(`  Skills: ${c.skills.join(', ')}`);
@@ -150,7 +150,7 @@ function fallbackReform(body: ReformRequestBody): string {
 
   // Fallback note appended for transparency
   lines.push('');
-  lines.push(`— Generated by Marq AI Resume Studio (${tpl?.name ?? 'Template'} · ${styleHint}) on ${dateStr}. Deterministic fallback used (no LLM credentials configured).`);
+  lines.push(`— Generated by marqaicourses Resume Studio (${tpl?.name ?? 'Template'} · ${styleHint}) on ${dateStr}. Deterministic fallback used (no LLM credentials configured).`);
 
   return lines.join('\n');
 }
@@ -185,7 +185,7 @@ export async function POST(req: NextRequest) {
       .map((c, i) => `${i + 1}. ${c.title} — score ${c.scorePct}%, skills: ${c.skills.join(', ')}`)
       .join('\n');
     const certsDigest = (body.certificates ?? [])
-      .map((c, i) => `${i + 1}. ${c.courseTitle} — Marq AI Tech Pvt Ltd, score ${c.scorePct}%, code ${c.code}, issued ${new Date(c.issuedAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short' })}`)
+      .map((c, i) => `${i + 1}. ${c.courseTitle} — marqaicourses, score ${c.scorePct}%, code ${c.code}, issued ${new Date(c.issuedAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short' })}`)
       .join('\n');
 
     const userPrompt = `Candidate name: ${body.candidateName}
@@ -196,10 +196,10 @@ ORIGINAL RESUME TEXT (uploaded by candidate):
 ${body.originalResumeText}
 """
 
-COMPLETED MARQ AI COURSES:
+COMPLETED MARQAICOURSES COURSES:
 ${coursesDigest || '(none)'}
 
-MARQ AI CERTIFICATES:
+MARQAICOURSES CERTIFICATES:
 ${certsDigest || '(none)'}
 
 Rewrite the resume using a ${tpl.styleHint}. Return ONLY the resume plain text — no Markdown, no HTML, no preamble.`;

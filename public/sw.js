@@ -1,5 +1,5 @@
 // ============================================================
-// MarqAI Software Tutor — Service Worker
+// marqaicourses Online Courses Platform — Service Worker
 // Progressive Web App: offline-capable caching for static assets
 // and an app-shell fallback for navigation requests.
 // ============================================================

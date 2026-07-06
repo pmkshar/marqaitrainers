@@ -62,7 +62,7 @@ export const SEED_BUNDLES: CourseBundle[] = [
   {
     id: 'bundle-all',
     slug: 'marq-everything',
-    title: 'Marq Everything',
+    title: 'marqaicourses Everything',
     subtitle: 'All 5 courses + priority human tutors + AI tutor',
     courseIds: ['ai-ml', 'java-fullstack', 'dotnet-fullstack', 'mobile-dev', 'flutter-dev'],
     price: 599,
@@ -160,7 +160,7 @@ export const SEED_NOTIFICATIONS: AppNotification[] = [
   },
   {
     id: 'n-6', userId: 'u-cand-1', type: 'system',
-    title: 'Welcome to your Marq AI dashboard!',
+    title: 'Welcome to your marqaicourses dashboard!',
     body: 'Track courses, badges, certificates, and live sessions all in one place.',
     read: false, createdAt: now - 30 * 60 * 1000,
   },
@@ -339,7 +339,7 @@ export const SEED_GROUPS: Group[] = [
     createdAt: now - 90 * day,
   },
   {
-    id: 'g-3', slug: 'marq-cohort-2024', name: 'Marq Cohort 2024',
+    id: 'g-3', slug: 'marq-cohort-2024', name: 'marqaicourses Cohort 2024',
     description: 'Official cohort group for everyone who enrolled in 2024. Cohort-only live sessions and discounts.',
     category: 'cohort', memberIds: ['u-cand-1', 'u-cand-2', 'u-cand-3'], adminIds: ['u-admin-1'],
     createdAt: now - 60 * day,

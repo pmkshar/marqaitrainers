@@ -1885,7 +1885,7 @@ export const COURSES: Course[] = [
               {
                 title: 'Type hints',
                 content: 'Type hints document intent and let tools (mypy, pyright, IDEs) catch bugs before runtime. They are optional and ignored at runtime.',
-                code: 'def greet(name: str, times: int = 1) -> str:\n    return (f"Hello, {name}! " * times).strip()\n\nmessage: str = greet("Marq", 3)\nprint(message)',
+                code: 'def greet(name: str, times: int = 1) -> str:\n    return (f"Hello, {name}! " * times).strip()\n\nmessage: str = greet("marqaicourses", 3)\nprint(message)',
                 codeLanguage: 'python',
                 tip: 'Run `mypy yourfile.py` to type-check. It catches ~60% of bugs in production Python codebases.',
               },
@@ -1899,7 +1899,7 @@ export const COURSES: Course[] = [
               {
                 title: 'Strings and booleans',
                 content: 'Strings are immutable sequences of Unicode code points. Booleans are True/False (capitalized). Use .upper(), .lower(), .strip(), .split(), .join() for common ops.',
-                code: 's = "  Marq AI  "\nprint(s.strip().upper())      # "MARQ AI"\nprint(",".join(["a", "b", "c"]))  # "a,b,c"\nprint("Marq" in s)             # True\n\nflag: bool = True\nprint(flag and not False)      # True',
+                code: 's = "  marqaicourses  "\nprint(s.strip().upper())      # "MARQAICOURSES"\nprint(",".join(["a", "b", "c"]))  # "a,b,c"\nprint("marq" in s)             # True\n\nflag: bool = True\nprint(flag and not False)      # True',
                 codeLanguage: 'python',
               },
             ],
@@ -2026,7 +2026,7 @@ export const COURSES: Course[] = [
               {
                 title: 'Slicing',
                 content: 'slice syntax: list[start:stop:step]. stop is exclusive. Negative indices count from the end. Slicing returns a new list (shallow copy).',
-                code: 's = "MarqAI Software Tutor"\nprint(s[0:4])    # "Marq"\nprint(s[-6:])    # "Tutor"\nprint(s[::2])    # "MrAIsfwrTto"\nprint(s[::-1])   # "rotuT erawtoS IAqraM"  (reverse)\n\n# Copy a list\noriginal = [1, 2, 3]\ncopy = original[:]',
+                code: 's = "marqaicourses Online Courses"\nprint(s[0:4])    # "marq"\nprint(s[-8:])    # "Courses"\nprint(s[::2])    # "mqacesOnieCuse"\nprint(s[::-1])   # "sesruoC enilnO sesruociqram"  (reverse)\n\n# Copy a list\noriginal = [1, 2, 3]\ncopy = original[:]',
                 codeLanguage: 'python',
                 tip: 'list[::-1] is the fastest idiomatic way to reverse a sequence in Python.',
               },

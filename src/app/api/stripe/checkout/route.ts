@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
     const Stripe = (await import('stripe')).default;
     const stripe = new Stripe(stripeKey, {
       apiVersion: '2024-06-20' as Stripe.LatestApiVersion,
-      appInfo: { name: 'MarqAI', version: '1.0.0' },
+      appInfo: { name: 'marqaicourses', version: '1.0.0' },
     });
 
     const origin = req.headers.get('origin') || 'https://marqaitrainers.vercel.app';
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
             price_data: {
               currency: (body.currency ?? 'usd').toLowerCase(),
               product_data: {
-                name: body.courseTitle ?? `MarqAI Course: ${body.courseId ?? ''}`,
+                name: body.courseTitle ?? `marqaicourses Course: ${body.courseId ?? ''}`,
                 description: 'One-time purchase — lifetime access to course content.',
               },
               unit_amount: body.amount!, // already in cents

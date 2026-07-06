@@ -1,6 +1,6 @@
 {
-  "name": "MarqAI Software Tutor",
-  "short_name": "MarqAI",
+  "name": "marqaicourses Online Courses Platform",
+  "short_name": "marqaicourses",
   "description": "AI + Human tutors · step-wise lessons · video walkthroughs · graded tests · Super Admin portal with RBAC.",
   "start_url": "/",
   "display": "standalone",

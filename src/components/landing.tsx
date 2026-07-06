@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowRight, PlayCircle, Sparkles, BookOpen, Video, FileQuestion, MessageSquare, Users, ShieldCheck, CreditCard, Check } from 'lucide-react';
+import { ArrowRight, PlayCircle, Sparkles, BookOpen, Video, FileQuestion, MessageSquare, Users, CreditCard, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,12 +10,12 @@ import { PRICING_PLANS } from '@/lib/seed-data';
 import { CourseIcon } from './navbar';
 
 const FEATURES = [
-  { icon: BookOpen, title: 'Step-Wise Training', description: 'Every lesson is broken into bite-sized, ordered steps with code examples, tips, and explanations so you never feel lost.', color: 'from-emerald-500 to-teal-600' },
-  { icon: Video, title: 'Video Walkthroughs', description: 'Each lesson ships with a guided video so you can watch, pause, and code along at your own pace.', color: 'from-rose-500 to-pink-600' },
-  { icon: FileQuestion, title: 'Sample Tests & Quizzes', description: 'Reinforce learning with auto-graded MCQ quizzes after every lesson, complete with detailed explanations.', color: 'from-amber-500 to-orange-600' },
-  { icon: MessageSquare, title: 'AI Tutor Chat', description: 'Ask questions anytime — our AI tutor answers in seconds with code snippets, examples, and follow-ups.', color: 'from-violet-500 to-purple-600' },
-  { icon: Users, title: 'Human Tutors', description: 'Book 1:1 video sessions with vetted human experts for live mentoring, code reviews, and career advice.', color: 'from-sky-500 to-cyan-600' },
-  { icon: ShieldCheck, title: 'Super Admin Portal', description: 'Full RBAC, user management, pricing control, tutor approvals, and integrations — all in one dashboard.', color: 'from-fuchsia-500 to-pink-600' },
+  { icon: BookOpen, title: 'Structured Courses', description: '6 career-track courses with step-wise lessons, code examples, tips, and detailed explanations. From beginner to expert level.', color: 'from-emerald-500 to-teal-600' },
+  { icon: Video, title: 'Video Walkthroughs', description: 'Every lesson includes a guided video walkthrough so you can watch, pause, and code along at your own pace.', color: 'from-rose-500 to-pink-600' },
+  { icon: FileQuestion, title: 'Graded Quizzes & Tests', description: 'Auto-graded MCQ quizzes after every lesson with detailed explanations. Track your progress and earn certificates.', color: 'from-amber-500 to-orange-600' },
+  { icon: MessageSquare, title: 'AI Tutor Chat', description: 'Ask questions anytime — our AI tutor answers in seconds with code snippets, examples, and personalized follow-ups.', color: 'from-violet-500 to-purple-600' },
+  { icon: Users, title: 'Human Tutors', description: 'Book 1:1 video sessions with vetted human experts for live mentoring, code reviews, and career guidance.', color: 'from-sky-500 to-cyan-600' },
+  { icon: CreditCard, title: 'Flexible Pricing', description: 'Subscribe monthly or annually for all-access, or buy individual courses for lifetime access. Corporate plans available.', color: 'from-fuchsia-500 to-pink-600' },
 ];
 
 export function Hero() {
@@ -28,13 +28,13 @@ export function Hero() {
         <div className="grid items-center gap-12 lg:grid-cols-2">
           <div className="flex flex-col gap-6">
             <Badge variant="outline" className="w-fit border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
-              <Sparkles className="mr-1 h-3 w-3" /> AI + Human Tutors · Subscriptions &amp; One-Time
+              <Sparkles className="mr-1 h-3 w-3" /> Online Courses · AI Tutor · Certificates
             </Badge>
             <h1 className="text-4xl font-extrabold tracking-tight text-balance sm:text-5xl lg:text-6xl">
-              Marq<span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">AI</span> — your complete software tutor
+              Learn in-demand skills with <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">marqaicourses</span>
             </h1>
             <p className="max-w-xl text-lg text-muted-foreground text-pretty">
-              Learn AI/ML, Full Stack Java, .NET, Mobile App Development, Flutter, and Python with step-wise lessons, video walkthroughs, graded tests, an AI tutor available 24/7, and vetted human tutors for 1:1 sessions.
+              Explore 6 career-track courses in AI/ML, Full Stack Java, .NET, Mobile Development, Flutter, and Python. Step-wise lessons, video walkthroughs, graded tests, AI tutor 24/7, certificates, and corporate training plans.
             </p>
             <div className="flex flex-wrap items-center gap-3">
               {!user && (
@@ -56,7 +56,7 @@ export function Hero() {
             <div className="grid grid-cols-4 gap-3 pt-4">
               <Stat value="6" label="Career Tracks" />
               <Stat value="100+" label="Lessons" />
-              <Stat value="5+" label="Human Tutors" />
+              <Stat value="12K+" label="Students" />
               <Stat value="24/7" label="AI Tutor" />
             </div>
           </div>
@@ -121,9 +121,9 @@ export function Features() {
     <section className="border-t bg-background py-16 lg:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">One platform, every learning mode</h2>
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Why learn with marqaicourses?</h2>
           <p className="mt-4 text-muted-foreground">
-            AI tutor for instant answers, human tutors for live mentoring, step-wise lessons for self-paced learning, and a Super Admin portal for full platform control.
+            Structured courses with video lessons, graded tests, certificates, AI tutor for instant help, human tutors for live mentoring, and flexible pricing — everything you need to advance your career.
           </p>
         </div>
         <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -153,7 +153,7 @@ export function CourseGrid() {
           <div>
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Explore our courses</h2>
             <p className="mt-2 max-w-xl text-muted-foreground">
-              Six on-demand career tracks. Buy individually, or subscribe for all-access.
+              Six on-demand career tracks with certificates. Buy individually, subscribe for all-access, or get corporate training plans for your team.
             </p>
           </div>
         </div>
@@ -331,7 +331,7 @@ export function TutorsPreview() {
         <Card className="mt-6 border-dashed border-sky-500/40 bg-sky-500/5">
           <CardContent className="flex flex-col items-center justify-between gap-4 p-6 sm:flex-row">
             <div>
-              <h3 className="text-lg font-semibold">Are you an expert? Teach on MarqAI.</h3>
+              <h3 className="text-lg font-semibold">Are you an expert? Teach on marqaicourses.</h3>
               <p className="text-sm text-muted-foreground">Apply to become a human tutor. Set your rates, teach online via video + chat, get paid on your schedule.</p>
             </div>
             <Button onClick={() => useAppStore.getState().setAuthOpen(true, 'register', 'tutor')} className="bg-gradient-to-r from-sky-500 to-cyan-600 text-white hover:from-sky-600 hover:to-cyan-700">
@@ -355,7 +355,7 @@ export function CtaSection() {
           <div className="relative mx-auto max-w-2xl">
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Ready to start your journey?</h2>
             <p className="mt-4 text-emerald-50">
-              Join thousands of learners leveling up their software careers with MarqAI. Pick a course, follow the steps, ask the AI tutor, or book a human mentor.
+              Join thousands of learners leveling up their careers with marqaicourses. Pick a course, follow the steps, ask the AI tutor, or book a human mentor.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               {!user ? (

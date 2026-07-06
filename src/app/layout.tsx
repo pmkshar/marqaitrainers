@@ -14,10 +14,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MarqAI — Software Tutor Platform (AI + Human Tutors, RBAC Admin)",
-  description: "MarqAI Software Tutor — learn AI/ML, Full Stack Java, .NET, Mobile, and Flutter with step-wise lessons, video walkthroughs, graded tests, a 24/7 AI tutor, and vetted human tutors. Super Admin portal with full RBAC.",
-  keywords: ["MarqAI", "software tutor", "AI tutor", "human tutors", "RBAC", "Super Admin", "subscriptions", "React Native", "Flutter", "Spring Boot", "ASP.NET", "Machine Learning"],
-  authors: [{ name: "MarqAI" }],
+  title: "marqaicourses — Online Courses Platform (AI + Human Tutors, RBAC Admin)",
+  description: "marqaicourses Online Courses Platform — learn AI/ML, Full Stack Java, .NET, Mobile, and Flutter with step-wise lessons, video walkthroughs, graded tests, a 24/7 AI tutor, and vetted human tutors. Super Admin portal with full RBAC.",
+  keywords: ["marqaicourses", "online courses", "AI tutor", "human tutors", "RBAC", "Super Admin", "subscriptions", "React Native", "Flutter", "Spring Boot", "ASP.NET", "Machine Learning"],
+  authors: [{ name: "marqaicourses" }],
   icons: {
     icon: [
       { url: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg", type: "image/svg+xml" },
@@ -27,20 +27,20 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    title: "MarqAI Tutor",
+    title: "marqaicourses",
     statusBarStyle: "default",
   },
-  applicationName: "MarqAI Software Tutor",
+  applicationName: "marqaicourses Online Courses Platform",
   openGraph: {
-    title: "MarqAI — Software Tutor Platform",
+    title: "marqaicourses — Online Courses Platform",
     description: "AI + Human tutors · step-wise lessons · video walkthroughs · graded tests · Super Admin portal with RBAC.",
     url: "https://chat.z.ai",
-    siteName: "MarqAI",
+    siteName: "marqaicourses",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "MarqAI — Software Tutor Platform",
+    title: "marqaicourses — Online Courses Platform",
     description: "AI + Human tutors · step-wise lessons · graded tests · Super Admin portal.",
   },
 };

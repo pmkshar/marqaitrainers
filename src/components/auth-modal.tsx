@@ -67,8 +67,8 @@ export function AuthModal() {
                 <GraduationCap className="h-5 w-5" />
               </span>
               <div>
-                <p className="font-bold leading-tight">Marq<span className="opacity-80">AI</span></p>
-                <p className="text-xs text-white/80">Software Tutor</p>
+                <p className="font-bold leading-tight">marqai<span className="opacity-80">courses</span></p>
+                <p className="text-xs text-white/80">Online Courses</p>
               </div>
             </div>
           </div>
@@ -79,7 +79,7 @@ export function AuthModal() {
             {authMode === 'login'
               ? 'Sign in to access your courses, AI tutor, and bookings.'
               : localRole === 'tutor'
-              ? 'Apply to teach on MarqAI. Admin approval required before going live.'
+              ? 'Apply to teach on marqaicourses. Admin approval required before going live.'
               : 'Register free to start learning, take tests, and book human tutors.'}
           </p>
         </div>
@@ -179,7 +179,7 @@ export function AuthModal() {
                 >
                   <Users className="h-5 w-5 text-sky-600 dark:text-sky-400" />
                   <span className="text-sm font-medium">I&apos;m a Tutor</span>
-                  <span className="text-[10px] text-muted-foreground">Teach on MarqAI</span>
+                  <span className="text-[10px] text-muted-foreground">Teach on marqaicourses</span>
                 </button>
               </div>
 
@@ -218,7 +218,7 @@ export function AuthModal() {
                 </Button>
               </form>
               <p className="text-center text-[10px] text-muted-foreground">
-                By registering you agree to MarqAI&apos;s Terms &amp; Privacy Policy.
+                By registering you agree to marqaicourses's Terms &amp; Privacy Policy.
               </p>
             </TabsContent>
           </Tabs>

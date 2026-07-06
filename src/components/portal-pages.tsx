@@ -549,7 +549,7 @@ export function CertificatesPage() {
                   <div className={`bg-gradient-to-br ${c.template === 'platinum' ? 'from-slate-400 to-slate-600' : c.template === 'gold' ? 'from-amber-400 to-orange-500' : 'from-emerald-500 to-teal-600'} p-5 text-white`}>
                     <div className="flex items-center justify-between">
                       <Award className="h-8 w-8" />
-                      <span className="text-xs font-semibold uppercase tracking-wider opacity-80">Marq AI · Certificate of Completion</span>
+                      <span className="text-xs font-semibold uppercase tracking-wider opacity-80">marqaicourses · Certificate of Completion</span>
                     </div>
                     <p className="mt-4 text-xs uppercase tracking-wider opacity-80">This certifies that</p>
                     <p className="text-xl font-bold">{useAppStore.getState().currentUser()?.name}</p>
@@ -660,7 +660,7 @@ interface Feature {
 export function FeaturesPage() {
   const features: Feature[] = [
     // PWA / Mobile
-    { icon: Smartphone, name: 'Progressive Web App', description: 'Install Marq AI as a PWA on any device — phone, tablet, or desktop. Native-like launch, full-screen, no app store required.', status: 'live', category: 'Platform' },
+    { icon: Smartphone, name: 'Progressive Web App', description: 'Install marqaicourses as a PWA on any device — phone, tablet, or desktop. Native-like launch, full-screen, no app store required.', status: 'live', category: 'Platform' },
     { icon: Wifi, name: 'Offline Mode', description: 'Cached lessons, videos, and notes work even without internet. 200ms instant load on cached content.', status: 'live', category: 'Platform' },
     { icon: Layers, name: 'One-Click App Generation', description: 'One unified app for Admin, Tutors, Candidates, and custom roles — fully responsive across mobile, tablet, and desktop.', status: 'live', category: 'Platform' },
 

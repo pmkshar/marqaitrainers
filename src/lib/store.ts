@@ -567,7 +567,7 @@ export const useAppStore = create<AppState>()(
         get().pushNotification({
           userId: id,
           type: 'success',
-          title: `Welcome to Marq AI, ${name.split(' ')[0]}! 🎉`,
+          title: `Welcome to marqaicourses, ${name.split(' ')[0]}! 🎉`,
           body: role === 'tutor'
             ? 'Your tutor application is pending review by the Super Admin. You\'ll be notified once approved.'
             : 'Your candidate account is ready. Browse the catalog and enroll in your first course to get started.',
@@ -578,7 +578,7 @@ export const useAppStore = create<AppState>()(
             userId: 'u-admin-1',
             type: 'system',
             title: `New tutor application — ${name}`,
-            body: `${name} applied to teach on Marq AI. Review their application in the Admin Portal.`,
+            body: `${name} applied to teach on marqaicourses. Review their application in the Admin Portal.`,
             link: 'admin:tutors',
           });
         }
@@ -669,7 +669,7 @@ export const useAppStore = create<AppState>()(
           get().pushNotification({
             userId: id,
             type: 'success',
-            title: '🎉 You\'re approved as a Marq AI tutor!',
+            title: '🎉 You\'re approved as a marqaicourses tutor!',
             body: 'You can now set your availability, accept bookings, and start teaching. Visit your Tutor Dashboard to complete your profile.',
             link: 'tutor_portal',
           });

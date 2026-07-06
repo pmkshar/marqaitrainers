@@ -19,7 +19,7 @@ import type { Certificate } from '@/lib/types';
 // be downloaded as a PNG via the browser's native canvas API.
 // Layout:
 //   - Border + gradient background
-//   - Marq AI Tech Pvt Ltd logo (top-left)
+//   - marqaicourses logo (top-left)
 //   - "Certificate of Completion / Excellence / Mastery"
 //   - Candidate name + photo
 //   - Course title + skills + score
@@ -115,7 +115,7 @@ export function CertificateDisplay({ certificate, fullPage = false }: Certificat
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `Marq-AI-Certificate-${certificate.code}.png`;
+      a.download = `marqaicourses-Certificate-${certificate.code}.png`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -131,8 +131,8 @@ export function CertificateDisplay({ certificate, fullPage = false }: Certificat
   // ---------- Share ----------
   const handleShare = async () => {
     const shareData = {
-      title: `Marq AI Certificate — ${courseTitle}`,
-      text: `I earned a ${tplStyle.titleText} from Marq AI Tech Pvt Ltd for completing ${courseTitle} with ${certificate.scorePct}%. Validation code: ${certificate.code}`,
+      title: `marqaicourses Certificate — ${courseTitle}`,
+      text: `I earned a ${tplStyle.titleText} from marqaicourses for completing ${courseTitle} with ${certificate.scorePct}%. Validation code: ${certificate.code}`,
       url: typeof window !== 'undefined' ? `${window.location.origin}/?cert=${certificate.code}` : '',
     };
     try {
@@ -157,7 +157,7 @@ export function CertificateDisplay({ certificate, fullPage = false }: Certificat
           <div>
             <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Your certificate</h1>
             <p className="text-sm text-muted-foreground">
-              Issued by Marq AI Tech Pvt Ltd · Validation code {certificate.code}
+              Issued by marqaicourses · Validation code {certificate.code}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -193,7 +193,7 @@ export function CertificateDisplay({ certificate, fullPage = false }: Certificat
                 <p className="mt-1 text-sm text-amber-800 dark:text-amber-300">
                   You passed the AI interview with {certificate.scorePct}%. Your certificate
                   has been queued and will be released for download once a Super Admin at
-                  Marq AI Tech Pvt Ltd approves it. You will receive an in-app notification
+                  marqaicourses approves it. You will receive an in-app notification
                   when it is ready.
                 </p>
               </div>
@@ -248,12 +248,12 @@ export function CertificateDisplay({ certificate, fullPage = false }: Certificat
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/marq-ai-logo.png"
-                alt="Marq AI Tech Pvt Ltd logo"
+                alt="marqaicourses logo"
                 className="h-14 w-14 rounded-lg object-cover ring-2 ring-white/60"
               />
               <div>
                 <p className="text-xs font-bold uppercase tracking-wider" style={{ color: tplStyle.accentColor }}>
-                  Marq AI Tech Pvt Ltd
+                  marqaicourses
                 </p>
                 <p className="text-[10px] text-muted-foreground">Software Engineering Academy</p>
               </div>
@@ -333,14 +333,14 @@ export function CertificateDisplay({ certificate, fullPage = false }: Certificat
                 {certificate.code}
               </p>
               <p className="mt-1 text-[10px] text-muted-foreground">
-                Verify at marqai.dev/verify · Issued by Marq AI Tech Pvt Ltd
+                Verify at marqai.dev/verify · Issued by marqaicourses
               </p>
             </div>
             <div className="text-right">
               <div className="mb-1 h-8 w-32 border-b-2 border-dashed" style={{ borderColor: tplStyle.borderColor }} />
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Authorised by</p>
               <p className="text-sm font-semibold">Super Admin</p>
-              <p className="text-[10px] text-muted-foreground">Marq AI Tech Pvt Ltd</p>
+              <p className="text-[10px] text-muted-foreground">marqaicourses</p>
               {approvedDate && (
                 <p className="text-[10px] text-muted-foreground">Approved: {approvedDate}</p>
               )}
@@ -611,7 +611,7 @@ async function renderCertificateToPng(opts: RenderOpts): Promise<Blob> {
   ctx.fillText(opts.code, 120, 1070);
   ctx.fillStyle = '#64748b';
   ctx.font = '11px sans-serif';
-  ctx.fillText('Verify at marqai.dev/verify · Issued by Marq AI Tech Pvt Ltd', 120, 1100);
+  ctx.fillText('Verify at marqai.dev/verify · Issued by marqaicourses', 120, 1100);
 
   // Signature (bottom-right)
   ctx.strokeStyle = colors.border;
@@ -632,7 +632,7 @@ async function renderCertificateToPng(opts: RenderOpts): Promise<Blob> {
   ctx.fillText('Super Admin', W - 120, 1130);
   ctx.fillStyle = '#64748b';
   ctx.font = '11px sans-serif';
-  ctx.fillText('Marq AI Tech Pvt Ltd', W - 120, 1155);
+  ctx.fillText('marqaicourses', W - 120, 1155);
   if (opts.approvedDate) {
     ctx.fillText(`Approved: ${opts.approvedDate}`, W - 120, 1175);
   }

@@ -59,12 +59,12 @@ export function GreetingCard() {
           <div className="flex items-center gap-2 text-white/80">
             <Sparkles className="h-4 w-4" />
             <span className="text-xs uppercase tracking-wider font-medium">
-              {language === 'es' ? 'Bienvenido a MarqAI' :
-               language === 'de' ? 'Willkommen bei MarqAI' :
-               language === 'ja' ? 'MarqAIへようこそ' :
-               language === 'hi' ? 'MarqAI में आपका स्वागत है' :
-               language === 'fr' ? 'Bienvenue sur MarqAI' :
-               'Welcome to MarqAI'}
+              {language === 'es' ? 'Bienvenido a marqaicourses' :
+               language === 'de' ? 'Willkommen bei marqaicourses' :
+               language === 'ja' ? 'marqaicoursesへようこそ' :
+               language === 'hi' ? 'marqaicourses में आपका स्वागत है' :
+               language === 'fr' ? 'Bienvenue sur marqaicourses' :
+               'Welcome to marqaicourses'}
             </span>
           </div>
           <h2 className="mt-3 text-2xl font-bold leading-tight">
