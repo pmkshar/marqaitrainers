@@ -322,3 +322,34 @@ Stage Summary:
 - Fresh Vercel production deployment triggered and completed successfully
 - Pre-deploy verification script added at scripts/verify-features.sh to prevent future regressions
 - Root cause likely: Vercel CDN cache or a manual deployment overriding the git-triggered one
+
+---
+Task ID: 2
+Agent: Main Agent
+Task: Rebrand MarqAI to marqaicourses, fix UI gaps on home page, course pages, AI tutor
+
+Work Log:
+- Analyzed current production site vs user's previous build using agent-browser and VLM
+- Identified branding gap: site was branded as "MarqAI" instead of "marqaicourses"
+- Identified hero section text needed to be more courses-platform focused
+- Identified features section needed to highlight courses/certificates/corporate plans
+- Rebranded 22 source files + 2 public config files from "MarqAI"/"Marq AI" to "marqaicourses"
+- Updated visual brand display: marqai<span className="text-emerald-600">courses</span>
+- Updated subtitle: "Software Tutor" → "Online Courses Platform"
+- Updated hero: "Learn in-demand skills with marqaicourses"
+- Updated hero badge: "Online Courses · AI Tutor · Certificates"
+- Updated hero stats: Changed "5+ Human Tutors" to "12K+ Students"
+- Updated features: Added "Structured Courses", "Graded Quizzes & Tests", "Flexible Pricing" (replaced Step-Wise Training, Sample Tests, Super Admin Portal)
+- Updated features heading: "Why learn with marqaicourses?"
+- Updated course grid description to mention certificates and corporate plans
+- Updated all metadata (layout.tsx): title, description, keywords, openGraph, twitter cards
+- Updated all API routes, seed data, i18n translations, certificate display, resume studio
+- Build verified: Next.js build succeeds
+- Committed and pushed to GitHub
+- Deployed to Vercel: dpl_FyQD3NMFRxtZSLQbWF3T2cQ24sv1 — READY, production
+
+Stage Summary:
+- Complete rebrand from MarqAI to marqaicourses across 24 files
+- Home page UI updated to be courses-platform focused
+- Production deployed at marqaitrainers.vercel.app
+- Verified via agent-browser: brand shows "marqaicourses", hero shows updated text, auth modal shows new branding
