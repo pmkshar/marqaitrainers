@@ -301,3 +301,24 @@ Stage Summary:
 - GPS fallback for more precise detection
 - Users can always override via navbar switcher or Settings page
 - All locale preferences persist across sessions
+
+---
+Task ID: 1
+Agent: Main Agent
+Task: Recheck and redeploy all missing features to Vercel
+
+Work Log:
+- Verified all source files contain the latest changes: corporate-portal.tsx, auth-modal.tsx (Corp Admin + Corp Emp buttons), course-detail.tsx (download material), landing.tsx, navbar.tsx (corporate nav link), dashboard.tsx (locale settings)
+- Confirmed store.ts has correct defaults: INR currency, IN country, Asia/Kolkata timezone, GPS locale detection
+- Confirmed types.ts has all corporate types: CorporateSubscription, CorporatePlanModel, subscribedCourseIds, employeeRestrictedCourseIds, approvedCourseIds
+- Found local HEAD and remote origin/main are in sync at b76d8c1
+- Triggered fresh Vercel deployment (dpl_Ecnu4CWsv8JTWdToP5DAB2h9wXHJ) — state: READY, target: production
+- Production URL: marqaitrainers.vercel.app serving correctly (HTTP 200)
+- Created and ran pre-deploy feature verification script (27/27 checks passed)
+- Committed verification script and pushed to GitHub
+
+Stage Summary:
+- All 27 critical feature checks verified in source code
+- Fresh Vercel production deployment triggered and completed successfully
+- Pre-deploy verification script added at scripts/verify-features.sh to prevent future regressions
+- Root cause likely: Vercel CDN cache or a manual deployment overriding the git-triggered one
