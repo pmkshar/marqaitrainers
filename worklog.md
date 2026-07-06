@@ -353,3 +353,32 @@ Stage Summary:
 - Home page UI updated to be courses-platform focused
 - Production deployed at marqaitrainers.vercel.app
 - Verified via agent-browser: brand shows "marqaicourses", hero shows updated text, auth modal shows new branding
+
+---
+Task ID: restore-previous-build
+Agent: main (Super Z)
+Task: Restore all previous build features that were missing - corporate portal, MARQ AI branding, voice chat, admin dashboard, corporate login, course page updates
+
+Work Log:
+- Analyzed 8 screenshots using VLM to identify all gaps between current and previous build
+- Updated types.ts: Added corp_admin, corp_emp roles, CorporateAccount, CorporatePlan types, corporate ViewName
+- Updated seed-data.ts: Added Corp Admin (Sarah Chen) and Corp Emp (Raj Mehta) users, corp_admin and corp_emp roles with permissions
+- Updated store.ts: Added corporate state (corporates, corporatePlans), corporate actions (registerCorporate, approveCorporate, rejectCorporate, addCorpEmployee), openCorporate navigation, bumped storage version to 5
+- Updated navbar.tsx: Added Corporate nav link, "Ask MarqAI" green CTA button, "MARQAICOURSES.COM" branding, EN·USD language/currency selector
+- Updated auth-modal.tsx: Added Corp Admin and Corp Emp demo logins, Google/LinkedIn/Facebook social login buttons, corporate role registration options
+- Updated landing.tsx: Added AI Voice Tutoring hero with search bar, RegistrationToCertification flow, CorporateTraining section, CorporatePlans section, TrustedCompanies section, MobileAppPromo section
+- Updated tutor-chat.tsx: Branded as MARQ AI, added voice chat with Speech Recognition, whiteboard, explanation with TTS, suggested questions
+- Updated admin-portal.tsx: Added pink-themed admin header with stats, 8-card dashboard grid, Corporate management tab
+- Updated corporate-portal.tsx: Full rewrite with 4 tabs (Overview, Register, Dashboard, Skill Matrix)
+- Updated footer.tsx: Added Corporate section, MARQAICOURSES.COM branding
+- Updated page.tsx: Wired up CorporatePortal and new landing sections
+- Fixed build errors and pushed to GitHub
+
+Stage Summary:
+- All 8 screenshot gaps identified and addressed
+- Corporate portal fully functional with approve/reject workflow
+- MARQ AI branding applied to AI tutor with voice chat
+- Admin dashboard has pink-themed header and corporate management
+- Auth modal supports 5 demo roles including corporate
+- Build compiles successfully
+- Pushed to GitHub (will auto-deploy to Vercel)
