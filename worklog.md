@@ -496,3 +496,21 @@ Stage Summary:
 - AI Interview Proctoring: face detection + gaze + concentration + auto-pause ✅
 - Voice state persistence to localStorage ✅
 - Code pushed to GitHub, Vercel deployment triggered
+
+---
+Task ID: search-scroll-courses
+Agent: main
+Task: Add big course search bar and scrolling course icons to home page
+
+Work Log:
+- Created CourseSearchBar component with large search input, dropdown results, and quick search tags
+- Created ScrollingCourseIcons component with auto-scrolling marquee of course icon cards
+- Removed old small search bar from Hero section
+- Updated home page layout order: SearchBar → ScrollingIcons → Hero → TrainingFlow → ...
+- Both components support hover-to-pause interaction
+- Committed and pushed to GitHub (5ab3138)
+
+Stage Summary:
+- Big search bar with real-time filtering and course navigation
+- Scrolling course icons with gradient backgrounds, ratings, and level badges
+- Quick search tags: AI & ML, Full Stack Java, .NET, React Native, Flutter, Python
