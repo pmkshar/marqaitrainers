@@ -224,48 +224,72 @@ export function FloatingTutorPopup({
         opacity: isZooming ? 0.7 : 1,
       }}
     >
-      {/* Draggable Header */}
+      {/* Draggable Header — matching MARQ AI reference design */}
       <div
         onMouseDown={handleDragStart}
-        className="flex items-center gap-3 border-b bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-3 cursor-move select-none"
+        className="cursor-move select-none"
       >
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          <Animated3DTutorAvatar speaking={isSpeaking} expression={expression} size={32} />
-          <div className="min-w-0">
-            <h3 className="text-sm font-bold text-white truncate">{tutor.name}</h3>
-            <p className="text-[10px] text-emerald-100 truncate">{tutor.tagline}</p>
+        {/* Green gradient header bar */}
+        <div className="flex items-center gap-3 bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-3">
+          <div className="relative">
+            {/* Circular avatar with white border */}
+            <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-white/40 bg-emerald-700/30 overflow-hidden">
+              <Animated3DTutorAvatar speaking={isSpeaking} expression={expression} size={36} />
+            </div>
+            {/* Online/speaking indicator dot */}
+            <div className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-emerald-600 ${isSpeaking ? 'bg-green-400 animate-pulse' : 'bg-emerald-300'}`} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5">
+              <h3 className="text-sm font-bold text-white truncate">{tutor.name}</h3>
+              {/* Verified badge */}
+              <CheckCircle2 className="h-3.5 w-3.5 text-blue-300 shrink-0" />
+            </div>
+            <p className="text-[10px] text-emerald-100 truncate">{tutor.title}</p>
+            <p className="text-[9px] text-emerald-200/80 italic truncate">{tutor.tagline}</p>
+          </div>
+          {/* Zoom & close controls */}
+          <div className="flex items-center gap-0.5">
+            <button
+              onClick={() => handleSizeChange('mini')}
+              className={`flex h-6 w-6 items-center justify-center rounded-md transition-colors ${popupSize === 'mini' ? 'bg-white/30' : 'hover:bg-white/20'}`}
+              title="Small"
+            >
+              <Minimize2 className="h-3 w-3 text-white" />
+            </button>
+            <button
+              onClick={() => handleSizeChange('medium')}
+              className={`flex h-6 w-6 items-center justify-center rounded-md transition-colors ${popupSize === 'medium' ? 'bg-white/30' : 'hover:bg-white/20'}`}
+              title="Medium"
+            >
+              <Maximize2 className="h-3 w-3 text-white" />
+            </button>
+            <button
+              onClick={() => handleSizeChange('large')}
+              className={`flex h-6 w-6 items-center justify-center rounded-md transition-colors ${popupSize === 'large' ? 'bg-white/30' : 'hover:bg-white/20'}`}
+              title="Large"
+            >
+              <Maximize2 className="h-3.5 w-3.5 text-white" />
+            </button>
+            <button
+              onClick={() => setIsOpen(false)}
+              className="flex h-6 w-6 items-center justify-center rounded-md hover:bg-white/20 transition-colors ml-0.5"
+              title="Minimize"
+            >
+              <X className="h-3.5 w-3.5 text-white" />
+            </button>
           </div>
         </div>
-        <div className="flex items-center gap-1">
-          {/* Zoom controls */}
-          <button
-            onClick={() => handleSizeChange('mini')}
-            className={`flex h-6 w-6 items-center justify-center rounded-md transition-colors ${popupSize === 'mini' ? 'bg-white/30' : 'hover:bg-white/20'}`}
-            title="Small"
-          >
-            <Minimize2 className="h-3 w-3 text-white" />
-          </button>
-          <button
-            onClick={() => handleSizeChange('medium')}
-            className={`flex h-6 w-6 items-center justify-center rounded-md transition-colors ${popupSize === 'medium' ? 'bg-white/30' : 'hover:bg-white/20'}`}
-            title="Medium"
-          >
-            <Maximize2 className="h-3 w-3 text-white" />
-          </button>
-          <button
-            onClick={() => handleSizeChange('large')}
-            className={`flex h-6 w-6 items-center justify-center rounded-md transition-colors ${popupSize === 'large' ? 'bg-white/30' : 'hover:bg-white/20'}`}
-            title="Large"
-          >
-            <Maximize2 className="h-3.5 w-3.5 text-white" />
-          </button>
-          <button
-            onClick={() => setIsOpen(false)}
-            className="flex h-6 w-6 items-center justify-center rounded-md hover:bg-white/20 transition-colors ml-1"
-            title="Minimize"
-          >
-            <X className="h-3.5 w-3.5 text-white" />
-          </button>
+        {/* Stats bar */}
+        <div className="flex items-center gap-3 bg-emerald-700/20 px-4 py-1.5 border-b border-emerald-500/20">
+          <div className="flex items-center gap-0.5">
+            {[1,2,3,4,5].map(i => (
+              <span key={i} className={`text-[10px] ${i <= Math.round(tutor.rating) ? 'text-amber-400' : 'text-zinc-400'}`}>★</span>
+            ))}
+            <span className="text-[9px] text-muted-foreground ml-0.5">{tutor.rating}</span>
+          </div>
+          <span className="text-[9px] text-amber-600 dark:text-amber-400 font-medium bg-amber-500/10 px-1.5 py-0.5 rounded">8+ years</span>
+          <span className="text-[9px] text-muted-foreground">1,800+ sessions</span>
         </div>
       </div>
 

@@ -20,6 +20,8 @@ import {
   CalendarPage, MembersPage, GroupsPage, MessagesPage,
   CertificatesPage, AchievementsPage, FeaturesPage,
 } from '@/components/portal-pages';
+import { ResumeStudio } from '@/components/resume-studio';
+import { AIInterview } from '@/components/ai-interview';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { useAppStore } from '@/lib/store';
 
@@ -92,12 +94,14 @@ export default function Home() {
             {view.name === 'achievements' && <AchievementsPage />}
             {view.name === 'features' && <FeaturesPage />}
             {view.name === 'courses' && <CoursesPage />}
+            {view.name === 'resume_studio' && <ResumeStudio />}
+            {view.name === 'ai_interview' && <AIInterview />}
           </ErrorBoundary>
         </main>
         <Footer />
       </div>
-      {/* Sidebar is fixed positioned, so it doesn't need to be inside the shifted container */}
-      <TutorChat />
+      {/* AI Tutor chat only in course/lesson views */}
+      {(view.name === 'course' || view.name === 'lesson') && <TutorChat />}
       <AuthModal />
     </div>
   );

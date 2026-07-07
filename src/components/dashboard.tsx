@@ -6,7 +6,7 @@ import {
   TrendingUp, Users, MessageSquare, Bell, CheckCircle2, PlayCircle, FileQuestion,
   Trophy, Target, Flame, ChevronRight, Settings, ShieldCheck, DollarSign,
   GraduationCap, BarChart3, Star, Zap, BookMarked, Activity as ActivityIcon,
-  Building2, Globe,
+  Building2, Globe, FileText, Brain, Lock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -238,11 +238,13 @@ function CandidateDashboard() {
   return (
     <div className="space-y-6 pt-6">
       {/* Quick actions row */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <QuickAction icon={PlayCircle} label="Continue learning" desc="Pick up where you left off" color="from-emerald-500 to-teal-600" onClick={() => useAppStore.getState().openMyLearning()} />
         <QuickAction icon={Calendar} label="My calendar" desc="Sessions, deadlines, live classes" color="from-sky-500 to-cyan-600" onClick={() => useAppStore.getState().openCalendar()} />
         <QuickAction icon={Trophy} label="Achievements" desc="Badges & certificates" color="from-amber-500 to-orange-600" onClick={() => useAppStore.getState().openAchievements()} />
         <QuickAction icon={Users} label="Community" desc="Members, groups, messages" color="from-violet-500 to-purple-600" onClick={() => useAppStore.getState().openMembers()} />
+        <QuickAction icon={FileText} label="AI Resume Builder" desc="Reform your resume with AI" color="from-fuchsia-500 to-pink-600" onClick={() => useAppStore.getState().openResumeStudio()} />
+        <QuickAction icon={Brain} label="AI Interview" desc="Practice interviews with AI" color="from-rose-500 to-red-600" onClick={() => useAppStore.getState().openAiInterview()} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -521,6 +523,20 @@ function ActivityPanel() {
 function MiniAchievementsPanel() {
   const myBadges = useMyBadges();
   const myCerts = useMyCertificates();
+  const currentUserId = useAppStore((s) => s.currentUserId);
+  const interviewSessions = useAppStore((s) => s.interviewSessions);
+
+  // Check which courses the user has passed an AI interview for
+  const passedInterviewCourseIds = useMemo(() => {
+    if (!currentUserId) return new Set<string>();
+    return new Set(
+      interviewSessions
+        .filter((s) => s.userId === currentUserId && s.status === 'completed' && s.report?.passed)
+        .map((s) => s.courseId),
+    );
+  }, [currentUserId, interviewSessions]);
+
+  const hasLockedCerts = myCerts.some((c) => !passedInterviewCourseIds.has(c.courseId));
 
   return (
     <Card>
@@ -554,17 +570,46 @@ function MiniAchievementsPanel() {
             <div className="space-y-1.5">
               {myCerts.slice(0, 3).map((c) => {
                 const course = findCourse(c.courseId);
+                const interviewPassed = passedInterviewCourseIds.has(c.courseId);
                 return (
-                  <div key={c.id} className="flex items-center gap-2 rounded-md border bg-amber-500/5 p-2">
-                    <Award className="h-4 w-4 text-amber-600" />
+                  <div
+                    key={c.id}
+                    className={`flex items-center gap-2 rounded-md border p-2 ${
+                      interviewPassed ? 'bg-amber-500/5' : 'bg-muted/50 opacity-70'
+                    }`}
+                  >
+                    {interviewPassed ? (
+                      <Award className="h-4 w-4 text-amber-600" />
+                    ) : (
+                      <Lock className="h-4 w-4 text-muted-foreground" />
+                    )}
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-xs font-medium">{course?.title}</p>
-                      <p className="text-[10px] text-muted-foreground">{c.code} · {c.scorePct}%</p>
+                      {interviewPassed ? (
+                        <p className="text-[10px] text-muted-foreground">{c.code} · {c.scorePct}%</p>
+                      ) : (
+                        <p className="text-[10px] text-amber-600 dark:text-amber-400">Clear AI Interview to unlock certificate</p>
+                      )}
                     </div>
+                    {!interviewPassed && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-6 text-[10px] px-2"
+                        onClick={() => useAppStore.getState().openAiInterview(c.courseId)}
+                      >
+                        <Brain className="mr-1 h-3 w-3" /> Take Interview
+                      </Button>
+                    )}
                   </div>
                 );
               })}
             </div>
+          )}
+          {hasLockedCerts && (
+            <p className="mt-2 flex items-center gap-1 text-[10px] text-amber-600 dark:text-amber-400">
+              <Lock className="h-3 w-3" /> Certification requires passing the AI Interview
+            </p>
           )}
         </div>
       </CardContent>

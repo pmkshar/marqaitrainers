@@ -434,7 +434,7 @@ function SyllabusContent({
   );
 }
 
-// Desktop Sidebar (fixed position)
+// Desktop Sidebar (sticky position within page flow)
 export function SyllabusSidebar({
   courseId,
   currentModuleId,
@@ -446,7 +446,7 @@ export function SyllabusSidebar({
   if (!course) return null;
 
   return (
-    <aside className="hidden lg:block fixed left-0 top-0 bottom-0 w-[280px] border-r bg-background z-40 shadow-sm">
+    <aside className="hidden lg:block sticky top-0 h-screen w-[280px] shrink-0 border-r bg-background z-10 shadow-sm overflow-y-auto">
       <SyllabusContent
         course={course}
         currentModuleId={currentModuleId}

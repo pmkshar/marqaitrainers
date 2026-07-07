@@ -1225,15 +1225,6 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
 
   return (
     <div className="bg-background">
-      {/* Desktop Syllabus Sidebar - Fixed position */}
-      {syllabusVisible && (
-        <SyllabusSidebar
-          courseId={courseId}
-          currentModuleId={moduleId}
-          currentLessonId={lessonId}
-        />
-      )}
-
       {/* Mobile Syllabus Drawer */}
       <SyllabusDrawer
         courseId={courseId}
@@ -1243,9 +1234,19 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
         onOpenChange={setSyllabusDrawerOpen}
       />
 
-      {/* Main content wrapper - shift right when syllabus is visible on desktop */}
-      <div className={`${syllabusVisible ? 'lg:ml-[280px]' : ''}`}>
-        {/* Breadcrumb + header */}
+      <div className="flex">
+        {/* Desktop Syllabus Sidebar - inside page flow */}
+        {syllabusVisible && (
+          <SyllabusSidebar
+            courseId={courseId}
+            currentModuleId={moduleId}
+            currentLessonId={lessonId}
+          />
+        )}
+
+        {/* Main content */}
+        <div className="flex-1 min-w-0">
+          {/* Breadcrumb + header */}
         <div className="border-b bg-muted/30">
           <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-3">
@@ -1596,6 +1597,8 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
           </div>
         </div>
       </div>
+        </div>
+      </div>
 
       {/* Mid-lesson question popup */}
       <Dialog open={questionPopupOpen} onOpenChange={() => {}}>
@@ -1870,7 +1873,6 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
         onContinueClass={handleContinueClass}
         onStayInChat={handleStayInChat}
       />
-      </div>
     </div>
   );
 }

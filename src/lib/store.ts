@@ -307,6 +307,8 @@ interface AppState {
   removeCorporateEmployee: (corpId: string, userId: string) => void;
   openCorporate: () => void;
   openCourses: () => void;
+  openResumeStudio: () => void;
+  openAiInterview: (courseId?: string) => void;
 
   // ---- AI Interview sessions ----
   interviewSessions: InterviewSession[];
@@ -609,6 +611,8 @@ export const useAppStore = create<AppState>()(
       openFeatures: () => set({ view: { name: 'features' }, isMenuOpen: false }),
       openCorporate: () => set({ view: { name: 'corporate' }, isMenuOpen: false }),
       openCourses: () => set({ view: { name: 'courses' }, isMenuOpen: false }),
+      openResumeStudio: () => set({ view: { name: 'resume_studio' }, isMenuOpen: false }),
+      openAiInterview: (courseId) => set({ view: { name: 'ai_interview', courseId }, isMenuOpen: false }),
       openCertificates: () => set({ view: { name: 'certificates' }, isMenuOpen: false }),
       openAchievements: () => set({ view: { name: 'achievements' }, isMenuOpen: false }),
       openCalendar: () => set({ view: { name: 'calendar' }, isMenuOpen: false }),

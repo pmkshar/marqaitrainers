@@ -492,7 +492,9 @@ export type ViewName =
   | 'groups'
   | 'messages'
   | 'features'      // WPLMS-parity features showcase
-  | 'courses';      // all courses grid page
+  | 'courses'       // all courses grid page
+  | 'resume_studio' // AI Resume Builder
+  | 'ai_interview'; // AI Interview
 
 export interface View {
   name: ViewName;

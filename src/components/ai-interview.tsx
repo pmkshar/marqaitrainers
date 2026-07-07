@@ -5,7 +5,7 @@ import {
   ArrowLeft, Video, VideoOff, Mic, MicOff, Phone, PhoneOff, Clock, Loader2,
   AlertTriangle, CheckCircle2, XCircle, Sparkles, ChevronRight, FileText,
   Camera, RefreshCw, Award, Eye, Brain, User as UserIcon, UserX, Focus, Activity,
-  Pause, Play, AlertCircle, Logs,
+  Pause, Play, AlertCircle, Logs, BookOpen,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,7 +13,8 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAppStore } from '@/lib/store';
-import { findCourse } from '@/lib/courses';
+import { COURSES, findCourse } from '@/lib/courses';
+import { CourseIcon } from './navbar';
 import type { 
   InterviewQuestion, InterviewReport, InterviewTurn, User,
   GazeDirection, ProctoringSnapshot, ProctoringIncident,
@@ -222,27 +223,15 @@ function calculateConcentrationScore(
 //      issued for super-admin approval.
 // ============================================================
 
-type Phase = 'intro' | 'requesting_av' | 'live' | 'paused' | 'evaluating' | 'done' | 'error';
+type Phase = 'setup' | 'intro' | 'requesting_av' | 'live' | 'paused' | 'evaluating' | 'done' | 'error';
 
 interface AiInterviewProps {
-  interviewId: string;
+  interviewId?: string;
 }
 
 export function AIInterview({ interviewId }: AiInterviewProps) {
   const user = useCurrentUser();
-  const session = useAppStore((s) =>
-    s.interviewSessions.find((x) => x.id === interviewId),
-  );
-  const appendInterviewTurn = useAppStore((s) => s.appendInterviewTurn);
-  const advanceInterviewQuestion = useAppStore((s) => s.advanceInterviewQuestion);
-  const completeInterviewSession = useAppStore((s) => s.completeInterviewSession);
-  const abandonInterviewSession = useAppStore((s) => s.abandonInterviewSession);
-  const openInterviewReport = useAppStore((s) => s.openInterviewReport);
-  const goHome = useAppStore((s) => s.goHome);
-  const openDashboard = useAppStore((s) => s.openDashboard);
-  const addProctoringSnapshot = useAppStore((s) => s.addProctoringSnapshot);
-  const addProctoringIncident = useAppStore((s) => s.addProctoringIncident);
-  const updateProctoringData = useAppStore((s) => s.updateProctoringData);
+  const viewCourseId = useAppStore((s) => s.view.courseId);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -251,7 +240,11 @@ export function AIInterview({ interviewId }: AiInterviewProps) {
   const recognitionRef = useRef<any>(null);
   const proctoringIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const [phase, setPhase] = useState<Phase>('intro');
+  const [phase, setPhase] = useState<Phase>(interviewId ? 'intro' : 'setup');
+  const [activeInterviewId, setActiveInterviewId] = useState<string | undefined>(interviewId);
+  const [selectedCourseId, setSelectedCourseId] = useState<string>(viewCourseId ?? '');
+  const [startingInterview, setStartingInterview] = useState(false);
+  const [setupError, setSetupError] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [cameraOn, setCameraOn] = useState(false);
   const [micOn, setMicOn] = useState(true);
@@ -272,6 +265,23 @@ export function AIInterview({ interviewId }: AiInterviewProps) {
   const [proctoringIncidents, setProctoringIncidents] = useState<ProctoringIncident[]>([]);
   const [showPauseOverlay, setShowPauseOverlay] = useState(false);
   const [lastGazeDirection, setLastGazeDirection] = useState<GazeDirection>('center');
+
+  // Use activeInterviewId (set after setup) or the prop interviewId
+  const effectiveInterviewId = activeInterviewId ?? interviewId;
+  const session = useAppStore((s) =>
+    effectiveInterviewId ? s.interviewSessions.find((x) => x.id === effectiveInterviewId) : undefined,
+  );
+  const appendInterviewTurn = useAppStore((s) => s.appendInterviewTurn);
+  const advanceInterviewQuestion = useAppStore((s) => s.advanceInterviewQuestion);
+  const completeInterviewSession = useAppStore((s) => s.completeInterviewSession);
+  const abandonInterviewSession = useAppStore((s) => s.abandonInterviewSession);
+  const openInterviewReport = useAppStore((s) => s.openInterviewReport);
+  const goHome = useAppStore((s) => s.goHome);
+  const openDashboard = useAppStore((s) => s.openDashboard);
+  const addProctoringSnapshot = useAppStore((s) => s.addProctoringSnapshot);
+  const addProctoringIncident = useAppStore((s) => s.addProctoringIncident);
+  const updateProctoringData = useAppStore((s) => s.updateProctoringData);
+  const createInterviewSession = useAppStore((s) => s.createInterviewSession);
 
   const currentQuestion: InterviewQuestion | undefined = session?.questions[session.currentQuestionIdx];
 
@@ -767,6 +777,150 @@ export function AIInterview({ interviewId }: AiInterviewProps) {
       window.speechSynthesis.getVoices();
     }
   }, []);
+
+  // ---------- Setup: start a new interview ----------
+  const handleStartInterview = useCallback(async () => {
+    if (!user || !selectedCourseId) return;
+    setStartingInterview(true);
+    setSetupError(null);
+    try {
+      const course = findCourse(selectedCourseId);
+      const courseTitle = course?.title ?? selectedCourseId;
+      // Call the API to generate questions
+      const resp = await fetch('/api/interview/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          courseId: selectedCourseId,
+          courseTitle,
+          courseSkills: course?.tags ?? [],
+        }),
+      });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+      const questions: InterviewQuestion[] = data.questions;
+      if (!questions?.length) throw new Error('No questions returned');
+      // Create session in the store
+      const newId = createInterviewSession(user.id, selectedCourseId, courseTitle, questions);
+      setActiveInterviewId(newId);
+      setPhase('intro');
+    } catch (err) {
+      console.error('Start interview error:', err);
+      setSetupError(err instanceof Error ? err.message : 'Failed to start interview');
+    } finally {
+      setStartingInterview(false);
+    }
+  }, [user, selectedCourseId, createInterviewSession]);
+
+  // ---------- SETUP PHASE (no interview session yet) ----------
+  if (phase === 'setup') {
+    const enrolledCourses = user
+      ? COURSES.filter((c) => (user.enrolledCourseIds ?? []).includes(c.id))
+      : [];
+
+    if (!user) {
+      return (
+        <div className="mx-auto max-w-3xl px-4 py-12 text-center">
+          <p className="text-sm text-muted-foreground">Please sign in to start an AI Interview.</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="bg-background">
+        <section className="border-b bg-gradient-to-br from-indigo-50/60 to-background dark:from-indigo-950/20">
+          <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+            <button onClick={openDashboard} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
+              <ArrowLeft className="h-4 w-4" /> Dashboard
+            </button>
+            <div className="mt-3 flex items-center gap-3">
+              <span className="grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
+                <Brain className="h-6 w-6" />
+              </span>
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">AI Interview</h1>
+                <p className="text-sm text-muted-foreground">
+                  Select a course and practice your skills with an AI interviewer
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+          {setupError && (
+            <div className="mb-4 rounded-lg border border-amber-500/40 bg-amber-500/5 p-3 text-sm text-amber-900 dark:text-amber-200">
+              <AlertTriangle className="mr-2 inline h-4 w-4" /> {setupError}
+            </div>
+          )}
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <BookOpen className="h-4 w-4 text-indigo-600" /> Select a course
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {enrolledCourses.length === 0 ? (
+                <div className="py-6 text-center">
+                  <BookOpen className="mx-auto h-8 w-8 text-muted-foreground" />
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    You need to be enrolled in at least one course to take an interview.
+                  </p>
+                  <Button onClick={() => useAppStore.getState().goHome()} variant="outline" size="sm" className="mt-2">
+                    Browse courses
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {enrolledCourses.map((c) => (
+                    <button
+                      key={c.id}
+                      onClick={() => setSelectedCourseId(c.id)}
+                      className={`flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-all ${
+                        selectedCourseId === c.id
+                          ? 'border-indigo-500 bg-indigo-500/5 shadow-sm'
+                          : 'border-border hover:bg-muted/40'
+                      }`}
+                    >
+                      <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-gradient-to-br ${c.gradient} text-white`}>
+                        <CourseIcon name={c.icon} className="h-5 w-5" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold">{c.title}</p>
+                        <p className="text-xs text-muted-foreground">{c.level} · {c.duration}</p>
+                      </div>
+                      {selectedCourseId === c.id && (
+                        <CheckCircle2 className="h-5 w-5 text-indigo-600" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <div className="mt-4 flex flex-col items-center gap-3">
+            <Button
+              onClick={handleStartInterview}
+              disabled={!selectedCourseId || startingInterview}
+              size="lg"
+              className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700"
+            >
+              {startingInterview ? (
+                <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Generating questions…</>
+              ) : (
+                <><Video className="mr-2 h-5 w-5" /> Start Interview</>
+              )}
+            </Button>
+            <button onClick={openDashboard} className="text-xs text-muted-foreground hover:text-foreground">
+              Cancel and return to dashboard
+            </button>
+          </div>
+        </section>
+      </div>
+    );
+  }
 
   if (!user || !session) {
     return (
