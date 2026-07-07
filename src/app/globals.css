@@ -152,6 +152,15 @@
   background: rgba(255, 255, 255, 0.28);
 }
 
+/* Hide scrollbar utility for carousel */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Smooth scroll for the whole page */
 html {
   scroll-behavior: smooth;

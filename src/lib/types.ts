@@ -494,7 +494,8 @@ export type ViewName =
   | 'features'      // WPLMS-parity features showcase
   | 'courses'       // all courses grid page
   | 'resume_studio' // AI Resume Builder
-  | 'ai_interview'; // AI Interview
+  | 'ai_interview' // AI Interview
+  | 'settings';     // User settings
 
 export interface View {
   name: ViewName;

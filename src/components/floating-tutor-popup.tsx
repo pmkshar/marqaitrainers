@@ -528,9 +528,11 @@ export function FloatingTutorPopup({
           </div>
         ) : activeTab === 'syllabus' ? (
           /* Syllabus Tab — Tree View */
-          <div className="p-3" data-nodrag>
-            <SyllabusTree courseId={courseId} course={course} />
-          </div>
+          <ScrollArea className="flex-1 overflow-y-auto" data-nodrag>
+            <div className="p-3 max-w-full">
+              <SyllabusTree courseId={courseId} course={course} />
+            </div>
+          </ScrollArea>
         ) : (
           /* Whiteboard Tab */
           <div className="p-3 flex flex-col gap-2" data-nodrag>
@@ -643,9 +645,9 @@ function SyllabusTree({ courseId, course }: { courseId: string; course: Course }
   const coursePct = getCourseProgress();
 
   return (
-    <div className="space-y-2 overflow-hidden">
+    <div className="space-y-2 overflow-hidden max-w-full">
       {/* Course info header — compact */}
-      <div className="space-y-1">
+      <div className="space-y-1 overflow-hidden">
         <h4 className="text-xs font-bold truncate">{course.title}</h4>
         <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground">
           <span className="flex items-center gap-0.5"><BookOpen className="h-2.5 w-2.5" /> {course.modules.length} modules</span>

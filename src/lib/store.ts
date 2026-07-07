@@ -180,6 +180,7 @@ interface AppState {
   openMyLearning: () => void;
   openDashboard: () => void;
   openFeatures: () => void;
+  openSettings: () => void;
   openCertificates: () => void;
   openAchievements: () => void;
   openCalendar: () => void;
@@ -624,6 +625,7 @@ export const useAppStore = create<AppState>()(
       openMyLearning: () => set({ view: { name: 'my_learning' }, isMenuOpen: false }),
       openDashboard: () => set({ view: { name: 'dashboard' }, isMenuOpen: false }),
       openFeatures: () => set({ view: { name: 'features' }, isMenuOpen: false }),
+      openSettings: () => set({ view: { name: 'settings' }, isMenuOpen: false }),
       openCorporate: () => set({ view: { name: 'corporate' }, isMenuOpen: false }),
       openCourses: () => set({ view: { name: 'courses' }, isMenuOpen: false }),
       openResumeStudio: () => set({ view: { name: 'resume_studio' }, isMenuOpen: false }),

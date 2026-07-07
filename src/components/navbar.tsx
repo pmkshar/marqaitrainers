@@ -1,6 +1,6 @@
 'use client';
 
-import { GraduationCap, Menu, X, Sparkles, LogIn, User as UserIcon, ShieldCheck, LayoutDashboard, BookOpen, LogOut, ChevronDown, BadgeCheck, Bell, Grid3x3, Building2, Compass } from 'lucide-react';
+import { GraduationCap, Menu, X, Sparkles, LogIn, User as UserIcon, ShieldCheck, LayoutDashboard, BookOpen, LogOut, ChevronDown, BadgeCheck, Bell, Grid3x3, Building2, Compass, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -12,7 +12,7 @@ import { LanguageCurrencySwitcher } from './language-currency-switcher';
 export function Navbar() {
   const {
     view, isMenuOpen, toggleMenu, goHome, openCourse,
-    setTutorOpen, openPricing, openTutors, openAdmin, openTutorPortal, openMyLearning, openDashboard, openFeatures, openCorporate, openCourses,
+    setTutorOpen, openPricing, openTutors, openAdmin, openTutorPortal, openMyLearning, openDashboard, openFeatures, openCorporate, openCourses, openSettings,
     currentUser, logout, setAuthOpen,
   } = useAppStore();
   const user = currentUser();
@@ -143,8 +143,11 @@ export function Navbar() {
                   <DropdownMenuItem onClick={openFeatures}>
                     <Grid3x3 className="mr-2 h-4 w-4" /> Features
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={openSettings}>
+                    <Settings className="mr-2 h-4 w-4" /> Settings
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setTutorOpen(true)}>
-                    <Sparkles className="mr-2 h-4 w-4" /> Ask AI Tutor
+                    <Sparkles className="mr-2 h-4 w-4" /> Ask Marq AI
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logout} className="text-rose-600 dark:text-rose-400">
@@ -173,7 +176,7 @@ export function Navbar() {
             size="sm"
           >
             <Sparkles className="mr-1.5 h-4 w-4" />
-            Ask AI
+            Marq AI
           </Button>
           <button
             onClick={toggleMenu}
@@ -212,6 +215,8 @@ export function Navbar() {
                   {user.role === 'tutor' && <button onClick={openTutorPortal} className="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-accent">Tutor Dashboard</button>}
                   {user.role === 'super_admin' && <button onClick={() => openAdmin('dashboard')} className="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-accent">Admin Portal</button>}
                   {(user.role === 'corporate_admin' || user.role === 'corporate_user') && <button onClick={openCorporate} className="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-accent">Corporate Portal</button>}
+                  <button onClick={openSettings} className="w-full rounded-md px-3 py-2 text-left text-sm hover:bg-accent">Settings</button>
+                  <button onClick={() => setTutorOpen(true)} className="w-full rounded-md px-3 py-2 text-left text-sm text-emerald-600 hover:bg-accent flex items-center gap-2"><Sparkles className="h-4 w-4" /> Ask Marq AI</button>
                   <button onClick={logout} className="w-full rounded-md px-3 py-2 text-left text-sm text-rose-600 hover:bg-accent">Sign out</button>
                 </>
               ) : (

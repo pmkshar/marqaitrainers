@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
-import { Hero, Features, TrainingFlow, CorporateTraining, CorporateClientsTicker, CorporatePlans, TrustedCompanies, MobileAppPromo, CtaSection, CourseSearchBar, ScrollingCourseIcons, InfographicStats, InfographicHowItWorks, CorporateCTABanner, CoursesPage } from '@/components/landing';
+import { Hero, Features, TrainingFlow, CorporateTraining, CorporateClientsTicker, CorporatePlans, TrustedCompanies, MobileAppPromo, CtaSection, CourseSearchBar, ScrollingCourseIcons, InfographicStats, InfographicHowItWorks, CorporateCTABanner, CoursesPage, HeroSection } from '@/components/landing';
 import { CourseDetail } from '@/components/course-detail';
 import { LessonView } from '@/components/lesson-view';
 import { QuizView } from '@/components/quiz-view';
@@ -22,6 +22,9 @@ import {
 import { ResumeStudio } from '@/components/resume-studio';
 import { AIInterview } from '@/components/ai-interview';
 import { ErrorBoundary } from '@/components/error-boundary';
+import { GlobalTutorPopup } from '@/components/global-tutor-popup';
+import { WelcomeOverlay } from '@/components/welcome-overlay';
+import { SettingsPage } from '@/components/settings-page';
 import { useAppStore } from '@/lib/store';
 
 export default function Home() {
@@ -64,10 +67,7 @@ export default function Home() {
           <ErrorBoundary label={`view:${view.name}`}>
             {view.name === 'home' && (
               <>
-                <ScrollingCourseIcons />
-                <CourseSearchBar />
-                <InfographicStats />
-                <InfographicHowItWorks />
+                <HeroSection />
                 {isCorporateUser && (
                   <>
                     <CorporateTraining />
@@ -102,6 +102,7 @@ export default function Home() {
             {view.name === 'certificates' && <CertificatesPage />}
             {view.name === 'achievements' && <AchievementsPage />}
             {view.name === 'features' && <FeaturesPage />}
+            {view.name === 'settings' && <SettingsPage />}
             {view.name === 'courses' && <CoursesPage />}
             {view.name === 'resume_studio' && <ResumeStudio />}
             {view.name === 'ai_interview' && <AIInterview />}
@@ -110,6 +111,8 @@ export default function Home() {
         <Footer />
       </div>
       <AuthModal />
+      <GlobalTutorPopup />
+      <WelcomeOverlay />
     </div>
   );
 }

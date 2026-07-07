@@ -9,7 +9,8 @@ import { useAppStore } from '@/lib/store';
 import { COURSES } from '@/lib/courses';
 import { PRICING_PLANS } from '@/lib/seed-data';
 import { CourseIcon } from './navbar';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { formatPrice } from '@/lib/currency';
 
 const FEATURES = [
   { icon: BookOpen, title: 'Structured Courses', description: '6 career-track courses with step-wise lessons, code examples, tips, and detailed explanations. From beginner to expert level.', color: 'from-emerald-500 to-teal-600' },
@@ -1261,9 +1262,345 @@ export function TrustedCompanies() {
   );
 }
 
+// ── New Hero Section (combined hero + search + feature icons + carousel) ──
+export function HeroSection() {
+  const { openCourse, setTutorOpen, openPricing, setAuthOpen, currentUser, currency } = useAppStore();
+  const user = currentUser();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  // Feature icons data
+  const featureIcons = [
+    { icon: Layers, count: '6', label: 'Career Tracks', color: 'from-emerald-500 to-teal-600' },
+    { icon: MessageCircle, count: '5+', label: 'Languages', color: 'from-violet-500 to-purple-600' },
+    { icon: Mic, count: '🎙️', label: 'AI Voice Tutor', color: 'from-sky-500 to-cyan-600' },
+    { icon: Video, count: '24/7', label: 'AI Interview', color: 'from-rose-500 to-pink-600' },
+    { icon: Award, count: '100%', label: 'Verified Certs', color: 'from-amber-500 to-orange-600' },
+    { icon: BookOpen, count: '100+', label: 'Lessons', color: 'from-fuchsia-500 to-pink-600' },
+  ];
+
+  // Search filtering
+  const filteredCourses = searchQuery.trim()
+    ? COURSES.filter(
+        (c) =>
+          c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          c.subtitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          c.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase()))
+      )
+    : [];
+
+  // Carousel scroll
+  const checkScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 4);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  }, []);
+
+  useEffect(() => {
+    checkScroll();
+    const el = scrollRef.current;
+    if (!el) return;
+    el.addEventListener('scroll', checkScroll, { passive: true });
+    const ro = new ResizeObserver(checkScroll);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener('scroll', checkScroll);
+      ro.disconnect();
+    };
+  }, [checkScroll]);
+
+  const scrollBy = (direction: 'left' | 'right') => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const amount = el.clientWidth * 0.7;
+    el.scrollBy({ left: direction === 'left' ? -amount : amount, behavior: 'smooth' });
+  };
+
+  return (
+    <section className="relative overflow-hidden">
+      {/* ── Hero gradient area ── */}
+      <div className="relative bg-gradient-to-b from-emerald-600 via-emerald-700 to-teal-800 dark:from-emerald-900 dark:via-emerald-950 dark:to-teal-950">
+        {/* Decorative background shapes */}
+        <div className="pointer-events-none absolute inset-0 -z-0">
+          <div className="absolute -left-20 -top-20 h-80 w-80 rounded-full bg-white/5 blur-3xl" />
+          <div className="absolute -right-20 top-10 h-96 w-96 rounded-full bg-teal-400/10 blur-3xl" />
+          <div className="absolute bottom-0 left-1/2 h-60 w-[600px] -translate-x-1/2 rounded-full bg-emerald-300/10 blur-3xl" />
+        </div>
+
+        <div className="relative z-10 mx-auto max-w-7xl px-4 pb-8 pt-16 sm:px-6 sm:pb-12 sm:pt-24 lg:px-8 lg:pb-16">
+          <div className="flex flex-col items-center text-center">
+            {/* Badge */}
+            <Badge className="mb-6 border-white/20 bg-white/10 text-white hover:bg-white/20">
+              <Sparkles className="mr-1.5 h-3.5 w-3.5" /> Powered by Marq AI · Voice Tutoring
+            </Badge>
+
+            {/* Headline */}
+            <h1 className="max-w-4xl text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
+              Learn Software with{' '}
+              <span className="bg-gradient-to-r from-yellow-300 via-amber-300 to-orange-300 bg-clip-text text-transparent">
+                AI Voice Tutoring
+              </span>
+            </h1>
+
+            {/* Subtitle */}
+            <p className="mt-5 max-w-2xl text-lg text-emerald-100/90 sm:text-xl">
+              AI &amp; ML, Full Stack Java, .NET, Mobile Dev, Flutter, Python — voice-led tutoring in Indian English, Hindi, Telugu, Tamil &amp; Kannada
+            </p>
+
+            {/* CTA Buttons */}
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+              {!user ? (
+                <Button
+                  onClick={() => setAuthOpen(true, 'register', 'candidate')}
+                  size="lg"
+                  className="bg-white text-emerald-700 shadow-lg hover:bg-emerald-50 font-bold text-base px-8"
+                >
+                  Get Started Free <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => openCourse(COURSES[0].id)}
+                  size="lg"
+                  className="bg-white text-emerald-700 shadow-lg hover:bg-emerald-50 font-bold text-base px-8"
+                >
+                  Go to Courses <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              )}
+              <Button
+                onClick={openPricing}
+                variant="outline"
+                size="lg"
+                className="border-white/30 bg-white/10 text-white hover:bg-white/20 font-semibold text-base px-8 backdrop-blur-sm"
+              >
+                View Pricing
+              </Button>
+              <Button
+                onClick={() => setTutorOpen(true)}
+                size="lg"
+                className="bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-lg hover:from-amber-500 hover:to-orange-600 font-bold text-base px-8"
+              >
+                <Mic className="mr-2 h-4 w-4" /> Talk to MarqAI
+              </Button>
+            </div>
+
+            {/* Search Bar */}
+            <div className="mt-10 w-full max-w-2xl relative">
+              <Search className="absolute left-5 top-1/2 h-6 w-6 -translate-y-1/2 text-muted-foreground" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
+                placeholder="Search courses — AI, Java, .NET, Flutter, Python..."
+                className="h-16 w-full rounded-2xl border-2 border-transparent bg-white pl-14 pr-6 text-lg shadow-2xl transition-all focus:border-emerald-400 focus:outline-none focus:ring-4 focus:ring-emerald-400/30 dark:bg-slate-900 dark:text-foreground dark:focus:border-emerald-500"
+              />
+              {searchQuery.trim() && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                >
+                  ✕
+                </button>
+              )}
+
+              {/* Search dropdown */}
+              {searchFocused && searchQuery.trim() && (
+                <div className="absolute left-0 right-0 z-50 mt-2 rounded-xl border bg-popover shadow-2xl max-h-80 overflow-y-auto">
+                  {filteredCourses.length > 0 ? (
+                    <ul className="py-2">
+                      {filteredCourses.map((course) => (
+                        <li key={course.id}>
+                          <button
+                            onClick={() => {
+                              openCourse(course.id);
+                              setSearchQuery('');
+                              setSearchFocused(false);
+                            }}
+                            className="flex w-full items-center gap-4 px-5 py-3 text-left transition-colors hover:bg-accent"
+                          >
+                            <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${course.gradient} text-white shadow-sm`}>
+                              <CourseIcon name={course.icon} className="h-5 w-5" />
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-semibold">{course.title}</p>
+                              <p className="truncate text-sm text-muted-foreground">{course.subtitle}</p>
+                            </div>
+                            <div className="hidden items-center gap-3 text-xs text-muted-foreground sm:flex">
+                              <Badge variant="secondary">{course.level}</Badge>
+                              <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{course.duration}</span>
+                              <span className="flex items-center gap-1"><Star className="h-3 w-3 text-amber-500" />{course.rating}</span>
+                            </div>
+                            <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="p-6 text-center">
+                      <p className="text-muted-foreground">No courses found for &quot;{searchQuery}&quot;</p>
+                      <p className="mt-1 text-sm text-muted-foreground">Try AI, Java, Flutter, .NET, Python...</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Feature Icons Row */}
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+              {featureIcons.map((feat) => (
+                <div
+                  key={feat.label}
+                  className="flex items-center gap-2.5 rounded-xl border border-white/15 bg-white/10 px-4 py-2.5 backdrop-blur-sm transition-all hover:bg-white/20"
+                >
+                  <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br ${feat.color} text-white shadow-sm`}>
+                    <feat.icon className="h-4 w-4" />
+                  </span>
+                  <div className="text-left">
+                    <div className="text-sm font-bold text-white leading-tight">{feat.count}</div>
+                    <div className="text-[11px] text-emerald-100/80 leading-tight">{feat.label}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Wave divider */}
+        <div className="relative z-10">
+          <svg viewBox="0 0 1440 60" className="w-full text-background dark:text-background" preserveAspectRatio="none">
+            <path fill="currentColor" d="M0,32 C360,60 720,0 1080,32 C1260,48 1380,48 1440,40 L1440,60 L0,60 Z" />
+          </svg>
+        </div>
+      </div>
+
+      {/* ── Horizontal Course Carousel ── */}
+      <div className="relative bg-background py-10 sm:py-14">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Explore Our Courses</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Career-track programs with AI voice tutoring</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => scrollBy('left')}
+                disabled={!canScrollLeft}
+                className="grid h-10 w-10 place-items-center rounded-full border bg-card shadow-sm transition-all hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
+                aria-label="Scroll left"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => scrollBy('right')}
+                disabled={!canScrollRight}
+                className="grid h-10 w-10 place-items-center rounded-full border bg-card shadow-sm transition-all hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
+                aria-label="Scroll right"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Scrollable track */}
+        <div
+          ref={scrollRef}
+          className="flex gap-5 overflow-x-auto px-4 sm:px-6 lg:px-8 scroll-smooth pb-4 scrollbar-hide"
+        >
+          {/* Left spacer for centering on large screens */}
+          <div className="hidden lg:block w-[calc((100vw-80rem)/2)] shrink-0" />
+
+          {COURSES.map((course) => (
+            <div
+              key={course.id}
+              className="group flex w-72 shrink-0 flex-col overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer sm:w-80"
+              onClick={() => openCourse(course.id)}
+            >
+              {/* Gradient header */}
+              <div className={`relative h-32 bg-gradient-to-br ${course.gradient}`}>
+                <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-10" />
+                <span className="absolute right-4 top-4 grid h-14 w-14 place-items-center rounded-xl bg-white/15 text-white backdrop-blur">
+                  <CourseIcon name={course.icon} className="h-7 w-7" />
+                </span>
+                <Badge className="absolute left-4 top-4 bg-white/20 text-white hover:bg-white/30" variant="secondary">
+                  {course.level}
+                </Badge>
+              </div>
+
+              {/* Card body */}
+              <div className="flex flex-1 flex-col p-5">
+                <h3 className="text-base font-semibold leading-tight">{course.title}</h3>
+                <p className="mt-1.5 line-clamp-2 text-sm text-muted-foreground">{course.subtitle}</p>
+
+                {/* Tags */}
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {course.tags.slice(0, 3).map((t) => (
+                    <Badge key={t} variant="outline" className="text-[10px] font-medium">{t}</Badge>
+                  ))}
+                  {course.tags.length > 3 && (
+                    <Badge variant="outline" className="text-[10px] font-medium">+{course.tags.length - 3}</Badge>
+                  )}
+                </div>
+
+                {/* Meta row */}
+                <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+                  <span className="inline-flex items-center gap-1"><PlayCircle className="h-3.5 w-3.5" /> {course.lessonsCount} lessons</span>
+                  <span>·</span>
+                  <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {course.duration}</span>
+                  <span>·</span>
+                  <span className="inline-flex items-center gap-1"><Star className="h-3 w-3 fill-amber-400 text-amber-500" /> {course.rating}</span>
+                </div>
+
+                {/* Price + CTA */}
+                <div className="mt-auto flex items-center justify-between border-t pt-3">
+                  <div className="text-sm">
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                      {formatPrice(course.oneTimePrice, currency)}
+                    </span>
+                    <span className="text-xs text-muted-foreground"> one-time</span>
+                  </div>
+                  <span className="inline-flex items-center gap-1 text-sm font-semibold text-emerald-600 transition-transform group-hover:translate-x-1 dark:text-emerald-400">
+                    View <ArrowRight className="h-3.5 w-3.5" />
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {/* Ask MarqAI card */}
+          <div
+            className="flex w-72 shrink-0 flex-col items-center justify-center rounded-2xl border border-dashed border-emerald-500/40 bg-emerald-500/5 p-8 text-center transition-all hover:bg-emerald-500/10 cursor-pointer sm:w-80"
+            onClick={() => setTutorOpen(true)}
+          >
+            <span className="grid h-14 w-14 place-items-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg">
+              <Sparkles className="h-7 w-7" />
+            </span>
+            <h3 className="mt-4 text-lg font-semibold">Not sure where to start?</h3>
+            <p className="mt-2 text-sm text-muted-foreground">Ask our AI tutor for a personalized recommendation.</p>
+            <Button
+              onClick={(e) => { e.stopPropagation(); setTutorOpen(true); }}
+              className="mt-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700"
+            >
+              <Sparkles className="mr-1.5 h-4 w-4" /> Ask MarqAI
+            </Button>
+          </div>
+
+          {/* Right spacer */}
+          <div className="hidden lg:block w-[calc((100vw-80rem)/2)] shrink-0" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ── Courses Page (separate page for all courses) ──────────────────
 export function CoursesPage() {
-  const { openCourse, setTutorOpen } = useAppStore();
+  const { openCourse, setTutorOpen, currency } = useAppStore();
   const currentUser = useAppStore((s) => {
     const uid = s.currentUserId;
     if (!uid) return null;
@@ -1417,9 +1754,9 @@ export function CoursesPage() {
                 </div>
                 <div className="mt-3 flex items-center justify-between border-t pt-3">
                   <div className="text-sm">
-                    <span className="font-bold text-emerald-600 dark:text-emerald-400">${course.oneTimePrice}</span>
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400">{formatPrice(course.oneTimePrice, currency)}</span>
                     <span className="text-xs text-muted-foreground"> one-time · </span>
-                    <span className="font-medium">${course.monthlyPrice}/mo</span>
+                    <span className="font-medium">{formatPrice(course.monthlyPrice, currency)}/mo</span>
                   </div>
                   {hasAccess ? (
                     <span className="text-sm font-semibold text-emerald-600 transition-transform group-hover:translate-x-1 dark:text-emerald-400">View →</span>
@@ -1579,11 +1916,11 @@ export function CoursesPage() {
                       <p className="text-sm font-medium text-emerald-800 dark:text-emerald-200">Purchase Options</p>
                       <div className="flex items-center justify-between">
                         <span className="text-sm">One-time access</span>
-                        <span className="font-bold text-emerald-600 dark:text-emerald-400">${course.oneTimePrice}</span>
+                        <span className="font-bold text-emerald-600 dark:text-emerald-400">{formatPrice(course.oneTimePrice, currency)}</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-sm">Monthly subscription</span>
-                        <span className="font-bold text-emerald-600 dark:text-emerald-400">${course.monthlyPrice}/mo</span>
+                        <span className="font-bold text-emerald-600 dark:text-emerald-400">{formatPrice(course.monthlyPrice, currency)}/mo</span>
                       </div>
                     </div>
                     {!currentUser && (
