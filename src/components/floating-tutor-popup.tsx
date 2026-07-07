@@ -31,7 +31,7 @@ import type { Course, Module, Lesson } from '@/lib/types';
 //   - Dragged around the screen
 // ============================================================
 
-type PopupSize = 'mini' | 'medium' | 'large';
+type PopupSize = 'mini' | 'medium' | 'large' | 'fullscreen';
 type TabType = 'tutor' | 'syllabus' | 'whiteboard';
 
 interface FloatingTutorPopupProps {
@@ -142,6 +142,7 @@ export function FloatingTutorPopup({
     mini: { width: 380, height: 480, avatarSize: 80 },
     medium: { width: 440, height: 580, avatarSize: 100 },
     large: { width: 520, height: 700, avatarSize: 130 },
+    fullscreen: { width: typeof window !== 'undefined' ? window.innerWidth - 48 : 1200, height: typeof window !== 'undefined' ? window.innerHeight - 80 : 800, avatarSize: 160 },
   };
 
   const currentSize = sizeConfig[popupSize];
@@ -230,11 +231,14 @@ export function FloatingTutorPopup({
   }
 
   // Popup is open
+  const isFullscreen = popupSize === 'fullscreen';
   return (
     <div
       ref={popupRef}
-      className="fixed z-50 flex flex-col overflow-hidden rounded-2xl border-2 border-emerald-500/30 bg-background shadow-2xl shadow-emerald-500/10 animate-popup-enter transition-all duration-200"
-      style={{
+      className={`fixed z-50 flex flex-col overflow-hidden bg-background shadow-2xl shadow-emerald-500/10 animate-popup-enter transition-all duration-200 ${
+        isFullscreen ? 'inset-6 rounded-2xl border-2 border-emerald-500/30' : 'rounded-2xl border-2 border-emerald-500/30'
+      }`}
+      style={isFullscreen ? undefined : {
         width: currentSize.width,
         height: currentSize.height,
         right: position.x === 0 && position.y === 0 ? 24 : undefined,
@@ -291,6 +295,13 @@ export function FloatingTutorPopup({
               title="Large"
             >
               <Maximize2 className="h-3.5 w-3.5 text-white" />
+            </button>
+            <button
+              onClick={() => handleSizeChange('fullscreen')}
+              className={`flex h-6 w-6 items-center justify-center rounded-md transition-colors ${popupSize === 'fullscreen' ? 'bg-white/30' : 'hover:bg-white/20'}`}
+              title="Fullscreen"
+            >
+              <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 text-white" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
             </button>
             <button
               onClick={() => setIsOpen(false)}
@@ -632,24 +643,24 @@ function SyllabusTree({ courseId, course }: { courseId: string; course: Course }
   const coursePct = getCourseProgress();
 
   return (
-    <div className="space-y-3">
-      {/* Course info header */}
-      <div className="space-y-1.5">
-        <h4 className="text-sm font-bold">{course.title}</h4>
-        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-          <span className="flex items-center gap-0.5"><BookOpen className="h-3 w-3" /> {course.modules.length} modules</span>
+    <div className="space-y-2 overflow-hidden">
+      {/* Course info header — compact */}
+      <div className="space-y-1">
+        <h4 className="text-xs font-bold truncate">{course.title}</h4>
+        <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground">
+          <span className="flex items-center gap-0.5"><BookOpen className="h-2.5 w-2.5" /> {course.modules.length} modules</span>
           <span>·</span>
-          <span className="flex items-center gap-0.5"><ListChecks className="h-3 w-3" /> {totalLessons} lessons</span>
+          <span className="flex items-center gap-0.5"><ListChecks className="h-2.5 w-2.5" /> {totalLessons} lessons</span>
           <span>·</span>
-          <span className="flex items-center gap-0.5"><Clock className="h-3 w-3" /> {totalDuration}</span>
+          <span className="flex items-center gap-0.5"><Clock className="h-2.5 w-2.5" /> {totalDuration}</span>
         </div>
         {/* Overall course progress bar */}
         <div className="space-y-0.5">
-          <div className="flex items-center justify-between text-[10px]">
-            <span className="text-muted-foreground">Course Progress</span>
+          <div className="flex items-center justify-between text-[9px]">
+            <span className="text-muted-foreground">Progress</span>
             <span className="font-semibold text-emerald-700 dark:text-emerald-300">{coursePct}%</span>
           </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
             <div
               className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-500"
               style={{ width: `${coursePct}%` }}
@@ -658,8 +669,8 @@ function SyllabusTree({ courseId, course }: { courseId: string; course: Course }
         </div>
       </div>
 
-      {/* Tree-style modules & lessons */}
-      <div className="space-y-0">
+      {/* Tree-style modules & lessons — compact, no overflow */}
+      <div className="space-y-0 overflow-hidden">
         {course.modules.map((mod, modIdx) => {
           const isExpanded = expandedModules.has(mod.id);
           const modPct = getModuleProgress(mod);
@@ -667,48 +678,41 @@ function SyllabusTree({ courseId, course }: { courseId: string; course: Course }
           const isLastModule = modIdx === course.modules.length - 1;
 
           return (
-            <div key={mod.id}>
+            <div key={mod.id} className="overflow-hidden">
               {/* Module node — tree structure */}
               <div className="flex items-start">
                 {/* Tree line column */}
-                <div className="relative w-5 shrink-0 flex flex-col items-center">
-                  {/* Vertical line from top — only if not first module */}
+                <div className="relative w-4 shrink-0 flex flex-col items-center">
                   {modIdx > 0 && (
-                    <div className="absolute top-0 h-2.5 w-px bg-emerald-300 dark:bg-emerald-700" />
+                    <div className="absolute top-0 h-2 w-px bg-emerald-300 dark:bg-emerald-700" />
                   )}
-                  {/* Horizontal connector */}
-                  <div className="absolute top-3.5 h-px w-2.5 bg-emerald-300 dark:bg-emerald-700 left-1/2" />
-                  {/* Vertical line to children — only if expanded */}
+                  <div className="absolute top-3 h-px w-2 bg-emerald-300 dark:bg-emerald-700 left-1/2" />
                   {isExpanded && (
-                    <div className="absolute top-4 bottom-0 w-px bg-emerald-200 dark:bg-emerald-800" />
+                    <div className="absolute top-3.5 bottom-0 w-px bg-emerald-200 dark:bg-emerald-800" />
                   )}
                 </div>
 
                 {/* Module content */}
-                <div className="flex-1 min-w-0 pb-1">
-                  {/* Module header button */}
+                <div className="flex-1 min-w-0 pb-0.5">
+                  {/* Module header button — compact */}
                   <button
                     onClick={() => toggleModule(mod.id)}
-                    className="flex w-full items-center gap-1.5 rounded-md px-1.5 py-1.5 text-left transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-950/30 group"
+                    className="flex w-full items-center gap-1 rounded-md px-1 py-1 text-left transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-950/30 group"
                   >
-                    {/* Folder icon */}
                     {isExpanded ? (
-                      <FolderOpen className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      <FolderOpen className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                     ) : (
-                      <Folder className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <Folder className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                     )}
-                    {/* Chevron */}
                     {isExpanded ? (
-                      <ChevronDown className="h-3 w-3 text-emerald-600 shrink-0" />
+                      <ChevronDown className="h-2.5 w-2.5 text-emerald-600 shrink-0" />
                     ) : (
-                      <ChevronRightIcon className="h-3 w-3 text-muted-foreground shrink-0" />
+                      <ChevronRightIcon className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
                     )}
-                    {/* Module title */}
-                    <span className="flex-1 text-xs font-semibold truncate">{mod.title}</span>
-                    {/* Completed count badge */}
+                    <span className="flex-1 text-[11px] font-semibold truncate">{mod.title}</span>
                     <Badge
                       variant="outline"
-                      className={`text-[9px] shrink-0 ${
+                      className={`text-[8px] shrink-0 px-1 py-0 ${
                         completedCount === mod.lessons.length && mod.lessons.length > 0
                           ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
                           : 'text-muted-foreground'
@@ -718,20 +722,19 @@ function SyllabusTree({ courseId, course }: { courseId: string; course: Course }
                     </Badge>
                   </button>
 
-                  {/* Module progress bar */}
-                  <div className="ml-7 mr-1.5 mb-1 space-y-0.5">
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                  {/* Module progress bar — compact */}
+                  <div className="ml-5 mr-1 mb-0.5 space-y-0">
+                    <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
                       <div
                         className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-500"
                         style={{ width: `${modPct}%` }}
                       />
                     </div>
-                    <span className="text-[9px] text-muted-foreground tabular-nums">{modPct}% complete</span>
                   </div>
 
-                  {/* Expanded lessons */}
+                  {/* Expanded lessons — compact */}
                   {isExpanded && (
-                    <div className="ml-4 mt-0.5 space-y-0">
+                    <div className="ml-3 mt-0.5 space-y-0">
                       {mod.lessons.map((lesson, lessonIdx) => {
                         const status = getLessonStatus(lesson.id);
                         const progressPct = getLessonProgress(lesson.id);
@@ -740,31 +743,27 @@ function SyllabusTree({ courseId, course }: { courseId: string; course: Course }
                         return (
                           <div key={lesson.id} className="flex items-start">
                             {/* Tree line column for lesson */}
-                            <div className="relative w-4 shrink-0 flex flex-col items-center">
-                              {/* Vertical line from parent */}
-                              <div className={`w-px bg-emerald-200 dark:bg-emerald-800 ${isLastLesson ? 'h-3.5' : 'h-full'}`} />
-                              {/* Horizontal connector */}
-                              <div className="absolute top-2.5 h-px w-2 bg-emerald-200 dark:bg-emerald-800 left-1/2" />
+                            <div className="relative w-3 shrink-0 flex flex-col items-center">
+                              <div className={`w-px bg-emerald-200 dark:bg-emerald-800 ${isLastLesson ? 'h-2.5' : 'h-full'}`} />
+                              <div className="absolute top-2 h-px w-1.5 bg-emerald-200 dark:bg-emerald-800 left-1/2" />
                             </div>
 
-                            {/* Lesson row */}
+                            {/* Lesson row — compact, no overflow */}
                             <button
-                              className="flex items-center gap-1.5 rounded-md px-1.5 py-1 text-left transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-950/30 cursor-pointer w-full min-h-[32px]"
+                              className="flex items-center gap-1 rounded-md px-1 py-0.5 text-left transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-950/30 cursor-pointer w-full min-h-[24px] overflow-hidden"
                               onClick={() => {
                                 useAppStore.getState().openLesson(courseId, mod.id, lesson.id);
                               }}
                             >
-                              {/* Progress indicator icon */}
                               {status === 'completed' ? (
-                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
                               ) : status === 'in_progress' ? (
-                                <HalfCircleIcon className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                                <HalfCircleIcon className="h-3 w-3 text-amber-500 shrink-0" />
                               ) : (
-                                <Circle className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" />
+                                <Circle className="h-3 w-3 text-muted-foreground/40 shrink-0" />
                               )}
 
-                              {/* Lesson title */}
-                              <span className={`flex-1 text-[11px] truncate ${
+                              <span className={`flex-1 text-[10px] truncate ${
                                 status === 'completed'
                                   ? 'text-emerald-700 dark:text-emerald-300 font-medium'
                                   : status === 'in_progress'
@@ -774,11 +773,10 @@ function SyllabusTree({ courseId, course }: { courseId: string; course: Course }
                                 {lesson.title}
                               </span>
 
-                              {/* Progress pct or duration */}
                               {status === 'in_progress' ? (
-                                <span className="text-[9px] text-amber-600 dark:text-amber-400 tabular-nums shrink-0">{progressPct}%</span>
+                                <span className="text-[8px] text-amber-600 dark:text-amber-400 tabular-nums shrink-0">{progressPct}%</span>
                               ) : (
-                                <span className="text-[9px] text-muted-foreground shrink-0">{lesson.duration}</span>
+                                <span className="text-[8px] text-muted-foreground shrink-0">{lesson.duration}</span>
                               )}
                             </button>
                           </div>
@@ -791,7 +789,7 @@ function SyllabusTree({ courseId, course }: { courseId: string; course: Course }
 
               {/* Vertical line after module (if not last) */}
               {!isLastModule && !isExpanded && (
-                <div className="ml-2.5 w-px h-2 bg-emerald-200 dark:bg-emerald-800" />
+                <div className="ml-2 w-px h-1.5 bg-emerald-200 dark:bg-emerald-800" />
               )}
             </div>
           );

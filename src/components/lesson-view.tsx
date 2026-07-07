@@ -405,6 +405,7 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
   const passedLessonTests = useAppStore((s) => s.passedLessonTests) ?? [];
   const markLessonTestPassed = useAppStore((s) => s.markLessonTestPassed);
   const [activeStep, setActiveStep] = useState(0);
+  const [lessonTab, setLessonTab] = useState<'video' | 'steps'>('video');
   const stepRef = useRef<HTMLDivElement>(null);
 
   // AI tutor state
@@ -1300,217 +1301,232 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
         <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
         {/* Lesson Content */}
         <div ref={stepRef} className="min-w-0 space-y-5">
-          {/* Video */}
+          {/* Tabbed Lesson Content: Video / Steps */}
           <Card className="overflow-hidden">
-            <div className="flex items-center gap-2 border-b bg-muted/40 px-4 py-2.5">
-              <Video className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-              <span className="text-sm font-medium">Video Training</span>
-              <span className="ml-auto text-xs text-muted-foreground">~{lesson.duration}</span>
+            {/* Tab header */}
+            <div className="flex border-b" data-nodrag>
+              <button
+                onClick={() => setLessonTab('video')}
+                className={`flex items-center gap-2 px-5 py-3 text-sm font-medium transition-colors border-b-2 ${
+                  lessonTab === 'video'
+                    ? 'border-emerald-500 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/30'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Video className="h-4 w-4" /> Video Training
+                <span className="text-xs text-muted-foreground ml-1">~{lesson.duration}</span>
+              </button>
+              <button
+                onClick={() => setLessonTab('steps')}
+                className={`flex items-center gap-2 px-5 py-3 text-sm font-medium transition-colors border-b-2 ${
+                  lessonTab === 'steps'
+                    ? 'border-emerald-500 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/30'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <ListChecks className="h-4 w-4" /> Step-by-Step
+                <span className="text-xs text-muted-foreground ml-1">Step {activeStep + 1}/{lesson.steps.length}</span>
+              </button>
             </div>
-            <div className="relative aspect-video bg-black">
-              {lesson.videoUrl.includes('youtube.com/embed') ? (
-                <iframe
-                  key={lesson.videoUrl}
-                  src={lesson.videoUrl}
-                  title="Video Training"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="absolute inset-0 h-full w-full"
-                />
-              ) : (
-                <video
-                  key={lesson.videoUrl}
-                  src={lesson.videoUrl}
-                  controls
-                  playsInline
-                  preload="metadata"
-                  controlsList="nodownload noremoteplayback"
-                  className="h-full w-full"
-                  onError={(e) => {
-                    const el = e.currentTarget;
-                    const fallback = el.nextElementSibling as HTMLElement | null;
-                    if (fallback) fallback.style.display = 'flex';
-                    el.style.display = 'none';
-                  }}
-                >
-                  Your browser does not support the video tag.
-                </video>
-              )}
-              {!lesson.videoUrl.includes('youtube.com/embed') && (
-                <div
-                  style={{ display: 'none' }}
-                  className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-zinc-900 to-zinc-800 p-6 text-center text-zinc-200"
-                >
-                  <Video className="h-10 w-10 text-emerald-400" />
-                  <p className="text-sm font-medium">Video preview unavailable</p>
-                  <p className="max-w-md text-xs text-zinc-400">
-                    The walkthrough video could not be loaded right now. The step-by-step guide below is complete and self-contained.
-                  </p>
-                  <a
-                    href={lesson.videoUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-1 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700"
-                  >
-                    Open video in new tab
-                  </a>
-                </div>
-              )}
-            </div>
-            <CardContent className="p-4 text-sm text-muted-foreground">
-              Watch the video walkthrough first, then follow the step-by-step guide below. Pause and code along — practice beats passive watching every time.
-            </CardContent>
-          </Card>
 
-          {/* Step-wise training */}
-          <Card>
-            <div className="flex items-center gap-2 border-b bg-muted/40 px-4 py-2.5">
-              <ListChecks className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-              <span className="text-sm font-medium">Step-by-Step Procedure</span>
-              <span className="ml-auto text-xs text-muted-foreground">
-                Step {activeStep + 1} of {lesson.steps.length}
-              </span>
-            </div>
-            <CardContent className="p-0">
-              {/* Step tabs */}
-              <div className="flex gap-1 overflow-x-auto border-b p-2">
-                {lesson.steps.map((s, i) => (
-                  <button
-                    key={i}
-                    onClick={() => { stopVoice(); setActiveStep(i); }}
-                    className={`flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
-                      i === activeStep
-                        ? 'bg-emerald-600 text-white'
-                        : i < activeStep
-                        ? 'bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-300'
-                        : 'bg-muted text-muted-foreground hover:bg-muted/70'
-                    }`}
+            {/* Tab Content */}
+            {lessonTab === 'video' ? (
+              /* Video Tab */
+              <CardContent className="p-0">
+              <div className="relative aspect-video bg-black">
+                {lesson.videoUrl.includes('youtube.com/embed') ? (
+                  <iframe
+                    key={lesson.videoUrl}
+                    src={lesson.videoUrl}
+                    title="Video Training"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="absolute inset-0 h-full w-full"
+                  />
+                ) : (
+                  <video
+                    key={lesson.videoUrl}
+                    src={lesson.videoUrl}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    controlsList="nodownload noremoteplayback"
+                    className="h-full w-full"
+                    onError={(e) => {
+                      const el = e.currentTarget;
+                      const fallback = el.nextElementSibling as HTMLElement | null;
+                      if (fallback) fallback.style.display = 'flex';
+                      el.style.display = 'none';
+                    }}
                   >
-                    <span className="grid h-5 w-5 place-items-center rounded-full bg-black/10 text-[10px]">
-                      {i < activeStep ? '✓' : i + 1}
-                    </span>
-                    <span className="max-w-[140px] truncate">{s.title}</span>
-                  </button>
-                ))}
+                    Your browser does not support the video tag.
+                  </video>
+                )}
+                {!lesson.videoUrl.includes('youtube.com/embed') && (
+                  <div
+                    style={{ display: 'none' }}
+                    className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-zinc-900 to-zinc-800 p-6 text-center text-zinc-200"
+                  >
+                    <Video className="h-10 w-10 text-emerald-400" />
+                    <p className="text-sm font-medium">Video preview unavailable</p>
+                    <p className="max-w-md text-xs text-zinc-400">
+                      The walkthrough video could not be loaded right now. The step-by-step guide is complete and self-contained.
+                    </p>
+                    <a
+                      href={lesson.videoUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-1 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700"
+                    >
+                      Open video in new tab
+                    </a>
+                  </div>
+                )}
               </div>
-
-              <div className="space-y-5 p-5 sm:p-6">
-                <div className="flex items-center justify-between gap-3">
-                  <Progress value={stepProgress} className="flex-1" />
-                  <span className="text-xs text-muted-foreground">{stepProgress}%</span>
+              </CardContent>
+            ) : (
+              /* Steps Tab */
+              <CardContent className="p-0">
+                {/* Step tabs */}
+                <div className="flex gap-1 overflow-x-auto border-b p-2">
+                  {lesson.steps.map((s, i) => (
+                    <button
+                      key={i}
+                      onClick={() => { stopVoice(); setActiveStep(i); }}
+                      className={`flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                        i === activeStep
+                          ? 'bg-emerald-600 text-white'
+                          : i < activeStep
+                          ? 'bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-300'
+                          : 'bg-muted text-muted-foreground hover:bg-muted/70'
+                      }`}
+                    >
+                      <span className="grid h-5 w-5 place-items-center rounded-full bg-black/10 text-[10px]">
+                        {i < activeStep ? '✓' : i + 1}
+                      </span>
+                      <span className="max-w-[140px] truncate">{s.title}</span>
+                    </button>
+                  ))}
                 </div>
 
-                <div>
-                  <h2 className="flex items-center gap-2 text-xl font-bold">
-                    <span className="grid h-7 w-7 place-items-center rounded-full bg-emerald-600 text-sm text-white">{activeStep + 1}</span>
-                    {step.title}
-                  </h2>
-                  <p className="mt-3 text-[15px] leading-relaxed text-foreground/90">{step.content}</p>
-                </div>
-
-                {step.code && (
-                  <div className="overflow-hidden rounded-xl border bg-zinc-950">
-                    <div className="flex items-center justify-between border-b border-white/10 px-4 py-2">
-                      <span className="text-xs font-medium text-zinc-400">{step.codeLanguage ?? 'code'}</span>
-                      <span className="text-[10px] text-zinc-500">copy &amp; paste</span>
-                    </div>
-                    <SyntaxHighlighter
-                      language={step.codeLanguage ?? 'text'}
-                      style={oneDark}
-                      customStyle={{ margin: 0, background: 'transparent', padding: '1rem', fontSize: '13px' }}
-                      codeTagProps={{ style: { fontFamily: 'var(--font-geist-mono), ui-monospace, monospace' } }}
-                    >
-                      {step.code}
-                    </SyntaxHighlighter>
+                <div className="space-y-5 p-5 sm:p-6">
+                  <div className="flex items-center justify-between gap-3">
+                    <Progress value={stepProgress} className="flex-1" />
+                    <span className="text-xs text-muted-foreground">{stepProgress}%</span>
                   </div>
-                )}
 
-                {step.tip && (
-                  <div className="flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-amber-900 dark:text-amber-200">
-                    <Lightbulb className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
-                    <div>
-                      <p className="font-semibold">Pro tip</p>
-                      <p className="mt-0.5">{step.tip}</p>
-                    </div>
+                  <div>
+                    <h2 className="flex items-center gap-2 text-xl font-bold">
+                      <span className="grid h-7 w-7 place-items-center rounded-full bg-emerald-600 text-sm text-white">{activeStep + 1}</span>
+                      {step.title}
+                    </h2>
+                    <p className="mt-3 text-[15px] leading-relaxed text-foreground/90">{step.content}</p>
                   </div>
-                )}
 
-                {/* AI Teaching Content */}
-                {loadingTeach && !teaching && (
-                  <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin" /> {tutor.name} is preparing the explanation...
-                  </div>
-                )}
-                {teachError && (
-                  <div className="rounded-lg border border-rose-500/30 bg-rose-500/5 p-4 text-sm text-rose-900 dark:text-rose-200">
-                    <AlertTriangle className="mr-1.5 inline h-4 w-4" /> {teachError}
-                  </div>
-                )}
-                {teaching && (
-                  <div className="space-y-3">
-                    <FlowingAnswer label="Explanation" icon={<Bot className="h-3.5 w-3.5" />}
-                      active={voicePhase === 'explanation'} done={voicePhase === 'example' || voicePhase === 'pitfall' || voicePhase === 'done'}>
-                      <MarkdownLite content={teaching.explanation} />
-                    </FlowingAnswer>
-                    <FlowingAnswer label="Real-world example" icon={<Lightbulb className="h-3.5 w-3.5" />}
-                      active={voicePhase === 'example'} done={voicePhase === 'pitfall' || voicePhase === 'done'}>
-                      <MarkdownLite content={teaching.example} />
-                    </FlowingAnswer>
-                    <FlowingAnswer label="Common pitfall" icon={<HelpCircle className="h-3.5 w-3.5" />}
-                      active={voicePhase === 'pitfall'} done={voicePhase === 'done'}>
-                      <MarkdownLite content={teaching.pitfall} />
-                    </FlowingAnswer>
-                  </div>
-                )}
-
-                {teaching && !voiceMode && !voiceLoading && (
-                  <Button size="sm" variant="outline" className="mt-2" onClick={() => startVoiceOver(teaching)}>
-                    <Volume2 className="mr-1.5 h-4 w-4" /> Replay voice-over
-                  </Button>
-                )}
-
-                {/* Step nav */}
-                <div className="flex items-center justify-between border-t pt-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={activeStep === 0}
-                    onClick={() => { stopVoice(); setActiveStep((s) => Math.max(0, s - 1)); }}
-                  >
-                    <ChevronLeft className="mr-1 h-4 w-4" /> Previous step
-                  </Button>
-                  {activeStep < lesson.steps.length - 1 ? (
-                    <Button
-                      size="sm"
-                      onClick={() => { stopVoice(); setActiveStep((s) => s + 1); }}
-                      className="bg-emerald-600 text-white hover:bg-emerald-700"
-                    >
-                      Next step <ChevronRight className="ml-1 h-4 w-4" />
-                    </Button>
-                  ) : (
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setTutorOpen(true)}
+                  {step.code && (
+                    <div className="overflow-hidden rounded-xl border bg-zinc-950">
+                      <div className="flex items-center justify-between border-b border-white/10 px-4 py-2">
+                        <span className="text-xs font-medium text-zinc-400">{step.codeLanguage ?? 'code'}</span>
+                        <span className="text-[10px] text-zinc-500">copy &amp; paste</span>
+                      </div>
+                      <SyntaxHighlighter
+                        language={step.codeLanguage ?? 'text'}
+                        style={oneDark}
+                        customStyle={{ margin: 0, background: 'transparent', padding: '1rem', fontSize: '13px' }}
+                        codeTagProps={{ style: { fontFamily: 'var(--font-geist-mono), ui-monospace, monospace' } }}
                       >
-                        <Sparkles className="mr-1 h-4 w-4" /> Ask AI Tutor
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => {
-                          markLessonComplete(lessonId);
-                          openQuiz(courseId, moduleId, lessonId);
-                        }}
-                        className="bg-emerald-600 text-white hover:bg-emerald-700"
-                      >
-                        <CheckCircle2 className="mr-1 h-4 w-4" /> Finish &amp; Take Test
-                      </Button>
+                        {step.code}
+                      </SyntaxHighlighter>
                     </div>
                   )}
+
+                  {step.tip && (
+                    <div className="flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-amber-900 dark:text-amber-200">
+                      <Lightbulb className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
+                      <div>
+                        <p className="font-semibold">Pro tip</p>
+                        <p className="mt-0.5">{step.tip}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* AI Teaching Content */}
+                  {loadingTeach && !teaching && (
+                    <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" /> {tutor.name} is preparing the explanation...
+                    </div>
+                  )}
+                  {teachError && (
+                    <div className="rounded-lg border border-rose-500/30 bg-rose-500/5 p-4 text-sm text-rose-900 dark:text-rose-200">
+                      <AlertTriangle className="mr-1.5 inline h-4 w-4" /> {teachError}
+                    </div>
+                  )}
+                  {teaching && (
+                    <div className="space-y-3">
+                      <FlowingAnswer label="Explanation" icon={<Bot className="h-3.5 w-3.5" />}
+                        active={voicePhase === 'explanation'} done={voicePhase === 'example' || voicePhase === 'pitfall' || voicePhase === 'done'}>
+                        <MarkdownLite content={teaching.explanation} />
+                      </FlowingAnswer>
+                      <FlowingAnswer label="Real-world example" icon={<Lightbulb className="h-3.5 w-3.5" />}
+                        active={voicePhase === 'example'} done={voicePhase === 'pitfall' || voicePhase === 'done'}>
+                        <MarkdownLite content={teaching.example} />
+                      </FlowingAnswer>
+                      <FlowingAnswer label="Common pitfall" icon={<HelpCircle className="h-3.5 w-3.5" />}
+                        active={voicePhase === 'pitfall'} done={voicePhase === 'done'}>
+                        <MarkdownLite content={teaching.pitfall} />
+                      </FlowingAnswer>
+                    </div>
+                  )}
+
+                  {teaching && !voiceMode && !voiceLoading && (
+                    <Button size="sm" variant="outline" className="mt-2" onClick={() => startVoiceOver(teaching)}>
+                      <Volume2 className="mr-1.5 h-4 w-4" /> Replay voice-over
+                    </Button>
+                  )}
+
+                  {/* Step nav */}
+                  <div className="flex items-center justify-between border-t pt-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={activeStep === 0}
+                      onClick={() => { stopVoice(); setActiveStep((s) => Math.max(0, s - 1)); }}
+                    >
+                      <ChevronLeft className="mr-1 h-4 w-4" /> Previous step
+                    </Button>
+                    {activeStep < lesson.steps.length - 1 ? (
+                      <Button
+                        size="sm"
+                        onClick={() => { stopVoice(); setActiveStep((s) => s + 1); }}
+                        className="bg-emerald-600 text-white hover:bg-emerald-700"
+                      >
+                        Next step <ChevronRight className="ml-1 h-4 w-4" />
+                      </Button>
+                    ) : (
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setTutorOpen(true)}
+                        >
+                          <Sparkles className="mr-1 h-4 w-4" /> Ask AI Tutor
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            markLessonComplete(lessonId);
+                            openQuiz(courseId, moduleId, lessonId);
+                          }}
+                          className="bg-emerald-600 text-white hover:bg-emerald-700"
+                        >
+                          <CheckCircle2 className="mr-1 h-4 w-4" /> Finish &amp; Take Test
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </CardContent>
+              </CardContent>
+            )}
           </Card>
 
           {/* Q&A section */}
