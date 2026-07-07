@@ -51,70 +51,70 @@ interface Script {
 
 const SCRIPTS: Record<LangCode, Script> = {
   en: {
-    greeting: "Hello! I'm TutorAI, your personal AI Software Tutor.",
+    greeting: "Hello! I'm Marq AI, your personal AI Software Tutor.",
     intro: 'I will be with you throughout this lesson — explaining concepts, answering questions, and reviewing your code.',
     whatYouWillLearn: "In this session, you'll walk through step-by-step examples, watch a short video, and finish with a quick test.",
     tip: 'If you get stuck at any point, just click the Ask AI Tutor button on the top right and I will help you out.',
     goodbye: "Ready? Let's begin your training session now.",
   },
   hi: {
-    greeting: 'नमस्ते! मैं TutorAI हूँ, आपका निजी एआई सॉफ्टवेयर ट्यूटर।',
+    greeting: 'नमस्ते! मैं Marq AI हूँ, आपका निजी एआई सॉफ्टवेयर ट्यूटर।',
     intro: 'मैं इस पूरे पाठ में आपके साथ रहूँगा — अवधारणाएँ समझाऊँगा, सवालों के जवाब दूँगा, और आपके कोड की समीक्षा करूँगा।',
     whatYouWillLearn: 'इस सत्र में आप चरण-दर-चरण उदाहरण देखेंगे, एक छोटा वीडियो देखेंगे, और एक छोटे परीक्षण के साथ समाप्त करेंगे।',
     tip: 'यदि किसी भी बिंदु पर आप अटक जाएँ, तो ऊपर दाएँ Ask AI Tutor बटन पर क्लिक करें, मैं आपकी मदद करूँगा।',
     goodbye: 'तैयार? चलिए अब आपका प्रशिक्षण सत्र शुरू करते हैं।',
   },
   ta: {
-    greeting: 'வணக்கம்! நான் TutorAI, உங்களின் தனிப்பட்ட AI மென்பொருள் ஆசிரியர்.',
+    greeting: 'வணக்கம்! நான் Marq AI, உங்களின் தனிப்பட்ட AI மென்பொருள் ஆசிரியர்.',
     intro: 'இந்தப் பாடத்தில் நான் முழுவதுமாக உங்களுடன் இருப்பேன் — கருத்துகளை விளக்குவேன், கேள்விகளுக்கு பதிலளிப்பேன், குறியீட்டை மதிப்பாய்வு செய்வேன்.',
     whatYouWillLearn: 'இந்த அமர்வில் படிப்படியான எடுத்துக்காட்டுகள், குறுகிய வீடியோ, மற்றும் சிறிய தேர்வுடன் முடிவடையும்.',
     tip: 'எப்போது தடைப்பட்டாலும், மேல் வலது Ask AI Tutor பொத்தானை அழுத்தவும், நான் உதவுகிறேன்.',
     goodbye: 'தயாரா? உங்கள் பயிற்சி அமர்வை இப்போது தொடங்கலாம்.',
   },
   te: {
-    greeting: 'నమస్తే! నేను TutorAI, మీ వ్యక్తిగత AI సాఫ్ట్‌వేర్ ట్యూటర్.',
+    greeting: 'నమస్తే! నేను Marq AI, మీ వ్యక్తిగత AI సాఫ్ట్‌వేర్ ట్యూటర్.',
     intro: 'ఈ పాఠం అంతటా నేను మీతో ఉంటాను — భావనలను వివరిస్తాను, ప్రశ్నలకు సమాధానమిస్తాను, మీ కోడ్‌ను సమీక్షిస్తాను.',
     whatYouWillLearn: 'ఈ సెషన్‌లో మీరు దశలవారీగా ఉదాహరణలు, చిన్న వీడియో, చిన్న పరీక్షతో ముగించం.',
     tip: 'ఎప్పుడైనా ఇబ్బంది పడితే, పై కుడి Ask AI Tutor బటన్ నొక్కండి, నేను సహాయం చేస్తాను.',
     goodbye: 'సిద్ధమా? మీ శిక్షణ సెషన్ ఇప్పుడే ప్రారంభిద్దాం.',
   },
   es: {
-    greeting: '¡Hola! Soy TutorAI, tu tutor de software personal con IA.',
+    greeting: '¡Hola! Soy Marq AI, tu tutor de software personal con IA.',
     intro: 'Estaré contigo durante toda esta lección: explicando conceptos, respondiendo preguntas y revisando tu código.',
     whatYouWillLearn: 'En esta sesión verás ejemplos paso a paso, un video corto y terminarás con un pequeño examen.',
     tip: 'Si te atascas en algún momento, haz clic en el botón Ask AI Tutor arriba a la derecha y te ayudaré.',
     goodbye: '¿Listo? Comencemos tu sesión de entrenamiento ahora.',
   },
   fr: {
-    greeting: "Bonjour ! Je suis TutorAI, votre tuteur logiciel IA personnel.",
+    greeting: "Bonjour ! Je suis Marq AI, votre tuteur logiciel IA personnel.",
     intro: "Je serai avec vous tout au long de cette leçon — j'expliquerai les concepts, répondrai aux questions et examinerai votre code.",
     whatYouWillLearn: "Dans cette session, vous suivrez des exemples pas à pas, regarderez une courte vidéo et terminerez avec un petit test.",
     tip: "Si vous êtes bloqué à tout moment, cliquez sur le bouton Ask AI Tutor en haut à droite et je vous aiderai.",
     goodbye: "Prêt ? Commençons votre session de formation maintenant.",
   },
   de: {
-    greeting: 'Hallo! Ich bin TutorAI, dein persönlicher KI-Software-Tutor.',
+    greeting: 'Hallo! Ich bin Marq AI, dein persönlicher KI-Software-Tutor.',
     intro: 'Ich werde dich durch die gesamte Lektion begleiten — Konzepte erklären, Fragen beantworten und deinen Code überprüfen.',
     whatYouWillLearn: 'In dieser Sitzung gehst du Schritt für Schritt durch Beispiele, schaust ein kurzes Video und beendest mit einem kleinen Test.',
     tip: 'Wenn du irgendwo feststeckst, klicke oben rechts auf Ask AI Tutor und ich helfe dir.',
     goodbye: 'Bereit? Lass uns jetzt mit deiner Trainingssitzung beginnen.',
   },
   pt: {
-    greeting: 'Olá! Sou o TutorAI, seu tutor de software com IA pessoal.',
+    greeting: 'Olá! Sou o Marq AI, seu tutor de software com IA pessoal.',
     intro: 'Estarei com você durante toda esta lição — explicando conceitos, respondendo perguntas e revisando seu código.',
     whatYouWillLearn: 'Nesta sessão, você verá exemplos passo a passo, assistirá a um vídeo curto e terminará com um pequeno teste.',
     tip: 'Se você travar em qualquer ponto, clique no botão Ask AI Tutor no canto superior direito e eu ajudarei.',
     goodbye: 'Pronto? Vamos começar sua sessão de treinamento agora.',
   },
   ar: {
-    greeting: 'مرحبًا! أنا TutorAI، مدرس البرمجة الشخصي المدعوم بالذكاء الاصطناعي.',
+    greeting: 'مرحبًا! أنا Marq AI، مدرس البرمجة الشخصي المدعوم بالذكاء الاصطناعي.',
     intro: 'سأكون معك طوال هذا الدرس — أشرح المفاهيم، أجيب على الأسئلة، وأراجع الكود الخاص بك.',
     whatYouWillLearn: 'في هذه الجلسة، ستتبع أمثلة خطوة بخطوة، تشاهد مقطع فيديو قصير، وتنهي باختبار قصير.',
     tip: 'إذا تعثرت في أي لحظة، انقر على زر Ask AI Tutor في الأعلى يمينًا وسأساعدك.',
     goodbye: 'مستعد؟ لنبدأ جلسة التدريب الآن.',
   },
   zh: {
-    greeting: '你好！我是 TutorAI，你的个人 AI 软件导师。',
+    greeting: '你好！我是 Marq AI，你的个人 AI 软件导师。',
     intro: '在整个课程中，我会一直陪伴你 — 解释概念、回答问题并审查你的代码。',
     whatYouWillLearn: '在本次课程中，你将逐步学习示例、观看短视频，最后完成一个小测试。',
     tip: '如果任何时候你遇到困难，点击右上角的 Ask AI Tutor 按钮，我会帮助你。',
@@ -346,7 +346,7 @@ export function AITutorIntro({ lessonTitle, courseTitle, onStart, allowDisable =
             </div>
             <div>
               <p className="text-xs uppercase tracking-wider text-white/80">marqaicourses Online Courses</p>
-              <h2 className="text-xl font-bold">TutorAI Introduction</h2>
+              <h2 className="text-xl font-bold">Marq AI Introduction</h2>
             </div>
           </div>
           {(lessonTitle || courseTitle) && (
@@ -373,7 +373,7 @@ export function AITutorIntro({ lessonTitle, courseTitle, onStart, allowDisable =
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold">TutorAI</p>
+              <p className="text-sm font-semibold">Marq AI</p>
               <p className="text-xs text-muted-foreground">
                 {supported
                   ? `Speaking in ${currentLang.flag} ${currentLang.label}`

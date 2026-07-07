@@ -96,29 +96,29 @@ function LessonItem({
       )}
 
       <div
-        className={`flex items-start gap-3 px-4 py-3 cursor-pointer ${
-          isCurrentLesson ? 'pl-5' : ''
+        className={`flex items-start gap-2 px-3 py-2 cursor-pointer overflow-hidden ${
+          isCurrentLesson ? 'pl-4' : ''
         }`}
         onClick={onSelect}
       >
         {/* Lesson number / completion icon */}
         <span
-          className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-semibold transition-all ${
+          className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-[10px] font-semibold transition-all ${
             isCompleted
               ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-500/30'
               : isCurrentLesson
-              ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-500/30 ring-2 ring-emerald-500/20'
+              ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-500/30 ring-1 ring-emerald-500/20'
               : 'bg-muted text-muted-foreground border border-border'
           }`}
         >
-          {isCompleted ? <CheckCircle2 className="h-3.5 w-3.5" /> : index + 1}
+          {isCompleted ? <CheckCircle2 className="h-3 w-3" /> : index + 1}
         </span>
 
         {/* Lesson info */}
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5">
+        <div className="min-w-0 flex-1 overflow-hidden">
+          <div className="flex items-center gap-1">
             <p
-              className={`text-sm leading-tight ${
+              className={`text-xs leading-tight truncate ${
                 isCurrentLesson
                   ? 'font-semibold text-emerald-700 dark:text-emerald-400'
                   : isCompleted
@@ -132,22 +132,22 @@ function LessonItem({
             {isTestPassed && (
               <Badge
                 variant="outline"
-                className="shrink-0 h-5 px-1.5 text-[10px] bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800"
+                className="shrink-0 h-4 px-1 text-[8px] bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800"
               >
                 ✓
               </Badge>
             )}
           </div>
-          <div className="flex items-center gap-2.5 mt-1 text-[11px] text-muted-foreground">
-            <span className="inline-flex items-center gap-1">
-              <Clock className="h-3 w-3" /> {lesson.duration}
+          <div className="flex items-center gap-2 mt-0.5 text-[10px] text-muted-foreground">
+            <span className="inline-flex items-center gap-0.5">
+              <Clock className="h-2.5 w-2.5" /> {lesson.duration}
             </span>
-            <span className="inline-flex items-center gap-1">
-              <ListChecks className="h-3 w-3" /> {stepCount} steps
+            <span className="inline-flex items-center gap-0.5">
+              <ListChecks className="h-2.5 w-2.5" /> {stepCount}
             </span>
             {quizCount > 0 && (
-              <span className="inline-flex items-center gap-1">
-                <FileQuestion className="h-3 w-3" /> {quizCount}Q
+              <span className="inline-flex items-center gap-0.5">
+                <FileQuestion className="h-2.5 w-2.5" /> {quizCount}Q
               </span>
             )}
           </div>
@@ -160,12 +160,12 @@ function LessonItem({
               e.stopPropagation();
               onToggleExpand();
             }}
-            className="shrink-0 h-7 w-7 grid place-items-center rounded-md hover:bg-muted/70 transition-colors"
+            className="shrink-0 h-6 w-6 grid place-items-center rounded-md hover:bg-muted/70 transition-colors"
           >
             {isExpanded ? (
-              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+              <ChevronDown className="h-3 w-3 text-muted-foreground" />
             ) : (
-              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+              <ChevronRight className="h-3 w-3 text-muted-foreground" />
             )}
           </button>
         )}
@@ -233,16 +233,16 @@ function ModuleSection({
         {/* Module header */}
         <CollapsibleTrigger asChild>
           <button
-            className={`w-full flex items-center gap-3 px-4 py-3.5 hover:bg-muted/40 transition-colors text-left ${
+            className={`w-full flex items-center gap-2 px-3 py-2.5 hover:bg-muted/40 transition-colors text-left overflow-hidden ${
               isExpanded ? 'bg-muted/20' : ''
             } ${hasCurrentLesson ? 'bg-emerald-50/30 dark:bg-emerald-950/10' : ''}`}
           >
             <span
-              className={`shrink-0 h-9 w-9 grid place-items-center rounded-xl text-sm font-bold transition-all ${
+              className={`shrink-0 h-7 w-7 grid place-items-center rounded-lg text-[10px] font-bold transition-all ${
                 isComplete
                   ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-500/30'
                   : hasCurrentLesson
-                  ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 ring-2 ring-emerald-500/20'
+                  ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 ring-1 ring-emerald-500/20'
                   : 'bg-muted text-muted-foreground'
               }`}
             >
@@ -250,7 +250,7 @@ function ModuleSection({
             </span>
 
             <div className="min-w-0 flex-1">
-              <p className="font-semibold text-sm truncate leading-tight">{module.title}</p>
+              <p className="font-semibold text-xs truncate leading-tight">{module.title}</p>
               <div className="flex items-center gap-2 mt-1">
                 {/* Module progress bar */}
                 <Progress value={moduleProgress} className="h-1 flex-1 max-w-[80px]" />
@@ -446,7 +446,7 @@ export function SyllabusSidebar({
   if (!course) return null;
 
   return (
-    <aside className="hidden lg:block sticky top-0 h-screen w-[280px] shrink-0 border-r bg-background z-10 shadow-sm overflow-y-auto">
+    <aside className="hidden lg:block sticky top-0 h-screen w-[260px] shrink-0 border-r bg-background z-10 shadow-sm overflow-y-auto overflow-x-hidden">
       <SyllabusContent
         course={course}
         currentModuleId={currentModuleId}

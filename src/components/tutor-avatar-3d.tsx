@@ -7,7 +7,7 @@ import * as THREE from 'three';
 // ============================================================
 // TutorAvatar3D — True 3D human avatar using React Three Fiber
 // ============================================================
-// Renders a stylized Indian female teacher ("Maya") bust using
+// Renders a stylized Indian female teacher ("Marq AI") bust using
 // primitive shapes (spheres, cylinders, boxes). Supports:
 //   - Speaking mouth animation (lip-sync)
 //   - Blinking

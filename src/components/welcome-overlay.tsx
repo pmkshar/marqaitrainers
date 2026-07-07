@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Sparkles,
   Play,
+  Pause,
   X,
   BookOpen,
   GraduationCap,
@@ -18,6 +19,8 @@ import {
   ChevronRight,
   Quote,
   Video,
+  Volume2,
+  RotateCcw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -61,6 +64,173 @@ const ADVANTAGES = [
   { icon: Clock, label: 'Learn at Your Own Pace', color: 'from-teal-500 to-emerald-600' },
   { icon: CreditCard, label: 'Affordable Pricing with Flexible Plans', color: 'from-cyan-500 to-sky-600' },
 ];
+
+// ============================================================
+// WelcomeIntroVideo — AI tutor introduction with voice narration
+// ============================================================
+
+const INTRO_SCRIPT = [
+  "Hello! I am Marq AI, your personal AI Software Tutor on MarqAI Courses.",
+  "I will guide you through every lesson — explaining concepts, writing code, and answering your questions 24/7.",
+  "Our platform offers 6 career-track courses in AI, Java, .NET, Python, React Native, and Flutter — each with video walkthroughs, graded quizzes, and verified certificates.",
+  "You can learn in English, Hindi, Tamil, Telugu, and more languages with my AI voice tutoring.",
+  "I also conduct mock interviews to help you prepare for real job opportunities.",
+  "Ready to start? Sign up, explore our courses, and let me be your learning companion. Let's begin!",
+];
+
+function WelcomeIntroVideo() {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [activeLine, setActiveLine] = useState(-1);
+  const [progress, setProgress] = useState(0);
+  const cancelRef = useRef(false);
+  const utterancesRef = useRef<SpeechSynthesisUtterance[]>([]);
+
+  const supported = typeof window !== 'undefined' && 'speechSynthesis' in window;
+
+  const stopSpeech = useCallback(() => {
+    cancelRef.current = true;
+    try { window.speechSynthesis.cancel(); } catch {}
+    setIsPlaying(false);
+    setIsPaused(false);
+  }, []);
+
+  const speak = useCallback(() => {
+    if (!supported) return;
+    stopSpeech();
+    cancelRef.current = false;
+    setIsPlaying(true);
+    setIsPaused(false);
+    setActiveLine(0);
+    setProgress(0);
+
+    const voices = window.speechSynthesis.getVoices();
+    const enIN = voices.find(v => v.lang === 'en-IN') ?? voices.find(v => v.lang.startsWith('en')) ?? null;
+
+    INTRO_SCRIPT.forEach((text, idx) => {
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'en-IN';
+      u.rate = 0.95;
+      u.pitch = 1.0;
+      if (enIN) u.voice = enIN;
+      u.onstart = () => {
+        if (!cancelRef.current) {
+          setActiveLine(idx);
+          setProgress(((idx) / INTRO_SCRIPT.length) * 100);
+        }
+      };
+      u.onend = () => {
+        if (!cancelRef.current) {
+          setProgress(((idx + 1) / INTRO_SCRIPT.length) * 100);
+          if (idx === INTRO_SCRIPT.length - 1) {
+            setIsPlaying(false);
+            setActiveLine(-1);
+          }
+        }
+      };
+      u.onerror = () => {
+        setIsPlaying(false);
+        setIsPaused(false);
+      };
+      utterancesRef.current.push(u);
+      window.speechSynthesis.speak(u);
+    });
+  }, [supported, stopSpeech]);
+
+  const pauseResume = useCallback(() => {
+    if (!isPlaying) return;
+    if (isPaused) {
+      window.speechSynthesis.resume();
+      setIsPaused(false);
+    } else {
+      window.speechSynthesis.pause();
+      setIsPaused(true);
+    }
+  }, [isPlaying, isPaused]);
+
+  useEffect(() => {
+    return () => { try { window.speechSynthesis.cancel(); } catch {} };
+  }, []);
+
+  return (
+    <div className="relative overflow-hidden rounded-xl border bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-cyan-500/10">
+      {/* Video-like player area */}
+      <div className="flex aspect-video items-center justify-center bg-gradient-to-br from-emerald-900/20 via-teal-900/10 to-cyan-900/20 relative">
+        {/* Avatar circle */}
+        <div className="flex flex-col items-center gap-3 text-center">
+          <div className="relative">
+            <div className="grid h-20 w-20 place-items-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25">
+              <Brain className="h-10 w-10" />
+            </div>
+            {isPlaying && !isPaused && (
+              <span className="absolute inset-0 animate-ping rounded-full bg-emerald-500/30" />
+            )}
+            {isPlaying && !isPaused && (
+              <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white text-[10px]">
+                <Mic className="h-3 w-3" />
+              </span>
+            )}
+          </div>
+          <div>
+            <p className="font-bold text-foreground text-lg">Marq AI Tutor</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {isPlaying && !isPaused ? 'Speaking...' : isPaused ? 'Paused' : 'Click play to hear the introduction'}
+            </p>
+          </div>
+        </div>
+
+        {/* Subtitle overlay */}
+        {isPlaying && activeLine >= 0 && (
+          <div className="absolute bottom-3 left-3 right-3 rounded-lg bg-black/70 px-3 py-2 backdrop-blur-sm">
+            <p className="text-sm text-white leading-relaxed">{INTRO_SCRIPT[activeLine]}</p>
+          </div>
+        )}
+
+        {/* Progress bar */}
+        {isPlaying && (
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/20">
+            <div
+              className="h-full bg-emerald-400 transition-all duration-500"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Player controls */}
+      <div className="flex items-center gap-2 px-4 py-2.5 bg-card/80 border-t">
+        {!isPlaying ? (
+          <Button onClick={speak} disabled={!supported} size="sm" className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700">
+            <Play className="mr-1.5 h-4 w-4" />
+            Play Introduction
+          </Button>
+        ) : (
+          <Button onClick={pauseResume} size="sm" variant="outline" className="border-emerald-500/30">
+            {isPaused ? <Play className="mr-1.5 h-4 w-4" /> : <Pause className="mr-1.5 h-4 w-4" />}
+            {isPaused ? 'Resume' : 'Pause'}
+          </Button>
+        )}
+        {isPlaying && (
+          <Button onClick={stopSpeech} size="sm" variant="outline">
+            <X className="mr-1 h-4 w-4" /> Stop
+          </Button>
+        )}
+        {isPlaying && (
+          <Button onClick={speak} size="sm" variant="ghost">
+            <RotateCcw className="h-4 w-4" />
+          </Button>
+        )}
+        <div className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Volume2 className="h-3.5 w-3.5" />
+          <span>{activeLine + 1}/{INTRO_SCRIPT.length}</span>
+        </div>
+      </div>
+
+      {/* Decorative gradient border effect */}
+      <div className="absolute inset-0 rounded-xl ring-1 ring-inset ring-emerald-500/10 pointer-events-none" />
+    </div>
+  );
+}
 
 interface WelcomeOverlayProps {
 }
@@ -178,27 +348,13 @@ export function WelcomeOverlay(_props?: WelcomeOverlayProps) {
 
         {/* ===== Scrollable body ===== */}
         <div className="max-h-[calc(92vh-320px)] overflow-y-auto p-6 sm:p-8">
-          {/* Introduction video placeholder */}
+          {/* AI Tutor Introduction Video */}
           <section className="mb-6">
             <div className="flex items-center gap-2 mb-3">
               <Video className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-              <h2 className="text-lg font-bold">Meet Your AI Tutor</h2>
+              <h2 className="text-lg font-bold">Meet Marq AI Tutor</h2>
             </div>
-            <div className="relative overflow-hidden rounded-xl border bg-gradient-to-br from-muted/50 to-muted/30">
-              <div className="flex aspect-video items-center justify-center bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-cyan-500/10">
-                <div className="flex flex-col items-center gap-3 text-center">
-                  <div className="grid h-16 w-16 place-items-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25">
-                    <Play className="h-7 w-7 ml-1" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-foreground">Marq AI Tutor Introduction</p>
-                    <p className="text-xs text-muted-foreground mt-1">Watch a 2-min overview of your AI-powered learning companion</p>
-                  </div>
-                </div>
-              </div>
-              {/* Decorative gradient border effect */}
-              <div className="absolute inset-0 rounded-xl ring-1 ring-inset ring-emerald-500/10" />
-            </div>
+            <WelcomeIntroVideo />
           </section>
 
           {/* Founder's Note */}
@@ -210,7 +366,7 @@ export function WelcomeOverlay(_props?: WelcomeOverlayProps) {
             <div className="rounded-xl border bg-muted/30 p-5">
               <div className="flex items-start gap-4">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-lg font-bold text-white shadow-sm">
-                  MR
+                  MP
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm leading-relaxed text-foreground/90 italic">
@@ -219,7 +375,7 @@ export function WelcomeOverlay(_props?: WelcomeOverlayProps) {
                   <div className="mt-3 flex items-center gap-2">
                     <div className="h-px flex-1 bg-border" />
                     <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
-                      Marq Rajkumar
+                      Mahesh Kumar Parvathareddy
                     </span>
                     <div className="h-px flex-1 bg-border" />
                   </div>

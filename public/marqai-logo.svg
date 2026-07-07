@@ -1,54 +1,136 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background -->
-  <rect width="512" height="512" rx="96" fill="url(#bgGradient)"/>
-  
-  <!-- Graduation Cap -->
-  <g transform="translate(96, 100)">
-    <!-- Cap Base -->
-    <rect x="40" y="180" width="240" height="20" rx="4" fill="#FFFFFF"/>
-    <!-- Cap Top -->
-    <polygon points="80,180 320,180 280,100 120,100" fill="#FFFFFF"/>
-    <!-- Button on top -->
-    <circle cx="200" cy="100" r="16" fill="#FFD700"/>
-    <!-- Tassel -->
-    <path d="M200,100 Q200,140 260,180" stroke="#FFD700" stroke-width="6" fill="none"/>
-    <circle cx="260" cy="180" r="10" fill="#FFD700"/>
-  </g>
-  
-  <!-- AI Brain Circuit -->
-  <g transform="translate(160, 260)">
-    <!-- Brain outline -->
-    <path d="M96,40 C60,40 40,70 40,100 C40,140 70,160 96,160 C130,160 152,130 152,100 C152,60 130,40 96,40" 
-          stroke="#FFFFFF" stroke-width="8" fill="none"/>
-    <!-- Neural connections -->
-    <line x1="60" y1="80" x2="96" y2="80" stroke="#10B981" stroke-width="4"/>
-    <line x1="96" y1="80" x2="132" y2="80" stroke="#10B981" stroke-width="4"/>
-    <line x1="60" y1="120" x2="96" y2="120" stroke="#10B981" stroke-width="4"/>
-    <line x1="96" y1="120" x2="132" y2="120" stroke="#10B981" stroke-width="4"/>
-    <line x1="96" y1="80" x2="96" y2="120" stroke="#10B981" stroke-width="4"/>
-    <!-- Nodes -->
-    <circle cx="60" cy="80" r="8" fill="#10B981"/>
-    <circle cx="96" cy="80" r="10" fill="#FFFFFF"/>
-    <circle cx="132" cy="80" r="8" fill="#10B981"/>
-    <circle cx="60" cy="120" r="8" fill="#10B981"/>
-    <circle cx="96" cy="120" r="10" fill="#FFFFFF"/>
-    <circle cx="132" cy="120" r="8" fill="#10B981"/>
-  </g>
-  
-  <!-- Text: MARQAI -->
-  <text x="256" y="420" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="#FFFFFF" text-anchor="middle">
-    MARQAI
-  </text>
-  <text x="256" y="460" font-family="Arial, sans-serif" font-size="28" font-weight="600" fill="#10B981" text-anchor="middle">
-    COURSES
-  </text>
-  
-  <!-- Gradients -->
   <defs>
+    <!-- 3D Background gradient with depth -->
     <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#10B981"/>
-      <stop offset="50%" style="stop-color:#059669"/>
+      <stop offset="0%" style="stop-color:#34D399"/>
+      <stop offset="35%" style="stop-color:#10B981"/>
+      <stop offset="70%" style="stop-color:#059669"/>
       <stop offset="100%" style="stop-color:#047857"/>
     </linearGradient>
+    <!-- Inner glow for 3D depth -->
+    <radialGradient id="innerGlow" cx="40%" cy="35%" r="60%">
+      <stop offset="0%" style="stop-color:#6EE7B7;stop-opacity:0.4"/>
+      <stop offset="100%" style="stop-color:#047857;stop-opacity:0"/>
+    </radialGradient>
+    <!-- Gold gradient for 3D tassel -->
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFE066"/>
+      <stop offset="50%" style="stop-color:#FFD700"/>
+      <stop offset="100%" style="stop-color:#B8860B"/>
+    </linearGradient>
+    <!-- Brain node glow -->
+    <radialGradient id="nodeGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#6EE7B7;stop-opacity:0.8"/>
+      <stop offset="100%" style="stop-color:#10B981;stop-opacity:0"/>
+    </radialGradient>
+    <!-- Shadow filter for 3D effect -->
+    <filter id="dropShadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
+    <!-- Cap shadow -->
+    <filter id="capShadow" x="-5%" y="-5%" width="115%" height="115%">
+      <feDropShadow dx="2" dy="3" stdDeviation="3" flood-color="#000000" flood-opacity="0.25"/>
+    </filter>
+    <!-- Text shadow -->
+    <filter id="textShadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
   </defs>
+
+  <!-- 3D Rounded Background -->
+  <rect width="512" height="512" rx="96" fill="url(#bgGradient)" filter="url(#dropShadow)"/>
+  <!-- Inner glow overlay for 3D depth -->
+  <rect width="512" height="512" rx="96" fill="url(#innerGlow)"/>
+  <!-- Subtle border for 3D edge -->
+  <rect x="2" y="2" width="508" height="508" rx="95" fill="none" stroke="#6EE7B7" stroke-width="1" opacity="0.3"/>
+  
+  <!-- Graduation Cap — 3D with shadow -->
+  <g transform="translate(96, 80)" filter="url(#capShadow)">
+    <!-- Cap Board — 3D perspective -->
+    <polygon points="60,175 320,175 280,95 100,95" fill="#FFFFFF" opacity="0.95"/>
+    <!-- Cap underside for 3D depth -->
+    <polygon points="60,175 320,175 320,185 60,185" fill="#D1D5DB" opacity="0.6"/>
+    <!-- Cap base rim -->
+    <rect x="40" y="175" width="280" height="14" rx="4" fill="#FFFFFF"/>
+    <!-- Diamond pattern on cap -->
+    <polygon points="190,100 200,110 190,120 180,110" fill="url(#goldGrad)" opacity="0.6"/>
+    <!-- Button on top — 3D sphere effect -->
+    <circle cx="190" cy="95" r="14" fill="url(#goldGrad)"/>
+    <circle cx="187" cy="91" r="5" fill="#FFF8DC" opacity="0.6"/>
+    <!-- Tassel — 3D rope -->
+    <path d="M190,95 C190,120 240,140 260,175" stroke="url(#goldGrad)" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M190,95 C195,120 245,140 265,175" stroke="#B8860B" stroke-width="2" fill="none" opacity="0.3"/>
+    <!-- Tassel end — 3D ball -->
+    <circle cx="260" cy="175" r="10" fill="url(#goldGrad)"/>
+    <circle cx="258" cy="172" r="3.5" fill="#FFF8DC" opacity="0.5"/>
+  </g>
+
+  <!-- AI Brain Circuit — 3D with glow effects -->
+  <g transform="translate(160, 255)">
+    <!-- Brain outline — 3D double stroke -->
+    <path d="M96,35 C55,35 35,68 35,100 C35,145 68,165 96,165 C135,165 155,130 155,100 C155,55 135,35 96,35" 
+          stroke="#6EE7B7" stroke-width="12" fill="none" opacity="0.3"/>
+    <path d="M96,40 C60,40 40,70 40,100 C40,140 70,160 96,160 C130,160 150,128 150,100 C150,58 130,40 96,40" 
+          stroke="#FFFFFF" stroke-width="6" fill="none"/>
+    
+    <!-- Neural connections — 3D glowing lines -->
+    <line x1="58" y1="78" x2="96" y2="78" stroke="#6EE7B7" stroke-width="5" opacity="0.5"/>
+    <line x1="58" y1="78" x2="96" y2="78" stroke="#10B981" stroke-width="3"/>
+    <line x1="96" y1="78" x2="134" y2="78" stroke="#6EE7B7" stroke-width="5" opacity="0.5"/>
+    <line x1="96" y1="78" x2="134" y2="78" stroke="#10B981" stroke-width="3"/>
+    <line x1="58" y1="122" x2="96" y2="122" stroke="#6EE7B7" stroke-width="5" opacity="0.5"/>
+    <line x1="58" y1="122" x2="96" y2="122" stroke="#10B981" stroke-width="3"/>
+    <line x1="96" y1="122" x2="134" y2="122" stroke="#6EE7B7" stroke-width="5" opacity="0.5"/>
+    <line x1="96" y1="122" x2="134" y2="122" stroke="#10B981" stroke-width="3"/>
+    <line x1="96" y1="78" x2="96" y2="122" stroke="#6EE7B7" stroke-width="5" opacity="0.5"/>
+    <line x1="96" y1="78" x2="96" y2="122" stroke="#10B981" stroke-width="3"/>
+    
+    <!-- Cross connections -->
+    <line x1="58" y1="78" x2="96" y2="100" stroke="#10B981" stroke-width="2" opacity="0.4"/>
+    <line x1="134" y1="78" x2="96" y2="100" stroke="#10B981" stroke-width="2" opacity="0.4"/>
+    <line x1="58" y1="122" x2="96" y2="100" stroke="#10B981" stroke-width="2" opacity="0.4"/>
+    <line x1="134" y1="122" x2="96" y2="100" stroke="#10B981" stroke-width="2" opacity="0.4"/>
+    
+    <!-- Center node — 3D glow -->
+    <circle cx="96" cy="100" r="14" fill="url(#nodeGlow)"/>
+    <circle cx="96" cy="100" r="8" fill="#FFFFFF"/>
+    <circle cx="94" cy="98" r="3" fill="#E0F2FE" opacity="0.6"/>
+    
+    <!-- Nodes — 3D spheres -->
+    <circle cx="58" cy="78" r="9" fill="url(#nodeGlow)"/>
+    <circle cx="58" cy="78" r="7" fill="#10B981"/>
+    <circle cx="56" cy="76" r="2.5" fill="#6EE7B7" opacity="0.7"/>
+    
+    <circle cx="96" cy="78" r="11" fill="url(#nodeGlow)"/>
+    <circle cx="96" cy="78" r="9" fill="#FFFFFF"/>
+    <circle cx="94" cy="76" r="3" fill="#E0F2FE" opacity="0.6"/>
+    
+    <circle cx="134" cy="78" r="9" fill="url(#nodeGlow)"/>
+    <circle cx="134" cy="78" r="7" fill="#10B981"/>
+    <circle cx="132" cy="76" r="2.5" fill="#6EE7B7" opacity="0.7"/>
+    
+    <circle cx="58" cy="122" r="9" fill="url(#nodeGlow)"/>
+    <circle cx="58" cy="122" r="7" fill="#10B981"/>
+    <circle cx="56" cy="120" r="2.5" fill="#6EE7B7" opacity="0.7"/>
+    
+    <circle cx="96" cy="122" r="11" fill="url(#nodeGlow)"/>
+    <circle cx="96" cy="122" r="9" fill="#FFFFFF"/>
+    <circle cx="94" cy="120" r="3" fill="#E0F2FE" opacity="0.6"/>
+    
+    <circle cx="134" cy="122" r="9" fill="url(#nodeGlow)"/>
+    <circle cx="134" cy="122" r="7" fill="#10B981"/>
+    <circle cx="132" cy="120" r="2.5" fill="#6EE7B7" opacity="0.7"/>
+  </g>
+
+  <!-- Text: MARQAI — 3D with shadow -->
+  <text x="256" y="420" font-family="'Segoe UI', Arial, sans-serif" font-size="52" font-weight="bold" fill="#FFFFFF" text-anchor="middle" filter="url(#textShadow)" letter-spacing="3">
+    MARQAI
+  </text>
+  <!-- Subtle text highlight for 3D -->
+  <text x="256" y="419" font-family="'Segoe UI', Arial, sans-serif" font-size="52" font-weight="bold" fill="#FFFFFF" text-anchor="middle" opacity="0.15" letter-spacing="3">
+    MARQAI
+  </text>
+  <text x="256" y="462" font-family="'Segoe UI', Arial, sans-serif" font-size="28" font-weight="600" fill="#6EE7B7" text-anchor="middle" filter="url(#textShadow)" letter-spacing="6">
+    COURSES
+  </text>
 </svg>

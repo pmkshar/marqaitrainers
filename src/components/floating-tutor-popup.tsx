@@ -527,12 +527,12 @@ export function FloatingTutorPopup({
             )}
           </div>
         ) : activeTab === 'syllabus' ? (
-          /* Syllabus Tab — Tree View */
-          <ScrollArea className="flex-1 overflow-y-auto" data-nodrag>
-            <div className="p-3 max-w-full">
+          /* Syllabus Tab — Tree View (compact, no overflow) */
+          <div className="flex-1 overflow-y-auto overflow-x-hidden" data-nodrag>
+            <div className="p-2 overflow-hidden">
               <SyllabusTree courseId={courseId} course={course} />
             </div>
-          </ScrollArea>
+          </div>
         ) : (
           /* Whiteboard Tab */
           <div className="p-3 flex flex-col gap-2" data-nodrag>
@@ -645,16 +645,16 @@ function SyllabusTree({ courseId, course }: { courseId: string; course: Course }
   const coursePct = getCourseProgress();
 
   return (
-    <div className="space-y-2 overflow-hidden max-w-full">
+    <div className="space-y-1.5 overflow-hidden" style={{ maxWidth: '100%' }}>
       {/* Course info header — compact */}
-      <div className="space-y-1 overflow-hidden">
-        <h4 className="text-xs font-bold truncate">{course.title}</h4>
-        <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground">
-          <span className="flex items-center gap-0.5"><BookOpen className="h-2.5 w-2.5" /> {course.modules.length} modules</span>
+      <div className="space-y-0.5 overflow-hidden">
+        <h4 className="text-[11px] font-bold truncate max-w-full">{course.title}</h4>
+        <div className="flex items-center gap-1 text-[8px] text-muted-foreground flex-wrap">
+          <span className="flex items-center gap-0.5"><BookOpen className="h-2 w-2" /> {course.modules.length} modules</span>
           <span>·</span>
-          <span className="flex items-center gap-0.5"><ListChecks className="h-2.5 w-2.5" /> {totalLessons} lessons</span>
+          <span className="flex items-center gap-0.5"><ListChecks className="h-2 w-2" /> {totalLessons} lessons</span>
           <span>·</span>
-          <span className="flex items-center gap-0.5"><Clock className="h-2.5 w-2.5" /> {totalDuration}</span>
+          <span className="flex items-center gap-0.5"><Clock className="h-2 w-2" /> {totalDuration}</span>
         </div>
         {/* Overall course progress bar */}
         <div className="space-y-0.5">
@@ -765,7 +765,7 @@ function SyllabusTree({ courseId, course }: { courseId: string; course: Course }
                                 <Circle className="h-3 w-3 text-muted-foreground/40 shrink-0" />
                               )}
 
-                              <span className={`flex-1 text-[10px] truncate ${
+                              <span className={`flex-1 text-[9px] truncate min-w-0 ${
                                 status === 'completed'
                                   ? 'text-emerald-700 dark:text-emerald-300 font-medium'
                                   : status === 'in_progress'

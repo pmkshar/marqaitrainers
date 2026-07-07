@@ -192,25 +192,12 @@ export function ScrollingCourseIcons() {
   const allCourses = [...COURSES, ...COURSES, ...COURSES];
 
   return (
-    <section className="overflow-hidden border-b bg-gradient-to-r from-emerald-50/30 via-teal-50/20 to-emerald-50/30 py-10 dark:from-emerald-950/10 dark:via-teal-950/5 dark:to-emerald-950/10">
+    <section className="overflow-hidden border-b bg-gradient-to-r from-emerald-50/30 via-teal-50/20 to-emerald-50/30 py-8 dark:from-emerald-950/10 dark:via-teal-950/5 dark:to-emerald-950/10">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Inspirational Quote */}
-        <div className="mb-6 text-center">
-          <blockquote className="relative mx-auto max-w-2xl">
-            <span className="absolute -left-4 -top-2 text-4xl text-emerald-300 dark:text-emerald-700">&ldquo;</span>
-            <p className="text-lg font-medium italic leading-relaxed text-foreground/90 sm:text-xl">
-              The beautiful thing about learning is that no one can take it away from you.
-            </p>
-            <footer className="mt-2 text-sm text-muted-foreground">
-              — B.B. King
-            </footer>
-          </blockquote>
-        </div>
-
         <div className="mb-5 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Layers className="h-5 w-5 text-emerald-600" />
-            <h3 className="text-lg font-semibold">Our Career Tracks</h3>
+            <h3 className="text-lg font-semibold">Explore Courses</h3>
           </div>
           <div className="hidden items-center gap-1 text-xs text-muted-foreground sm:flex">
             <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
@@ -219,16 +206,16 @@ export function ScrollingCourseIcons() {
         </div>
       </div>
 
-      {/* CSS-animated marquee track — pauses on hover */}
+      {/* CSS-animated marquee track — pauses on hover, continuous scroll */}
       <div className="group/marquee relative">
         {/* Fade edges */}
-        <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-16 bg-gradient-to-r from-emerald-50/80 to-transparent dark:from-emerald-950/80" />
-        <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-16 bg-gradient-to-l from-emerald-50/80 to-transparent dark:from-emerald-950/80" />
+        <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-20 bg-gradient-to-r from-emerald-50/90 to-transparent dark:from-emerald-950/90" />
+        <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-20 bg-gradient-to-l from-emerald-50/90 to-transparent dark:from-emerald-950/90" />
 
         <div
-          className="flex gap-5 px-4"
+          className="flex gap-4 px-4"
           style={{
-            animation: 'marqai-scroll 60s linear infinite',
+            animation: 'marqai-scroll 35s linear infinite',
           }}
           onMouseEnter={(e) => { e.currentTarget.style.animationPlayState = 'paused'; }}
           onMouseLeave={(e) => { e.currentTarget.style.animationPlayState = 'running'; }}
@@ -237,20 +224,17 @@ export function ScrollingCourseIcons() {
             <button
               key={`${course.id}-${idx}`}
               onClick={() => openCourse(course.id)}
-              className="group flex flex-col items-center gap-3 rounded-2xl border border-border/40 bg-card p-5 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg hover:border-emerald-400/40"
-              style={{ minWidth: '180px', flexShrink: 0 }}
+              className="group flex items-center gap-2.5 rounded-full border border-border/40 bg-card px-4 py-2.5 shadow-sm transition-all hover:shadow-md hover:border-emerald-400/40 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/30"
+              style={{ flexShrink: 0 }}
             >
-              <span className={`grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br ${course.gradient} text-white shadow-md transition-transform group-hover:scale-110`}>
-                <CourseIcon name={course.icon} className="h-8 w-8" />
+              <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full bg-gradient-to-br ${course.gradient} text-white shadow-sm transition-transform group-hover:scale-110`}>
+                <CourseIcon name={course.icon} className="h-4 w-4" />
               </span>
-              <span className="text-center">
-                <span className="block text-sm font-semibold leading-tight">{course.title}</span>
-                <span className="mt-1 block text-[11px] text-muted-foreground">{course.lessonsCount} lessons · {course.duration}</span>
-              </span>
-              <Badge variant="secondary" className="text-[10px]">{course.level}</Badge>
-              <div className="flex items-center gap-1 text-xs text-amber-500">
+              <span className="text-sm font-medium whitespace-nowrap">{course.title}</span>
+              <Badge variant="secondary" className="text-[9px] shrink-0">{course.level}</Badge>
+              <div className="flex items-center gap-0.5 text-amber-500">
                 <Star className="h-3 w-3 fill-amber-400" />
-                <span className="font-medium">{course.rating}</span>
+                <span className="text-[10px] font-medium">{course.rating}</span>
               </div>
             </button>
           ))}
