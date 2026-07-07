@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowRight, PlayCircle, Sparkles, BookOpen, Video, FileQuestion, MessageSquare, Users, CreditCard, Check, Search, Building2, Award, UserPlus, ClipboardCheck, Briefcase, Mic, Smartphone, ShoppingCart, GraduationCap, MessageCircle, Target, Download, QrCode, Wifi, Bell, ChevronLeft, ChevronRight, Clock, Star, Layers } from 'lucide-react';
+import { ArrowRight, PlayCircle, Sparkles, BookOpen, Video, FileQuestion, MessageSquare, Users, CreditCard, Check, Search, Building2, Award, UserPlus, ClipboardCheck, Briefcase, Mic, Smartphone, ShoppingCart, GraduationCap, MessageCircle, Target, Download, QrCode, Wifi, Bell, ChevronLeft, ChevronRight, Clock, Star, Layers, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -1264,10 +1264,33 @@ export function TrustedCompanies() {
 // ── Courses Page (separate page for all courses) ──────────────────
 export function CoursesPage() {
   const { openCourse, setTutorOpen } = useAppStore();
+  const currentUser = useAppStore((s) => {
+    const uid = s.currentUserId;
+    if (!uid) return null;
+    return s.users.find((u) => u.id === uid) ?? null;
+  });
+  const corporates = useAppStore((s) => s.corporates);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLevel, setSelectedLevel] = useState<string>('All');
+  const [showAccessDenied, setShowAccessDenied] = useState(false);
 
-  const filteredCourses = COURSES.filter((c) => {
+  // Separate regular courses from corporate-exclusive ones
+  const CORPORATE_COURSE_IDS = ['3boxes-dev'];
+  const regularCourses = COURSES.filter((c) => !CORPORATE_COURSE_IDS.includes(c.id));
+  const corporateCourses = COURSES.filter((c) => CORPORATE_COURSE_IDS.includes(c.id));
+
+  // Check if user has access to 3Boxes course
+  const has3BoxesAccess = (() => {
+    if (!currentUser) return false;
+    if (currentUser.role === 'super_admin') return true;
+    if (currentUser.corporateId) {
+      const corp = corporates.find((c) => c.id === currentUser.corporateId);
+      if (corp && corp.name.toLowerCase().includes('3 boxes')) return true;
+    }
+    return false;
+  })();
+
+  const filteredCourses = regularCourses.filter((c) => {
     const matchesSearch = !searchQuery.trim() ||
       c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.subtitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -1276,7 +1299,15 @@ export function CoursesPage() {
     return matchesSearch && matchesLevel;
   });
 
-  const levels = ['All', ...Array.from(new Set(COURSES.map((c) => c.level)))];
+  const levels = ['All', ...Array.from(new Set(regularCourses.map((c) => c.level)))];
+
+  const handleCorporateCourseClick = (courseId: string) => {
+    if (has3BoxesAccess) {
+      openCourse(courseId);
+    } else {
+      setShowAccessDenied(true);
+    }
+  };
 
   return (
     <section className="min-h-screen bg-background py-12 lg:py-16">
@@ -1390,6 +1421,107 @@ export function CoursesPage() {
             <Button variant="outline" className="mt-4" onClick={() => { setSearchQuery(''); setSelectedLevel('All'); }}>
               Clear Filters
             </Button>
+          </div>
+        )}
+
+        {/* Corporate Training Section */}
+        {corporateCourses.length > 0 && (
+          <div className="mt-16">
+            <div className="mb-8 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white">
+                <Building2 className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold">Corporate Training</h2>
+                <p className="text-sm text-muted-foreground">Exclusive courses for corporate partners</p>
+              </div>
+            </div>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {corporateCourses.map((course) => (
+                <Card
+                  key={course.id}
+                  onClick={() => handleCorporateCourseClick(course.id)}
+                  className={`group flex cursor-pointer flex-col overflow-hidden transition-all ${
+                    has3BoxesAccess
+                      ? 'border-border/60 hover:-translate-y-1 hover:shadow-xl'
+                      : 'border-amber-500/30 opacity-90'
+                  }`}
+                >
+                  <div className={`relative h-36 bg-gradient-to-br ${course.gradient}`}>
+                    <div className="absolute inset-0 bg-grid-pattern opacity-20" />
+                    <span className="absolute right-4 top-4 grid h-14 w-14 place-items-center rounded-xl bg-white/15 text-white backdrop-blur">
+                      <CourseIcon name={course.icon} className="h-7 w-7" />
+                    </span>
+                    <Badge className="absolute left-4 top-4 bg-white/20 text-white hover:bg-white/30" variant="secondary">
+                      {course.level}
+                    </Badge>
+                    {!has3BoxesAccess && (
+                      <Badge className="absolute left-4 bottom-3 bg-amber-500/90 text-white flex items-center gap-1" variant="secondary">
+                        <Lock className="h-3 w-3" /> Exclusive — 3 Boxes Group Only
+                      </Badge>
+                    )}
+                    {has3BoxesAccess && (
+                      <Badge className="absolute left-4 bottom-3 bg-emerald-500/80 text-white" variant="secondary">
+                        <Check className="mr-1 h-3 w-3" /> Access Granted
+                      </Badge>
+                    )}
+                  </div>
+                  <CardContent className="flex flex-1 flex-col p-5">
+                    <h3 className="text-lg font-semibold leading-tight">{course.title}</h3>
+                    <p className="mt-1.5 line-clamp-2 text-sm text-muted-foreground">{course.subtitle}</p>
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {course.tags.slice(0, 3).map((t) => (
+                        <Badge key={t} variant="outline" className="text-[10px] font-medium">{t}</Badge>
+                      ))}
+                    </div>
+                    <div className="mt-4 flex items-center gap-3 text-xs text-muted-foreground">
+                      <span className="inline-flex items-center gap-1"><PlayCircle className="h-3.5 w-3.5" /> {course.lessonsCount} lessons</span>
+                      <span>·</span><span>{course.duration}</span>
+                      <span>·</span><span className="flex items-center gap-0.5"><Star className="h-3 w-3 fill-amber-400 text-amber-500" /> {course.rating}</span>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between border-t pt-3">
+                      <div className="text-sm">
+                        {has3BoxesAccess ? (
+                          <span className="font-bold text-emerald-600 dark:text-emerald-400">Free for 3 Boxes employees</span>
+                        ) : (
+                          <span className="font-medium text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                            <Lock className="h-3.5 w-3.5" /> Restricted Access
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-sm font-semibold text-emerald-600 transition-transform group-hover:translate-x-1 dark:text-emerald-400">
+                        {has3BoxesAccess ? 'View →' : 'Locked'}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Access Denied Toast/Alert */}
+        {showAccessDenied && (
+          <div className="fixed bottom-6 right-6 z-50 max-w-sm animate-in slide-in-from-bottom-5">
+            <div className="rounded-xl border border-amber-500/40 bg-amber-50 dark:bg-amber-950/80 p-4 shadow-2xl">
+              <div className="flex items-start gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400">
+                  <Lock className="h-4 w-4" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-amber-800 dark:text-amber-200">Access Restricted</p>
+                  <p className="mt-0.5 text-sm text-amber-700 dark:text-amber-300">
+                    This course is exclusively for 3 Boxes Group employees.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowAccessDenied(false)}
+                  className="shrink-0 text-amber-500 hover:text-amber-700 dark:hover:text-amber-300"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

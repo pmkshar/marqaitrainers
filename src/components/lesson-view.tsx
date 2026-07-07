@@ -6,7 +6,7 @@ import {
   Clock, FileQuestion, Lightbulb, ListChecks, Sparkles, Video,
   Pause, Play, Square, Volume2, Loader2, Bot, HelpCircle,
   AlertTriangle, MessageSquare, Send, MessagesSquare,
-  Menu, PanelLeftClose, PanelLeftOpen,
+  Menu, PanelLeftClose, PanelLeftOpen, Mic, MicOff,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -23,6 +23,7 @@ import { useAppStore } from '@/lib/store';
 import { getTutorForCourse, type TutorPersona } from '@/lib/tutor-personas';
 import { CourseIcon } from './navbar';
 import { SyllabusSidebar, SyllabusDrawer, SyllabusDrawerToggle } from './syllabus-sidebar';
+import { Animated3DTutorAvatar, type Animated3DTutorAvatarProps } from './animated-tutor-avatar';
 
 // ============================================================
 // TTS Helpers — with Google Translate fallback for Indian langs
@@ -140,6 +141,11 @@ function AITutorSidebar({
   currentSlide,
   totalSlides,
   slideProgress,
+  // Voice chat props
+  isVoiceChatting,
+  onStartVoiceChat,
+  onStopVoiceChat,
+  tutorExpression,
 }: {
   tutor: TutorPersona;
   isSpeaking: boolean;
@@ -161,26 +167,48 @@ function AITutorSidebar({
   currentSlide: number;
   totalSlides: number;
   slideProgress: number;
+  // Voice chat props
+  isVoiceChatting?: boolean;
+  onStartVoiceChat?: () => void;
+  onStopVoiceChat?: () => void;
+  tutorExpression?: 'neutral' | 'explaining' | 'thinking' | 'happy' | 'curious';
 }) {
+  // Derive expression from voice state if not explicitly set
+  const expression = tutorExpression ?? (
+    isVoiceChatting ? 'curious' :
+    isSpeaking ? 'explaining' :
+    voicePhase === 'awaiting_answer' ? 'curious' :
+    voicePhase === 'done' ? 'happy' :
+    'neutral'
+  );
+
   return (
     <div className="space-y-3 lg:sticky lg:top-6 lg:self-start">
-      {/* Profile Card */}
+      {/* Profile Card with Animated Avatar */}
       <Card className="overflow-hidden border-2 border-emerald-500/30">
         <CardContent className="flex flex-col items-center p-4">
-          {/* Profile icon — animated when speaking */}
+          {/* Animated 3D Avatar */}
           <div className="relative">
-            <div className={`grid h-20 w-20 place-items-center rounded-full bg-gradient-to-br ${
-              tutor.gender === 'female' ? 'from-emerald-500 to-teal-600' : 'from-blue-500 to-indigo-600'
-            } text-white shadow-lg`}>
-              <span className="text-2xl font-bold">{tutor.initial}</span>
-            </div>
-            {isSpeaking && (
-              <>
-                <span className="absolute inset-0 animate-ping rounded-full bg-emerald-400/30" style={{ animationDuration: '2s' }} />
-                <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white">
-                  <Volume2 className="h-3.5 w-3.5" />
-                </span>
-              </>
+            <Animated3DTutorAvatar
+              speaking={isSpeaking}
+              expression={expression}
+              size={100}
+            />
+            {/* Voice Chat Button — overlaid on avatar */}
+            <button
+              onClick={isVoiceChatting ? onStopVoiceChat : onStartVoiceChat}
+              className={`absolute -bottom-1 -right-1 z-20 flex h-8 w-8 items-center justify-center rounded-full shadow-lg transition-all ${
+                isVoiceChatting
+                  ? 'bg-rose-500 text-white hover:bg-rose-600'
+                  : 'bg-emerald-500 text-white hover:bg-emerald-600'
+              }`}
+              title={isVoiceChatting ? 'Stop voice chat' : 'Start voice chat'}
+            >
+              {isVoiceChatting ? <MicOff className="h-3.5 w-3.5" /> : <Mic className="h-3.5 w-3.5" />}
+            </button>
+            {/* Voice chat pulse ring */}
+            {isVoiceChatting && (
+              <div className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full border-2 border-emerald-400 animate-voice-pulse" />
             )}
           </div>
           <div className="mt-3 text-center">
@@ -188,9 +216,15 @@ function AITutorSidebar({
             <p className="text-[11px] text-muted-foreground">{tutor.title}</p>
             <p className="mt-0.5 text-[11px] text-emerald-600 dark:text-emerald-400 italic">{tutor.tagline}</p>
           </div>
+          {/* Voice chat active badge */}
+          {isVoiceChatting && (
+            <Badge className="mt-2 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 animate-pulse text-[10px]">
+              <Mic className="mr-1 h-3 w-3" /> Listening...
+            </Badge>
+          )}
           {/* Status badge */}
           <div className="mt-2 flex items-center gap-1.5">
-            {voiceMode && voicePlaying && !voicePaused && (
+            {voiceMode && voicePlaying && !voicePaused && !isVoiceChatting && (
               <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 animate-pulse text-[10px]">
                 <Volume2 className="mr-1 h-3 w-3" /> Speaking...
               </Badge>
@@ -205,7 +239,7 @@ function AITutorSidebar({
                 <CheckCircle2 className="mr-1 h-3 w-3" /> Done
               </Badge>
             )}
-            {!voiceMode && !voiceLoading && (
+            {!voiceMode && !voiceLoading && !isVoiceChatting && (
               <Badge variant="outline" className="text-muted-foreground text-[10px]">Ready</Badge>
             )}
             {voiceLoading && (
@@ -383,6 +417,16 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
   const [voiceProgress, setVoiceProgress] = useState(0);
   const [voiceLoading, setVoiceLoading] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
+
+  // Voice chat state (Web Speech API)
+  const [isVoiceChatting, setIsVoiceChatting] = useState(false);
+  const [chapterPausedAt, setChapterPausedAt] = useState<number | null>(null);
+  const [showContinuePrompt, setShowContinuePrompt] = useState(false);
+  const [voiceChatTranscript, setVoiceChatTranscript] = useState('');
+  const [voiceChatResponse, setVoiceChatResponse] = useState('');
+  const [voiceChatLoading, setVoiceChatLoading] = useState(false);
+  const [tutorExpression, setTutorExpression] = useState<'neutral' | 'explaining' | 'thinking' | 'happy' | 'curious'>('neutral');
+  const speechRecognitionRef = useRef<any>(null);
 
   // Teaching content state
   const [teachings, setTeachings] = useState<Record<number, SlideTeaching>>({});
@@ -963,6 +1007,152 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
     } catch { /* noop */ }
   };
 
+  // ============================================================
+  // VOICE CHAT — Web Speech API with pause/resume chapter logic
+  // ============================================================
+  const startVoiceChat = useCallback(() => {
+    if (typeof window === 'undefined') return;
+
+    // Pause current chapter if playing
+    if (voiceMode && voicePlaying) {
+      setChapterPausedAt(activeStep);
+      // Pause the current TTS
+      if (window.speechSynthesis) {
+        window.speechSynthesis.pause();
+      }
+      setVoicePaused(true);
+      setVoicePlaying(false);
+    } else if (voiceMode) {
+      setChapterPausedAt(activeStep);
+    } else {
+      setChapterPausedAt(null);
+    }
+
+    setIsVoiceChatting(true);
+    setTutorExpression('curious');
+    setVoiceChatTranscript('');
+    setVoiceChatResponse('');
+
+    // Start SpeechRecognition
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setVoiceError('Voice recognition not supported in this browser.');
+      setIsVoiceChatting(false);
+      setTutorExpression('neutral');
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = async (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setVoiceChatTranscript(transcript);
+      setIsVoiceChatting(false);
+      setTutorExpression('thinking');
+      setVoiceChatLoading(true);
+
+      // Send to AI tutor
+      try {
+        const res = await fetch('/api/chapter-tutor', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            mode: 'answer_question',
+            courseId: course.id,
+            courseContext: `${course.title} — ${course.subtitle}`,
+            lessonTitle: lesson.title,
+            slideTitle: step.title,
+            slideContent: step.content,
+            slideCode: step.code,
+            codeLanguage: step.codeLanguage,
+            studentQuestion: transcript,
+          }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const answer = data.content;
+        setVoiceChatResponse(answer);
+        setVoiceChatLoading(false);
+        setTutorExpression('happy');
+
+        // Speak the answer via TTS
+        if (typeof window !== 'undefined' && window.speechSynthesis) {
+          const utterance = new SpeechSynthesisUtterance(answer);
+          utterance.rate = 0.9;
+          utterance.onend = () => {
+            // After TTS finishes, show continue prompt
+            setShowContinuePrompt(true);
+            setTutorExpression('neutral');
+          };
+          window.speechSynthesis.speak(utterance);
+        } else {
+          setShowContinuePrompt(true);
+          setTutorExpression('neutral');
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Failed to get response';
+        setVoiceChatResponse(`Sorry, I couldn't answer right now. ${msg}`);
+        setVoiceChatLoading(false);
+        setTutorExpression('neutral');
+        setShowContinuePrompt(true);
+      }
+    };
+
+    recognition.onerror = () => {
+      setIsVoiceChatting(false);
+      setTutorExpression('neutral');
+    };
+
+    recognition.onend = () => {
+      // Only reset if we didn't get a result (user cancelled)
+      if (!voiceChatTranscript) {
+        setIsVoiceChatting(false);
+        setTutorExpression('neutral');
+      }
+    };
+
+    recognition.start();
+    speechRecognitionRef.current = recognition;
+  }, [voiceMode, voicePlaying, activeStep, course.id, course.title, course.subtitle, lesson.title, step.title, step.content, step.code, step.codeLanguage, voiceChatTranscript]);
+
+  const stopVoiceChat = useCallback(() => {
+    if (speechRecognitionRef.current) {
+      speechRecognitionRef.current.stop();
+      speechRecognitionRef.current = null;
+    }
+    setIsVoiceChatting(false);
+    setTutorExpression('neutral');
+  }, []);
+
+  const handleContinueClass = useCallback(() => {
+    setShowContinuePrompt(false);
+    setVoiceChatTranscript('');
+    setVoiceChatResponse('');
+
+    // Resume chapter from where it was paused
+    if (chapterPausedAt !== null) {
+      if (typeof window !== 'undefined' && window.speechSynthesis && window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+        setVoicePlaying(true);
+        setVoicePaused(false);
+      } else {
+        // Restart voice over for the current slide
+        startVoiceOver();
+      }
+    }
+    setChapterPausedAt(null);
+  }, [chapterPausedAt]);
+
+  const handleStayInChat = useCallback(() => {
+    setShowContinuePrompt(false);
+    // Keep the chat open, don't resume the chapter
+    setTutorOpen(true);
+    setChapterPausedAt(null);
+  }, [setTutorOpen]);
+
   const handlePrevSlide = () => {
     stopVoice();
     if (activeStep > 0) setActiveStep((s) => s - 1);
@@ -1128,6 +1318,10 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
           currentSlide={activeStep}
           totalSlides={totalSlides}
           slideProgress={stepProgress}
+          isVoiceChatting={isVoiceChatting}
+          onStartVoiceChat={startVoiceChat}
+          onStopVoiceChat={stopVoiceChat}
+          tutorExpression={tutorExpression}
         />
 
         {/* RIGHT: Lesson Content */}
@@ -1482,6 +1676,40 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
               <Loader2 className="h-4 w-4 animate-spin" /> Loading question...
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Voice Chat Continue Prompt Dialog */}
+      <Dialog open={showContinuePrompt} onOpenChange={() => {}}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Animated3DTutorAvatar speaking={false} expression="happy" size={40} />
+              Shall we continue the class?
+            </DialogTitle>
+            <DialogDescription>
+              {voiceChatTranscript && (
+                <div className="space-y-2 mt-2">
+                  <div className="rounded-md bg-muted/50 px-3 py-2 text-xs">
+                    <span className="font-semibold">You asked: </span>{voiceChatTranscript}
+                  </div>
+                  {voiceChatResponse && (
+                    <div className="rounded-md bg-emerald-500/10 px-3 py-2 text-xs">
+                      <span className="font-semibold">{tutor.name}: </span>{voiceChatResponse}
+                    </div>
+                  )}
+                </div>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2 sm:gap-0">
+            <Button variant="outline" onClick={handleStayInChat} className="flex-1">
+              <MessageSquare className="mr-1.5 h-4 w-4" /> Keep Chatting
+            </Button>
+            <Button onClick={handleContinueClass} className="flex-1 bg-emerald-600 text-white hover:bg-emerald-700">
+              <Play className="mr-1.5 h-4 w-4" /> Continue Class
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

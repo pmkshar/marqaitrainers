@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAppStore } from '@/lib/store';
 import { findCourse, findLesson } from '@/lib/courses';
 import type { ChatMessage } from '@/lib/types';
+import { Animated3DTutorAvatar } from './animated-tutor-avatar';
 
 const SUGGESTIONS = [
   'Explain gradient descent in simple terms',
@@ -96,125 +97,17 @@ function playGoogleTTS(text: string, lang: string, onEnd?: () => void, onSpeak?:
 }
 
 // ============================================================
-// Animated 3D-Style Avatar SVG with Breathing Animation
+// Animated 3D-Style Avatar — now using shared Animated3DTutorAvatar
 // ============================================================
 
+// Local wrapper that maps the old API to the new component
 function AnimatedTutorAvatar({ speaking, size = 100 }: { speaking: boolean; size?: number }) {
-  const [mouthOpen, setMouthOpen] = useState(false);
-  const [blink, setBlink] = useState(false);
-
-  // Animate mouth when speaking - use callback pattern to avoid lint issue
-  useEffect(() => {
-    if (!speaking) {
-      // Reset mouth when not speaking - this is acceptable
-      return;
-    }
-    const interval = setInterval(() => {
-      setMouthOpen(prev => !prev);
-    }, 180);
-    return () => clearInterval(interval);
-  }, [speaking]);
-
-  // Random blinking
-  useEffect(() => {
-    const blinkInterval = setInterval(() => {
-      setBlink(true);
-      setTimeout(() => setBlink(false), 150);
-    }, 3000 + Math.random() * 2000);
-    return () => clearInterval(blinkInterval);
-  }, []);
-
   return (
-    <div className="relative">
-      {/* Glow ring around profile with emerald pulse */}
-      <div
-        className={`absolute inset-0 rounded-full ${speaking ? 'animate-pulse' : 'animate-breathing'} bg-gradient-to-r from-emerald-400 to-teal-500 opacity-60`}
-        style={{ animationDuration: speaking ? '1s' : '3s' }}
-      />
-
-      {/* Avatar SVG */}
-      <svg
-        viewBox="0 0 80 80"
-        width={size}
-        height={size}
-        role="img"
-        aria-label={`AI Tutor avatar${speaking ? ' speaking' : ''}`}
-        className={`relative z-10 ${speaking ? 'animate-head-bob' : ''}`}
-      >
-        {/* Background circle with gradient */}
-        <defs>
-          <linearGradient id="tutor-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#10b981" />
-            <stop offset="100%" stopColor="#0d9488" />
-          </linearGradient>
-          {/* 3D shadow effect */}
-          <filter id="shadow">
-            <feDropShadow dx="2" dy="4" stdDeviation="3" floodOpacity="0.3" />
-          </filter>
-        </defs>
-
-        {/* Head */}
-        <circle cx="40" cy="36" r="26" fill="url(#tutor-grad)" filter="url(#shadow)" />
-
-        {/* Hair / top of head detail */}
-        <ellipse cx="40" cy="16" rx="20" ry="8" fill="url(#tutor-grad)" opacity="0.8" />
-
-        {/* Face background */}
-        <circle cx="40" cy="38" r="20" fill="#FEF3C7" />
-
-        {/* Eyes */}
-        {blink ? (
-          <>
-            <line x1="32" y1="34" x2="36" y2="34" stroke="#1F2937" strokeWidth="2" strokeLinecap="round" />
-            <line x1="44" y1="34" x2="48" y2="34" stroke="#1F2937" strokeWidth="2" strokeLinecap="round" />
-          </>
-        ) : (
-          <>
-            <circle cx="34" cy="33" r="3" fill="#1F2937" />
-            <circle cx="46" cy="33" r="3" fill="#1F2937" />
-            {/* Eye highlights */}
-            <circle cx="35" cy="32" r="1" fill="white" />
-            <circle cx="47" cy="32" r="1" fill="white" />
-          </>
-        )}
-
-        {/* Eyebrows — slightly raised when speaking */}
-        <line x1="30" y1={speaking ? 27 : 28} x2="38" y2={speaking ? 27 : 28} stroke="#1F2937" strokeWidth="1.5" strokeLinecap="round" />
-        <line x1="42" y1={speaking ? 27 : 28} x2="50" y2={speaking ? 27 : 28} stroke="#1F2937" strokeWidth="1.5" strokeLinecap="round" />
-
-        {/* Nose */}
-        <ellipse cx="40" cy="38" rx="1.5" ry="2" fill="#D97706" opacity="0.5" />
-
-        {/* Mouth — animated when speaking */}
-        {speaking ? (
-          mouthOpen ? (
-            <ellipse cx="40" cy="46" rx="5" ry="4" fill="#DC2626" opacity="0.9" />
-          ) : (
-            <ellipse cx="40" cy="45" rx="4" ry="2" fill="#DC2626" opacity="0.8" />
-          )
-        ) : (
-          /* Smile when not speaking */
-          <path d="M35 44 Q40 49 45 44" fill="none" stroke="#DC2626" strokeWidth="1.5" strokeLinecap="round" />
-        )}
-
-        {/* Cheeks — blush when speaking */}
-        {speaking && (
-          <>
-            <circle cx="28" cy="41" r="4" fill="#FCA5A5" opacity="0.5" />
-            <circle cx="52" cy="41" r="4" fill="#FCA5A5" opacity="0.5" />
-          </>
-        )}
-      </svg>
-
-      {/* Sound wave indicators when speaking */}
-      {speaking && (
-        <div className="absolute -right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5 z-10">
-          <div className="w-0.5 h-2 rounded-full bg-emerald-500 animate-sound-wave-1" />
-          <div className="w-0.5 h-3 rounded-full bg-emerald-500 animate-sound-wave-2" />
-          <div className="w-0.5 h-2 rounded-full bg-emerald-500 animate-sound-wave-3" />
-        </div>
-      )}
-    </div>
+    <Animated3DTutorAvatar
+      speaking={speaking}
+      expression={speaking ? 'explaining' : 'neutral'}
+      size={size}
+    />
   );
 }
 
