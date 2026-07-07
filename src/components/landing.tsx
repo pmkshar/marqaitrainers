@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowRight, PlayCircle, Sparkles, BookOpen, Video, FileQuestion, MessageSquare, Users, CreditCard, Check, Search, Building2, Award, UserPlus, ClipboardCheck, Briefcase, Mic, Smartphone, ShoppingCart, GraduationCap, MessageCircle, Target, Download, QrCode, Wifi, Bell, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, PlayCircle, Sparkles, BookOpen, Video, FileQuestion, MessageSquare, Users, CreditCard, Check, Search, Building2, Award, UserPlus, ClipboardCheck, Briefcase, Mic, Smartphone, ShoppingCart, GraduationCap, MessageCircle, Target, Download, QrCode, Wifi, Bell, ChevronLeft, ChevronRight, Clock, Star, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -82,6 +82,181 @@ const CORPORATE_CLIENTS = [
   { name: 'Tech Mahindra', shortName: 'TECHM' },
 ];
 
+// ── Big Course Search Bar (shown right after navbar) ──────────────────
+export function CourseSearchBar() {
+  const [query, setQuery] = useState('');
+  const [focused, setFocused] = useState(false);
+  const { openCourse } = useAppStore();
+
+  const filtered = query.trim()
+    ? COURSES.filter(
+        (c) =>
+          c.title.toLowerCase().includes(query.toLowerCase()) ||
+          c.subtitle.toLowerCase().includes(query.toLowerCase()) ||
+          c.tags.some((t) => t.toLowerCase().includes(query.toLowerCase()))
+      )
+    : [];
+
+  return (
+    <section className="relative border-b bg-gradient-to-b from-emerald-50/40 to-background dark:from-emerald-950/10">
+      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Big search input */}
+        <div className="relative">
+          <Search className="absolute left-5 top-1/2 h-6 w-6 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setTimeout(() => setFocused(false), 200)}
+            placeholder="Search courses — e.g., AI, Java, Flutter, Python, .NET, React Native..."
+            className="h-16 w-full rounded-2xl border-2 border-emerald-200 bg-white pl-14 pr-6 text-lg shadow-lg transition-all focus:border-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-500/20 dark:border-emerald-800 dark:bg-slate-900 dark:focus:border-emerald-400"
+          />
+          {query.trim() && (
+            <button
+              onClick={() => setQuery('')}
+              className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+
+        {/* Dropdown results */}
+        {focused && query.trim() && (
+          <div className="absolute left-0 right-0 z-50 mx-auto mt-2 max-w-4xl rounded-xl border bg-popover shadow-2xl">
+            {filtered.length > 0 ? (
+              <ul className="py-2">
+                {filtered.map((course) => (
+                  <li key={course.id}>
+                    <button
+                      onClick={() => {
+                        openCourse(course.id);
+                        setQuery('');
+                        setFocused(false);
+                      }}
+                      className="flex w-full items-center gap-4 px-5 py-3 text-left transition-colors hover:bg-accent"
+                    >
+                      <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${course.gradient} text-white shadow-sm`}>
+                        <CourseIcon name={course.icon} className="h-5 w-5" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold">{course.title}</p>
+                        <p className="truncate text-sm text-muted-foreground">{course.subtitle}</p>
+                      </div>
+                      <div className="hidden items-center gap-3 text-xs text-muted-foreground sm:flex">
+                        <Badge variant="secondary">{course.level}</Badge>
+                        <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{course.duration}</span>
+                        <span className="flex items-center gap-1"><Star className="h-3 w-3 text-amber-500" />{course.rating}</span>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="p-6 text-center">
+                <p className="text-muted-foreground">No courses found for &quot;{query}&quot;</p>
+                <p className="mt-1 text-sm text-muted-foreground">Try searching for AI, Java, Flutter, .NET, Python, React Native...</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Quick tags below search bar */}
+        <div className="mt-3 flex flex-wrap gap-2">
+          {['AI & ML', 'Full Stack Java', '.NET', 'React Native', 'Flutter', 'Python'].map((tag) => (
+            <button
+              key={tag}
+              onClick={() => {
+                setQuery(tag);
+                setFocused(true);
+              }}
+              className="rounded-full border border-border/60 bg-card/80 px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-emerald-400 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300"
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ── Scrolling Course Icons (auto-scrolling marquee) ──────────────────
+export function ScrollingCourseIcons() {
+  const { openCourse } = useAppStore();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isPaused, setIsPaused] = useState(false);
+
+  // Double the courses for seamless infinite scroll
+  const allCourses = [...COURSES, ...COURSES];
+
+  useEffect(() => {
+    if (isPaused) return;
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const scroll = () => {
+      if (container.scrollLeft >= container.scrollWidth / 2) {
+        container.scrollLeft = 0;
+      } else {
+        container.scrollLeft += 0.8;
+      }
+    };
+
+    const interval = setInterval(scroll, 20);
+    return () => clearInterval(interval);
+  }, [isPaused]);
+
+  return (
+    <section className="overflow-hidden border-b bg-gradient-to-r from-emerald-50/30 via-teal-50/20 to-emerald-50/30 py-8 dark:from-emerald-950/10 dark:via-teal-950/5 dark:to-emerald-950/10">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-5 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Layers className="h-5 w-5 text-emerald-600" />
+            <h3 className="text-lg font-semibold">Our Career Tracks</h3>
+          </div>
+          <div className="hidden items-center gap-1 text-xs text-muted-foreground sm:flex">
+            <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
+            Scroll or hover to pause
+          </div>
+        </div>
+      </div>
+
+      {/* Scrolling track */}
+      <div
+        ref={scrollRef}
+        className="flex gap-5 overflow-x-hidden px-4"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+      >
+        {allCourses.map((course, idx) => (
+          <button
+            key={`${course.id}-${idx}`}
+            onClick={() => openCourse(course.id)}
+            className="group flex flex-col items-center gap-3 rounded-2xl border border-border/40 bg-card p-5 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg hover:border-emerald-400/40"
+            style={{ minWidth: '180px', flexShrink: 0 }}
+          >
+            <span className={`grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br ${course.gradient} text-white shadow-md transition-transform group-hover:scale-110`}>
+              <CourseIcon name={course.icon} className="h-8 w-8" />
+            </span>
+            <span className="text-center">
+              <span className="block text-sm font-semibold leading-tight">{course.title}</span>
+              <span className="mt-1 block text-[11px] text-muted-foreground">{course.lessonsCount} lessons · {course.duration}</span>
+            </span>
+            <Badge variant="secondary" className="text-[10px]">{course.level}</Badge>
+            <div className="flex items-center gap-1 text-xs text-amber-500">
+              <Star className="h-3 w-3 fill-amber-400" />
+              <span className="font-medium">{course.rating}</span>
+            </div>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export function Hero() {
   const { openCourse, setTutorOpen, openPricing, openTutors, setAuthOpen, currentUser } = useAppStore();
   const user = currentUser();
@@ -116,12 +291,6 @@ export function Hero() {
               <Button onClick={() => setTutorOpen(true)} variant="outline" size="lg" className="bg-purple-600 text-white hover:bg-purple-700 border-purple-600">
                 <Mic className="mr-2 h-4 w-4" /> Ask MarqAI
               </Button>
-            </div>
-            <div className="mt-2 max-w-lg">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input placeholder="Search courses — e.g., AI, Java, Flutter, Python..." className="pl-10" />
-              </div>
             </div>
             <div className="grid grid-cols-4 gap-3 pt-4">
               <Stat value="6" label="Career Tracks" />
