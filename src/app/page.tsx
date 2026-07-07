@@ -7,7 +7,6 @@ import { Hero, Features, TrainingFlow, CorporateTraining, CorporateClientsTicker
 import { CourseDetail } from '@/components/course-detail';
 import { LessonView } from '@/components/lesson-view';
 import { QuizView } from '@/components/quiz-view';
-import { TutorChat } from '@/components/tutor-chat';
 import { AuthModal } from '@/components/auth-modal';
 import { PricingPage } from '@/components/pricing-page';
 import { TutorMarketplace } from '@/components/tutor-marketplace';
@@ -100,8 +99,6 @@ export default function Home() {
         </main>
         <Footer />
       </div>
-      {/* AI Tutor chat only in course/lesson views */}
-      {(view.name === 'course' || view.name === 'lesson') && <TutorChat />}
       <AuthModal />
     </div>
   );
