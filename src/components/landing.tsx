@@ -99,6 +99,14 @@ export function CourseSearchBar() {
 
   return (
     <section className="relative border-b bg-gradient-to-b from-emerald-50/40 to-background dark:from-emerald-950/10">
+      {/* Hero Banner Image */}
+      <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
+        <img
+          src="/marqai-hero-banner.png"
+          alt="MarqAI Courses — Learn Software with AI Voice Tutor"
+          className="w-full rounded-2xl shadow-lg"
+        />
+      </div>
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Big search input */}
         <div className="relative">
