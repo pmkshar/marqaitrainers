@@ -161,3 +161,9 @@ html {
 video:focus {
   outline: none;
 }
+
+/* MarqAI course marquee animation */
+@keyframes marqai-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-33.333%); }
+}

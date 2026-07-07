@@ -491,7 +491,8 @@ export type ViewName =
   | 'members'
   | 'groups'
   | 'messages'
-  | 'features';      // WPLMS-parity features showcase
+  | 'features'      // WPLMS-parity features showcase
+  | 'courses';      // all courses grid page
 
 export interface View {
   name: ViewName;

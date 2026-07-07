@@ -1,19 +1,18 @@
 'use client';
 
-import { GraduationCap, Menu, X, Sparkles, LogIn, User as UserIcon, ShieldCheck, LayoutDashboard, BookOpen, LogOut, ChevronDown, BadgeCheck, Bell, Grid3x3, Building2 } from 'lucide-react';
+import { GraduationCap, Menu, X, Sparkles, LogIn, User as UserIcon, ShieldCheck, LayoutDashboard, BookOpen, LogOut, ChevronDown, BadgeCheck, Bell, Grid3x3, Building2, Compass } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAppStore } from '@/lib/store';
-import { COURSES } from '@/lib/courses';
 import { NotificationsBell } from './notifications-bell';
 import { LanguageCurrencySwitcher } from './language-currency-switcher';
 
 export function Navbar() {
   const {
     view, isMenuOpen, toggleMenu, goHome, openCourse,
-    setTutorOpen, openPricing, openTutors, openAdmin, openTutorPortal, openMyLearning, openDashboard, openFeatures, openCorporate,
+    setTutorOpen, openPricing, openTutors, openAdmin, openTutorPortal, openMyLearning, openDashboard, openFeatures, openCorporate, openCourses,
     currentUser, logout, setAuthOpen,
   } = useAppStore();
   const user = currentUser();
@@ -49,28 +48,12 @@ export function Navbar() {
           >
             Home
           </button>
-          <div className="group relative">
-            <button className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-              Courses
-            </button>
-            <div className="invisible absolute left-0 top-full z-50 mt-1 w-72 rounded-xl border bg-popover p-2 opacity-0 shadow-lg transition-all group-hover:visible group-hover:opacity-100">
-              {COURSES.map((c) => (
-                <button
-                  key={c.id}
-                  onClick={() => openCourse(c.id)}
-                  className="flex w-full items-start gap-3 rounded-lg p-2.5 text-left transition-colors hover:bg-accent"
-                >
-                  <span className={`mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-gradient-to-br ${c.gradient} text-white`}>
-                    <CourseIcon name={c.icon} />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-sm font-medium text-foreground">{c.title}</span>
-                    <span className="block truncate text-xs text-muted-foreground">{c.subtitle}</span>
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
+          <button
+            onClick={openCourses}
+            className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${view.name === 'courses' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+          >
+            Courses
+          </button>
           <button
             onClick={openTutors}
             className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${view.name === 'tutors' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
@@ -207,17 +190,8 @@ export function Navbar() {
         <div className="border-t bg-background md:hidden">
           <nav className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-3">
             <button onClick={goHome} className="rounded-md px-3 py-2 text-left text-sm font-medium hover:bg-accent">Home</button>
-            <p className="px-3 pt-2 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Courses</p>
-            {COURSES.map((c) => (
-              <button key={c.id} onClick={() => openCourse(c.id)} className="flex items-center gap-3 rounded-md px-3 py-2 text-left hover:bg-accent">
-                <span className={`grid h-7 w-7 place-items-center rounded-md bg-gradient-to-br ${c.gradient} text-white`}>
-                  <CourseIcon name={c.icon} />
-                </span>
-                <span className="text-sm font-medium">{c.title}</span>
-                <Badge variant="secondary" className="ml-auto text-xs">{c.level}</Badge>
-              </button>
-            ))}
-            <button onClick={openTutors} className="mt-1 rounded-md px-3 py-2 text-left text-sm font-medium hover:bg-accent">Human Tutors</button>
+            <button onClick={openCourses} className="rounded-md px-3 py-2 text-left text-sm font-medium hover:bg-accent">Courses</button>
+            <button onClick={openTutors} className="rounded-md px-3 py-2 text-left text-sm font-medium hover:bg-accent">Human Tutors</button>
             <button onClick={openPricing} className="rounded-md px-3 py-2 text-left text-sm font-medium hover:bg-accent">Pricing</button>
             <button onClick={openFeatures} className="rounded-md px-3 py-2 text-left text-sm font-medium hover:bg-accent">Features</button>
             <button onClick={openCorporate} className="rounded-md px-3 py-2 text-left text-sm font-medium hover:bg-accent">Corporate</button>
@@ -296,6 +270,19 @@ export function CourseIcon({ name, className }: { name: string; className?: stri
         <path d="m18 16 4-4-4-4" />
         <path d="m6 8-4 4 4 4" />
         <path d="m14.5 4-5 16" />
+      </svg>
+    ),
+    MessageCircleHeart: (p) => (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}>
+        <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+        <path d="M15.5 8.5a2.5 2.5 0 0 0-3.5.1L12 8.6l-.1-.1A2.5 2.5 0 1 0 8.5 12.5L12 16l3.5-3.5a2.5 2.5 0 0 0 0-4Z" />
+      </svg>
+    ),
+    ShoppingBag: (p) => (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}>
+        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+        <path d="M3 6h18" />
+        <path d="M16 10a4 4 0 0 1-8 0" />
       </svg>
     ),
   };

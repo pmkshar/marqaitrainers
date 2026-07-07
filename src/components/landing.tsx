@@ -183,35 +183,29 @@ export function CourseSearchBar() {
   );
 }
 
-// ── Scrolling Course Icons (auto-scrolling marquee) ──────────────────
+// ── Scrolling Course Icons (CSS animation marquee — continuous scroll, hover to pause) ──
 export function ScrollingCourseIcons() {
   const { openCourse } = useAppStore();
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [isPaused, setIsPaused] = useState(false);
 
-  // Double the courses for seamless infinite scroll
-  const allCourses = [...COURSES, ...COURSES];
-
-  useEffect(() => {
-    if (isPaused) return;
-    const container = scrollRef.current;
-    if (!container) return;
-
-    const scroll = () => {
-      if (container.scrollLeft >= container.scrollWidth / 2) {
-        container.scrollLeft = 0;
-      } else {
-        container.scrollLeft += 0.8;
-      }
-    };
-
-    const interval = setInterval(scroll, 20);
-    return () => clearInterval(interval);
-  }, [isPaused]);
+  // Triple the courses for seamless infinite CSS scroll
+  const allCourses = [...COURSES, ...COURSES, ...COURSES];
 
   return (
-    <section className="overflow-hidden border-b bg-gradient-to-r from-emerald-50/30 via-teal-50/20 to-emerald-50/30 py-8 dark:from-emerald-950/10 dark:via-teal-950/5 dark:to-emerald-950/10">
+    <section className="overflow-hidden border-b bg-gradient-to-r from-emerald-50/30 via-teal-50/20 to-emerald-50/30 py-10 dark:from-emerald-950/10 dark:via-teal-950/5 dark:to-emerald-950/10">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* Inspirational Quote */}
+        <div className="mb-6 text-center">
+          <blockquote className="relative mx-auto max-w-2xl">
+            <span className="absolute -left-4 -top-2 text-4xl text-emerald-300 dark:text-emerald-700">&ldquo;</span>
+            <p className="text-lg font-medium italic leading-relaxed text-foreground/90 sm:text-xl">
+              The beautiful thing about learning is that no one can take it away from you.
+            </p>
+            <footer className="mt-2 text-sm text-muted-foreground">
+              — B.B. King
+            </footer>
+          </blockquote>
+        </div>
+
         <div className="mb-5 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Layers className="h-5 w-5 text-emerald-600" />
@@ -219,40 +213,49 @@ export function ScrollingCourseIcons() {
           </div>
           <div className="hidden items-center gap-1 text-xs text-muted-foreground sm:flex">
             <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
-            Scroll or hover to pause
+            Hover to pause
           </div>
         </div>
       </div>
 
-      {/* Scrolling track */}
-      <div
-        ref={scrollRef}
-        className="flex gap-5 overflow-x-hidden px-4"
-        onMouseEnter={() => setIsPaused(true)}
-        onMouseLeave={() => setIsPaused(false)}
-      >
-        {allCourses.map((course, idx) => (
-          <button
-            key={`${course.id}-${idx}`}
-            onClick={() => openCourse(course.id)}
-            className="group flex flex-col items-center gap-3 rounded-2xl border border-border/40 bg-card p-5 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg hover:border-emerald-400/40"
-            style={{ minWidth: '180px', flexShrink: 0 }}
-          >
-            <span className={`grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br ${course.gradient} text-white shadow-md transition-transform group-hover:scale-110`}>
-              <CourseIcon name={course.icon} className="h-8 w-8" />
-            </span>
-            <span className="text-center">
-              <span className="block text-sm font-semibold leading-tight">{course.title}</span>
-              <span className="mt-1 block text-[11px] text-muted-foreground">{course.lessonsCount} lessons · {course.duration}</span>
-            </span>
-            <Badge variant="secondary" className="text-[10px]">{course.level}</Badge>
-            <div className="flex items-center gap-1 text-xs text-amber-500">
-              <Star className="h-3 w-3 fill-amber-400" />
-              <span className="font-medium">{course.rating}</span>
-            </div>
-          </button>
-        ))}
+      {/* CSS-animated marquee track — pauses on hover */}
+      <div className="group/marquee relative">
+        {/* Fade edges */}
+        <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-16 bg-gradient-to-r from-emerald-50/80 to-transparent dark:from-emerald-950/80" />
+        <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-16 bg-gradient-to-l from-emerald-50/80 to-transparent dark:from-emerald-950/80" />
+
+        <div
+          className="flex gap-5 px-4"
+          style={{
+            animation: 'marqai-scroll 60s linear infinite',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.animationPlayState = 'paused'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.animationPlayState = 'running'; }}
+        >
+          {allCourses.map((course, idx) => (
+            <button
+              key={`${course.id}-${idx}`}
+              onClick={() => openCourse(course.id)}
+              className="group flex flex-col items-center gap-3 rounded-2xl border border-border/40 bg-card p-5 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg hover:border-emerald-400/40"
+              style={{ minWidth: '180px', flexShrink: 0 }}
+            >
+              <span className={`grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br ${course.gradient} text-white shadow-md transition-transform group-hover:scale-110`}>
+                <CourseIcon name={course.icon} className="h-8 w-8" />
+              </span>
+              <span className="text-center">
+                <span className="block text-sm font-semibold leading-tight">{course.title}</span>
+                <span className="mt-1 block text-[11px] text-muted-foreground">{course.lessonsCount} lessons · {course.duration}</span>
+              </span>
+              <Badge variant="secondary" className="text-[10px]">{course.level}</Badge>
+              <div className="flex items-center gap-1 text-xs text-amber-500">
+                <Star className="h-3 w-3 fill-amber-400" />
+                <span className="font-medium">{course.rating}</span>
+              </div>
+            </button>
+          ))}
+        </div>
       </div>
+
     </section>
   );
 }
@@ -1253,6 +1256,142 @@ export function TrustedCompanies() {
         <div className="mt-6 text-center">
           <button onClick={openCorporate} className="text-sm font-medium text-purple-600 hover:underline">Explore Corporate Portal →</button>
         </div>
+      </div>
+    </section>
+  );
+}
+
+// ── Courses Page (separate page for all courses) ──────────────────
+export function CoursesPage() {
+  const { openCourse, setTutorOpen } = useAppStore();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedLevel, setSelectedLevel] = useState<string>('All');
+
+  const filteredCourses = COURSES.filter((c) => {
+    const matchesSearch = !searchQuery.trim() ||
+      c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.subtitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesLevel = selectedLevel === 'All' || c.level === selectedLevel;
+    return matchesSearch && matchesLevel;
+  });
+
+  const levels = ['All', ...Array.from(new Set(COURSES.map((c) => c.level)))];
+
+  return (
+    <section className="min-h-screen bg-background py-12 lg:py-16">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="mb-10 text-center">
+          <Badge variant="outline" className="mb-3 border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+            <GraduationCap className="mr-1 h-3 w-3" /> All Courses
+          </Badge>
+          <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
+            Explore Our <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">Career Tracks</span>
+          </h1>
+          <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
+            Industry-aligned courses with AI voice tutoring, video walkthroughs, graded quizzes, and verified certificates from MarqAI Tech Pvt Ltd.
+          </p>
+        </div>
+
+        {/* Search & Filter */}
+        <div className="mb-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
+          <div className="relative w-full max-w-md">
+            <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search courses..."
+              className="h-11 w-full rounded-xl border bg-card pl-10 pr-4 text-sm shadow-sm transition-all focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {levels.map((level) => (
+              <button
+                key={level}
+                onClick={() => setSelectedLevel(level)}
+                className={`rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${
+                  selectedLevel === level
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'bg-muted text-muted-foreground hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300'
+                }`}
+              >
+                {level}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Course Grid */}
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredCourses.map((course) => (
+            <Card
+              key={course.id}
+              onClick={() => openCourse(course.id)}
+              className="group flex cursor-pointer flex-col overflow-hidden border-border/60 transition-all hover:-translate-y-1 hover:shadow-xl"
+            >
+              <div className={`relative h-36 bg-gradient-to-br ${course.gradient}`}>
+                <div className="absolute inset-0 bg-grid-pattern opacity-20" />
+                <span className="absolute right-4 top-4 grid h-14 w-14 place-items-center rounded-xl bg-white/15 text-white backdrop-blur">
+                  <CourseIcon name={course.icon} className="h-7 w-7" />
+                </span>
+                <Badge className="absolute left-4 top-4 bg-white/20 text-white hover:bg-white/30" variant="secondary">
+                  {course.level}
+                </Badge>
+                {course.onDemand && (
+                  <Badge className="absolute left-4 bottom-3 bg-emerald-500/80 text-white hover:bg-emerald-500" variant="secondary">
+                    On-Demand
+                  </Badge>
+                )}
+              </div>
+              <CardContent className="flex flex-1 flex-col p-5">
+                <h3 className="text-lg font-semibold leading-tight">{course.title}</h3>
+                <p className="mt-1.5 line-clamp-2 text-sm text-muted-foreground">{course.subtitle}</p>
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {course.tags.slice(0, 3).map((t) => (
+                    <Badge key={t} variant="outline" className="text-[10px] font-medium">{t}</Badge>
+                  ))}
+                  {course.tags.length > 3 && (<Badge variant="outline" className="text-[10px] font-medium">+{course.tags.length - 3}</Badge>)}
+                </div>
+                <div className="mt-4 flex items-center gap-3 text-xs text-muted-foreground">
+                  <span className="inline-flex items-center gap-1"><PlayCircle className="h-3.5 w-3.5" /> {course.lessonsCount} lessons</span>
+                  <span>·</span><span>{course.duration}</span>
+                  <span>·</span><span className="flex items-center gap-0.5"><Star className="h-3 w-3 fill-amber-400 text-amber-500" /> {course.rating}</span>
+                </div>
+                <div className="mt-3 flex items-center justify-between border-t pt-3">
+                  <div className="text-sm">
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400">${course.oneTimePrice}</span>
+                    <span className="text-xs text-muted-foreground"> one-time · </span>
+                    <span className="font-medium">${course.monthlyPrice}/mo</span>
+                  </div>
+                  <span className="text-sm font-semibold text-emerald-600 transition-transform group-hover:translate-x-1 dark:text-emerald-400">View →</span>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+
+          {/* Ask AI Card */}
+          <Card className="flex flex-col items-center justify-center border-dashed border-emerald-500/40 bg-emerald-500/5 p-8 text-center">
+            <span className="grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white">
+              <Sparkles className="h-6 w-6" />
+            </span>
+            <h3 className="mt-4 text-lg font-semibold">Not sure where to start?</h3>
+            <p className="mt-2 text-sm text-muted-foreground">Ask our AI tutor for a personalized recommendation.</p>
+            <Button onClick={() => setTutorOpen(true)} className="mt-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700">
+              <Sparkles className="mr-1.5 h-4 w-4" /> Ask MarqAI
+            </Button>
+          </Card>
+        </div>
+
+        {filteredCourses.length === 0 && (
+          <div className="mt-12 text-center">
+            <p className="text-lg text-muted-foreground">No courses found for &quot;{searchQuery}&quot;</p>
+            <Button variant="outline" className="mt-4" onClick={() => { setSearchQuery(''); setSelectedLevel('All'); }}>
+              Clear Filters
+            </Button>
+          </div>
+        )}
       </div>
     </section>
   );

@@ -2879,6 +2879,806 @@ export const COURSES: Course[] = [
     expiresAfterDays: 365,
   },
 
+  // ============================================================
+  // 7. Soft Skills & Communication
+  // ============================================================
+  {
+    id: 'soft-skills-communication',
+    slug: 'soft-skills-communication',
+    title: 'Soft Skills & Communication',
+    subtitle: 'Master workplace communication, leadership, and professional presence',
+    description: 'Comprehensive soft skills program covering business communication, presentation skills, emotional intelligence, teamwork, conflict resolution, and leadership.',
+    longDescription:
+      'This Soft Skills & Communication course is designed for tech professionals who want to excel beyond coding. Whether you are presenting to stakeholders, collaborating with cross-functional teams, or leading a project, strong communication and interpersonal skills are the differentiator between a good engineer and a great leader. You will learn frameworks for structured thinking and speaking, techniques for persuasive presentations, strategies for managing conflict constructively, and habits for building trust and influence in the workplace. Every module includes video walkthroughs, role-play exercises, AI-powered mock scenarios, and graded assessments to ensure real-world readiness.',
+    icon: 'MessageCircleHeart',
+    color: 'pink',
+    gradient: 'from-pink-500 to-rose-600',
+    level: 'All Levels',
+    duration: '8 weeks',
+    lessonsCount: 18,
+    studentsCount: '8,320',
+    rating: 4.8,
+    instructor: 'Priya Menon',
+    instructorTitle: 'Executive Coach, ex-McKinsey',
+    tags: ['Communication', 'Leadership', 'Presentations', 'Emotional Intelligence', 'Teamwork', 'Conflict Resolution'],
+    whatYouLearn: [
+      'Structure and deliver compelling presentations to any audience',
+      'Write clear, persuasive business emails and documents',
+      'Navigate difficult conversations and resolve conflicts constructively',
+      'Build emotional intelligence and self-awareness for leadership',
+      'Collaborate effectively in cross-functional and remote teams',
+      'Develop executive presence and influence without authority',
+    ],
+    prerequisites: [
+      'Professional work experience (any industry)',
+      'Willingness to practice role-play exercises',
+      'A webcam for presentation practice sessions',
+    ],
+    modules: [
+      {
+        id: 'ss-m1',
+        title: 'Module 1 — Foundations of Professional Communication',
+        description: 'Understand communication models, active listening, and structured thinking for clarity.',
+        lessons: [
+          {
+            id: 'ss-m1-l1',
+            title: 'The Communication Framework',
+            description: 'Learn the sender-receiver model, barriers to communication, and how to overcome noise in workplace conversations.',
+            duration: '45 min',
+            videoUrl: SAMPLE_VIDEO_1,
+            steps: [
+              {
+                title: 'Understanding the communication model',
+                content: 'Every act of communication involves a sender encoding a message, a channel, and a receiver decoding it. Noise — physical, semantic, or psychological — can distort the message at any stage. Recognizing these elements helps you diagnose why messages get misunderstood and how to structure them for maximum clarity.',
+                tip: 'Always verify understanding by asking the receiver to paraphrase the key takeaway.',
+              },
+              {
+                title: 'Active listening techniques',
+                content: 'Active listening goes beyond hearing words. It involves maintaining eye contact, paraphrasing what was said, asking clarifying questions, and withholding judgment until the speaker finishes. Research shows that professionals who practice active listening resolve conflicts 40% faster than those who do not.',
+                code: '// Active Listening Checklist\n1. Face the speaker & maintain eye contact\n2. Nod and use verbal cues ("I see", "Go on")\n3. Paraphrase: "So what you\'re saying is..."\n4. Ask clarifying questions\n5. Summarize before responding',
+                codeLanguage: 'text',
+              },
+              {
+                title: 'Structured thinking: the Pyramid Principle',
+                content: 'Barbara Minto\'s Pyramid Principle teaches you to start with the answer, then support it with grouped arguments. This top-down structure ensures your audience gets the key point immediately and can follow the logic. Practice writing one-paragraph summaries using this structure.',
+                tip: 'Before any meeting, write down your top-line message in one sentence, then list 3 supporting points beneath it.',
+              },
+              {
+                title: 'Practice exercise',
+                content: 'Record a 60-second video explaining a technical concept to a non-technical audience using the Pyramid Principle. Focus on starting with the conclusion, then building supporting arguments.',
+              },
+            ],
+            quiz: [
+              {
+                id: 'ss-m1-l1-q1',
+                question: 'What is the first step in the Pyramid Principle?',
+                options: [
+                  'List all the supporting evidence',
+                  'State the conclusion or recommendation first',
+                  'Ask the audience what they want to hear',
+                  'Provide background context',
+                ],
+                correctAnswer: 1,
+                explanation: 'The Pyramid Principle starts with the answer (conclusion) at the top, then supports it with grouped arguments below.',
+              },
+              {
+                id: 'ss-m1-l1-q2',
+                question: 'Which of these is NOT a component of active listening?',
+                options: [
+                  'Paraphrasing the speaker\'s words',
+                  'Formulating your rebuttal while they speak',
+                  'Asking clarifying questions',
+                  'Summarizing before responding',
+                ],
+                correctAnswer: 1,
+                explanation: 'Formulating a rebuttal while someone is speaking means you are not truly listening — you are preparing to argue.',
+              },
+              {
+                id: 'ss-m1-l1-q3',
+                question: 'What does "noise" mean in the communication model?',
+                options: [
+                  'Loud background sounds only',
+                  'Any interference that distorts the message',
+                  'The sender\'s accent',
+                  'The receiver\'s mood',
+                ],
+                correctAnswer: 1,
+                explanation: 'Noise includes physical, semantic, and psychological interference that can distort meaning at any stage.',
+              },
+            ],
+          },
+          {
+            id: 'ss-m1-l2',
+            title: 'Business Writing & Email Etiquette',
+            description: 'Write clear, concise, and professional emails that get responses and drive action.',
+            duration: '40 min',
+            videoUrl: SAMPLE_VIDEO_2,
+            steps: [
+              {
+                title: 'The BLUF framework',
+                content: 'BLUF stands for Bottom Line Up Front. Start every email with the most important point or ask. Busy professionals scan the first 2-3 lines, so if your ask is buried in paragraph 3, it will be missed. Example: "Requesting approval for the $5K budget increase for Q3 cloud infrastructure — see details below."',
+              },
+              {
+                title: 'Email structure best practices',
+                content: 'A professional email has four parts: (1) a clear subject line that states the action needed, (2) the BLUF opening, (3) supporting context in bullet points, and (4) a specific call-to-action with deadline. Avoid long paragraphs — use bullets and bold text for scannability.',
+                tip: 'Subject line test: Can the recipient understand the entire email from the subject line alone?',
+              },
+              {
+                title: 'Tone and formality calibration',
+                content: 'Match your tone to the audience and context. Internal team chats can be casual, but emails to senior leadership or external stakeholders should be polished. When in doubt, err on the side of formality. Avoid sarcasm, ALL CAPS, and excessive exclamation marks in professional communication.',
+              },
+              {
+                title: 'Practice exercise',
+                content: 'Rewrite the following messy email using BLUF, bullet points, and a clear CTA: "Hey, so I was thinking about the project and we might need some more time because the API is not ready and also the design team changed the mockups so can we maybe push the deadline? Let me know. Thanks."',
+              },
+            ],
+            quiz: [
+              {
+                id: 'ss-m1-l2-q1',
+                question: 'What does BLUF stand for?',
+                options: [
+                  'Brief Language, Understandable Format',
+                  'Bottom Line Up Front',
+                  'Business Letters Under Framework',
+                  'Best Layout for Urgent Files',
+                ],
+                correctAnswer: 1,
+                explanation: 'BLUF (Bottom Line Up Front) ensures the most important point is the first thing the reader sees.',
+              },
+              {
+                id: 'ss-m1-l2-q2',
+                question: 'Which email subject line is most effective?',
+                options: [
+                  'Quick question',
+                  'FYI',
+                  'ACTION NEEDED: Approve $5K Q3 budget increase by Friday',
+                  'Budget stuff',
+                ],
+                correctAnswer: 2,
+                explanation: 'The best subject lines state the action needed and the deadline, making it scannable and actionable.',
+              },
+              {
+                id: 'ss-m1-l2-q3',
+                question: 'What should every professional email end with?',
+                options: [
+                  'A funny quote or GIF',
+                  'A specific call-to-action with a deadline',
+                  'The sender\'s life story',
+                  'No ending — just stop writing',
+                ],
+                correctAnswer: 1,
+                explanation: 'Every email should close with a clear CTA so the reader knows exactly what is expected and by when.',
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: 'ss-m2',
+        title: 'Module 2 — Presentation Skills & Executive Presence',
+        description: 'Deliver impactful presentations and develop the confidence to speak to any audience.',
+        lessons: [
+          {
+            id: 'ss-m2-l1',
+            title: 'Designing Compelling Presentations',
+            description: 'Learn to create slide decks that support your narrative instead of replacing it.',
+            duration: '50 min',
+            videoUrl: SAMPLE_VIDEO_3,
+            steps: [
+              {
+                title: 'The 10-20-30 rule',
+                content: 'Guy Kawasaki\'s 10-20-30 rule suggests: no more than 10 slides, no longer than 20 minutes, font size no smaller than 30pt. This forces you to be concise and focus on the story, not the slides. The slides should support your narrative — you are the presentation, not the deck.',
+              },
+              {
+                title: 'Storytelling with data',
+                content: 'Great presentations follow a narrative arc: set the context, introduce the problem, present the solution, and end with a clear ask. When showing data, use the "so what?" test — every chart must answer a question the audience cares about. Annotate charts with the key insight, not just the number.',
+                tip: 'Before creating a single slide, write your 3-minute spoken narrative first. Then design slides to support that narrative.',
+              },
+              {
+                title: 'Handling Q&A like a pro',
+                content: 'The Q&A is where presentations are won or lost. Use the ACK method: Acknowledge the question, Confirm your understanding, then answer concisely. For hostile questions, bridge back to your key messages. Never bluff — "I don\'t have that data right now, but I\'ll follow up by email" builds more credibility than guessing.',
+              },
+            ],
+            quiz: [
+              {
+                id: 'ss-m2-l1-q1',
+                question: 'According to the 10-20-30 rule, what is the minimum font size?',
+                options: ['12pt', '20pt', '30pt', '40pt'],
+                correctAnswer: 2,
+                explanation: 'The 10-20-30 rule recommends a minimum 30pt font size, which prevents you from cramming too much text on a slide.',
+              },
+              {
+                id: 'ss-m2-l1-q2',
+                question: 'What is the ACK method for handling Q&A?',
+                options: [
+                  'Answer, Clarify, Keep going',
+                  'Acknowledge, Confirm understanding, Answer concisely',
+                  'Ask, Comment, Knowledge check',
+                  'Analyze, Critique, Know',
+                ],
+                correctAnswer: 1,
+                explanation: 'ACK: Acknowledge the question, Confirm your understanding, then provide a concise answer.',
+              },
+              {
+                id: 'ss-m2-l1-q3',
+                question: 'What should you do before creating slides?',
+                options: [
+                  'Pick a template',
+                  'Write your spoken narrative first',
+                  'Find stock photos',
+                  'Set up animations',
+                ],
+                correctAnswer: 1,
+                explanation: 'Writing your narrative first ensures the slides support your story, not the other way around.',
+              },
+            ],
+          },
+          {
+            id: 'ss-m2-l2',
+            title: 'Executive Presence & Confidence',
+            description: 'Project authority, build influence, and command attention in meetings and presentations.',
+            duration: '45 min',
+            videoUrl: SAMPLE_VIDEO_4,
+            steps: [
+              {
+                title: 'The three pillars of executive presence',
+                content: 'Sylvia Ann Hewlett\'s research identifies three pillars: (1) Gravitas — the core of presence, showing confidence and decisiveness under pressure; (2) Communication — speaking with clarity, conciseness, and conviction; (3) Appearance — dressing and carrying yourself in a way that signals competence. All three can be developed with practice.',
+              },
+              {
+                title: 'Speaking up in meetings',
+                content: 'Many professionals hold back in meetings because they fear saying something wrong. Use the "prepared contribution" technique: before every meeting, identify one point you want to make and the earliest moment to make it. The first 5 minutes of a meeting have the most influence on its direction. Also, practice the "yes, and" approach to build on others\' ideas rather than contradicting them.',
+                tip: 'In virtual meetings, turn your camera on, sit up straight, and look at the camera lens — not the screen — when speaking.',
+              },
+              {
+                title: 'Influence without authority',
+                content: 'As a developer, you often need to convince people who do not report to you. Build a reputation for reliability first — always deliver on time and with quality. Then use evidence-based persuasion: "Based on the data from our last sprint, switching to feature flags would reduce deployment risk by 60%." Social proof (citing what other teams or competitors do) and reciprocity (helping others first) are powerful tools.',
+              },
+            ],
+            quiz: [
+              {
+                id: 'ss-m2-l2-q1',
+                question: 'What are the three pillars of executive presence?',
+                options: [
+                  'Height, Voice, Clothing',
+                  'Gravitas, Communication, Appearance',
+                  'Power, Money, Network',
+                  'Intelligence, Education, Experience',
+                ],
+                correctAnswer: 1,
+                explanation: 'Hewlett\'s research identifies Gravitas, Communication, and Appearance as the three pillars of executive presence.',
+              },
+              {
+                id: 'ss-m2-l2-q2',
+                question: 'What is the "prepared contribution" technique?',
+                options: [
+                  'Writing a full script for every meeting',
+                  'Identifying one point to make and the earliest moment to make it',
+                  'Preparing jokes to break the ice',
+                  'Sending an agenda before the meeting',
+                ],
+                correctAnswer: 1,
+                explanation: 'The prepared contribution technique ensures you speak up early and with purpose in every meeting.',
+              },
+              {
+                id: 'ss-m2-l2-q3',
+                question: 'How can you influence without authority?',
+                options: [
+                  'Complain to your manager',
+                  'Use evidence-based persuasion, social proof, and reciprocity',
+                  'Threaten to quit',
+                  'Skip meetings to show disapproval',
+                ],
+                correctAnswer: 1,
+                explanation: 'Building a reputation for reliability, using data-driven arguments, and helping others first are proven ways to influence without formal authority.',
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: 'ss-m3',
+        title: 'Module 3 — Emotional Intelligence & Conflict Resolution',
+        description: 'Develop self-awareness, manage emotions, and resolve workplace conflicts constructively.',
+        lessons: [
+          {
+            id: 'ss-m3-l1',
+            title: 'Emotional Intelligence at Work',
+            description: 'Understand and apply the four domains of EQ for better professional relationships.',
+            duration: '45 min',
+            videoUrl: SAMPLE_VIDEO_5,
+            steps: [
+              {
+                title: 'The four domains of EQ',
+                content: 'Daniel Goleman\'s model identifies four domains: (1) Self-Awareness — recognizing your own emotions and triggers; (2) Self-Management — regulating your reactions under stress; (3) Social Awareness — reading the room and understanding others\' perspectives; (4) Relationship Management — using the first three to build strong, productive relationships. Technical skills get you hired; EQ gets you promoted.',
+              },
+              {
+                title: 'The PAUSE technique',
+                content: 'When you feel triggered, use the PAUSE technique: Perceive the emotion, Acknowledge it, Understand the trigger, Strategize your response, Execute calmly. This 5-second gap between stimulus and response is where emotional intelligence lives. Practice this in low-stakes situations so it becomes automatic in high-stakes ones.',
+                tip: 'Keep a "trigger journal" for one week — note every situation that caused a strong emotional reaction and what the underlying trigger was.',
+              },
+              {
+                title: 'Empathy mapping',
+                content: 'Empathy mapping is a tool to understand others\' perspectives. For any stakeholder, consider: What are they thinking? What are they feeling? What are they saying? What are they doing? This exercise helps you anticipate objections, tailor your communication, and build genuine rapport.',
+              },
+            ],
+            quiz: [
+              {
+                id: 'ss-m3-l1-q1',
+                question: 'What are the four domains of Emotional Intelligence?',
+                options: [
+                  'Reading, Writing, Speaking, Listening',
+                  'Self-Awareness, Self-Management, Social Awareness, Relationship Management',
+                  'IQ, EQ, SQ, AQ',
+                  'Planning, Organizing, Leading, Controlling',
+                ],
+                correctAnswer: 1,
+                explanation: 'Goleman\'s four domains of EQ are Self-Awareness, Self-Management, Social Awareness, and Relationship Management.',
+              },
+              {
+                id: 'ss-m3-l1-q2',
+                question: 'What does the PAUSE technique help you do?',
+                options: [
+                  'Speak louder in meetings',
+                  'Create a gap between stimulus and response',
+                  'Write better emails',
+                  'Prepare slide decks faster',
+                ],
+                correctAnswer: 1,
+                explanation: 'PAUSE creates a gap between stimulus and response, allowing you to choose a constructive reaction rather than a reflexive one.',
+              },
+              {
+                id: 'ss-m3-l1-q3',
+                question: 'What does an empathy map help you understand?',
+                options: [
+                  'Your own feelings only',
+                  'Another person\'s thoughts, feelings, words, and actions',
+                  'Market trends and competitors',
+                  'Technical architecture decisions',
+                ],
+                correctAnswer: 1,
+                explanation: 'Empathy mapping helps you see situations from another person\'s perspective — their thoughts, feelings, words, and actions.',
+              },
+            ],
+          },
+        ],
+      },
+    ],
+    oneTimePrice: 99,
+    monthlyPrice: 14,
+    annualPrice: 129,
+    onDemand: true,
+    categoryIds: ['cat-soft-skills', 'cat-communication', 'cat-leadership'],
+    expiresAfterDays: 365,
+  },
+
+  // ============================================================
+  // 8. 3Boxes Developers Curated Course (Exclusive for 3 Boxes Group)
+  // ============================================================
+  {
+    id: '3boxes-dev',
+    slug: '3boxes-developers-curated',
+    title: '3Boxes Developers Curated Course',
+    subtitle: 'Exclusive for 3 Boxes Group — Build luxury e-commerce platforms end-to-end',
+    description: 'A curated, company-specific training program for 3 Boxes Group developers covering Next.js, headless commerce, luxury UX, payment integration, and AI-powered product experiences.',
+    longDescription:
+      'This exclusive course is designed specifically for developers at 3 Boxes Group — the luxury curated goods platform at 3boxes-luxury-v12.vercel.app. You will learn to build, extend, and maintain a modern luxury e-commerce platform using Next.js, TypeScript, and headless commerce APIs. The curriculum covers luxury-grade UI/UX patterns, product catalog management with filtering and search, secure payment integration, AI-powered style galleries, gift builder features, and multi-category product experiences (Jewelry, Sarees, Fashion, Watches, Home & Living, Couple, Kids, Office). Every module is hands-on with real 3 Boxes codebase examples, and each lesson includes video walkthroughs, coding labs, and graded assessments aligned to the 3 Boxes tech stack.',
+    icon: 'ShoppingBag',
+    color: 'amber',
+    gradient: 'from-amber-500 to-orange-600',
+    level: 'Intermediate',
+    duration: '12 weeks',
+    lessonsCount: 22,
+    studentsCount: '3 Boxes Team',
+    rating: 4.9,
+    instructor: 'Arjun Krishnan',
+    instructorTitle: 'Full Stack Architect, 3 Boxes Group',
+    tags: ['Next.js', 'E-Commerce', 'Luxury UX', 'Payments', 'AI Gallery', '3 Boxes'],
+    whatYouLearn: [
+      'Build and extend a Next.js luxury e-commerce platform from scratch',
+      'Implement multi-category product catalogs with advanced filtering and search',
+      'Design luxury-grade UI patterns: gift builder, AI style gallery, quick view modals',
+      'Integrate secure payment gateways and cart management systems',
+      'Build AI-powered style galleries with selfie upload and community features',
+      'Deploy and maintain a production-grade Vercel-hosted luxury commerce platform',
+    ],
+    prerequisites: [
+      'Basic React and JavaScript/TypeScript experience',
+      'Familiarity with CSS and responsive design',
+      'Employment at 3 Boxes Group (exclusive course)',
+    ],
+    modules: [
+      {
+        id: '3b-m1',
+        title: 'Module 1 — 3 Boxes Platform Architecture & Next.js Foundations',
+        description: 'Understand the 3 Boxes luxury commerce architecture and set up the development environment.',
+        lessons: [
+          {
+            id: '3b-m1-l1',
+            title: '3 Boxes Platform Overview & Architecture',
+            description: 'Deep dive into the 3 Boxes luxury platform: categories (Couple, Men, Women, Kids, Home, Office), product types, and the tech stack.',
+            duration: '55 min',
+            videoUrl: SAMPLE_VIDEO_1,
+            steps: [
+              {
+                title: 'Understanding the 3 Boxes luxury model',
+                content: '3 Boxes is a curated luxury goods platform offering products across six main categories: Couple (couple-friendly gifts, romantic gifts), Men (accessories, shirts, fragrances, watches, leather goods), Women (jewelry, sarees, fashion, fragrances, accessories), Kids (toys, fashion), Home (decor, candles & fragrances, living), and Office (corporate gifts, desk accessories, stationery). Each category has its own sub-filters and presentation style while maintaining a cohesive luxury brand experience.',
+                tip: 'Study the 3boxes-luxury-v12.vercel.app site carefully — the category navigation and product filtering are the core UX patterns you will be building and extending.',
+              },
+              {
+                title: 'Tech stack breakdown',
+                content: 'The 3 Boxes platform runs on Next.js with TypeScript, deployed on Vercel for edge-optimized performance. Key technologies include: Tailwind CSS for luxury-grade styling, server-side rendering for SEO-optimized product pages, API routes for cart and checkout, and image optimization for high-resolution product photography. The platform also integrates an AI Style Gallery where users upload selfies and share their styled looks.',
+                code: '// 3 Boxes Tech Stack\n- Framework: Next.js 14+ (App Router)\n- Language: TypeScript\n- Styling: Tailwind CSS\n- Deployment: Vercel\n- Image Handling: next/image\n- State: React Context / Zustand\n- Payments: Stripe / Razorpay\n- AI: AI Style Gallery integration',
+                codeLanguage: 'text',
+              },
+              {
+                title: 'Setting up the local development environment',
+                content: 'Clone the 3 Boxes repository and set up your development environment. Install Node.js 20+, run `npm install`, create a `.env.local` with the required API keys (Stripe, product API, image CDN). Run `npm run dev` to start the development server. Verify you can navigate all six categories and see product listings rendering correctly.',
+                code: 'git clone https://github.com/3boxes/luxury-platform.git\ncd luxury-platform\nnpm install\ncp .env.example .env.local\n# Edit .env.local with your API keys\nnpm run dev\n# Open http://localhost:3000',
+                codeLanguage: 'bash',
+                tip: 'Use `npm run dev:turbo` for faster refresh during development with Next.js turbopack.',
+              },
+              {
+                title: 'Understanding the product data model',
+                content: 'Each product in 3 Boxes has: name, category, subcategory, price, originalPrice (for discount display), images (multiple angles), description, features, stock quantity, tags, and rating. Products can belong to "New Arrivals", "Featured", or regular catalog. The Gift Builder feature allows combining products into curated gift sets. Understanding this data model is essential before building any feature.',
+              },
+            ],
+            quiz: [
+              {
+                id: '3b-m1-l1-q1',
+                question: 'What are the six main product categories on the 3 Boxes platform?',
+                options: [
+                  'Electronics, Books, Fashion, Home, Sports, Food',
+                  'Couple, Men, Women, Kids, Home, Office',
+                  'Luxury, Premium, Standard, Basic, Budget, Free',
+                  'Indian, Western, Modern, Classic, Vintage, Retro',
+                ],
+                correctAnswer: 1,
+                explanation: 'The six main categories are Couple, Men, Women, Kids, Home, and Office — each with subcategories like Jewelry, Sarees, Watches, etc.',
+              },
+              {
+                id: '3b-m1-l1-q2',
+                question: 'What is the AI Style Gallery feature?',
+                options: [
+                  'An AI that writes product descriptions',
+                  'A feature where users upload selfies and share how they style products',
+                  'A background color picker',
+                  'An automated inventory manager',
+                ],
+                correctAnswer: 1,
+                explanation: 'The AI Style Gallery lets real shoppers upload selfies and share how products look on them, creating a community-driven styling experience.',
+              },
+              {
+                id: '3b-m1-l1-q3',
+                question: 'What deployment platform does 3 Boxes use?',
+                options: ['AWS EC2', 'Vercel', 'Heroku', 'DigitalOcean'],
+                correctAnswer: 1,
+                explanation: '3 Boxes is deployed on Vercel for edge-optimized performance and seamless Next.js integration.',
+              },
+            ],
+          },
+          {
+            id: '3b-m1-l2',
+            title: 'Building the Product Catalog with Advanced Filtering',
+            description: 'Implement the multi-category product catalog with source, occasion, and price filtering.',
+            duration: '60 min',
+            videoUrl: SAMPLE_VIDEO_2,
+            steps: [
+              {
+                title: 'Product listing page architecture',
+                content: 'The product listing page is the heart of the 3 Boxes platform. It displays products in a grid with quick-view modals, supports filtering by source (All Products), occasion (All Occasions), for (All), and price (Any Price). The page shows "57 items" count, featured products with discount badges, and stock indicators ("Only 2 left", "Only 3 left"). Each product card shows an image, name, subcategory, price with original price crossed out for discounts, and an "Add to Cart" button.',
+              },
+              {
+                title: 'Implementing the filter system',
+                content: 'Build a responsive filter bar with dropdown selectors for Source, Occasion, For, and Price. Use URL search params to make filters shareable and browser-back-friendly. Implement client-side filtering for instant results with a product count update. For larger catalogs, implement server-side filtering with API routes.',
+                code: '// Filter interface\ntype Filter = {\n  source: string;    // "All Products" | "Featured" | "New Arrivals"\n  occasion: string;  // "All Occasions" | "Anniversary" | "Birthday" | ...\n  for: string;       // "All" | "Him" | "Her" | "Kids" | "Couple"\n  price: string;     // "Any Price" | "Under $50" | "$50-$100" | ...\n};\n\nfunction filterProducts(products: Product[], filter: Filter) {\n  return products.filter(p => {\n    if (filter.source !== "All Products" && !p.tags.includes(filter.source)) return false;\n    if (filter.occasion !== "All Occasions" && p.occasion !== filter.occasion) return false;\n    if (filter.for !== "All" && p.for !== filter.for) return false;\n    if (filter.price !== "Any Price") {\n      const [min, max] = parsePriceRange(filter.price);\n      if (p.price < min || p.price > max) return false;\n    }\n    return true;\n  });\n}',
+                codeLanguage: 'typescript',
+              },
+              {
+                title: 'Quick View modal implementation',
+                content: 'The Quick View modal lets users see product details without leaving the catalog page. It should display the product image carousel, name, price with discount, description, and an "Add to Cart" button. Use Next.js parallel routes or a modal pattern with the `dialog` element for accessibility.',
+                tip: 'Pre-load product images in the background when the user hovers over a product card for instant Quick View rendering.',
+              },
+            ],
+            quiz: [
+              {
+                id: '3b-m1-l2-q1',
+                question: 'Why should filters use URL search params?',
+                options: [
+                  'It is required by Next.js',
+                  'Filters become shareable and browser-back friendly',
+                  'It makes the page load faster',
+                  'It reduces server costs',
+                ],
+                correctAnswer: 1,
+                explanation: 'URL search params make filter state shareable via links and work correctly with browser back/forward navigation.',
+              },
+              {
+                id: '3b-m1-l2-q2',
+                question: 'What information does a 3 Boxes product card show?',
+                options: [
+                  'Only the product name and price',
+                  'Image, name, subcategory, price with discount, stock indicator, and Add to Cart',
+                  'A buy-now button only',
+                  'Product reviews only',
+                ],
+                correctAnswer: 1,
+                explanation: 'A product card shows the image, name, subcategory, price with original price for discount, stock status, and add-to-cart action.',
+              },
+              {
+                id: '3b-m1-l2-q3',
+                question: 'How can you optimize Quick View rendering speed?',
+                options: [
+                  'Use larger images',
+                  'Pre-load product images on hover',
+                  'Remove the Quick View feature',
+                  'Use server-side rendering for the modal',
+                ],
+                correctAnswer: 1,
+                explanation: 'Pre-loading images when the user hovers over a product card ensures the Quick View modal renders instantly.',
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: '3b-m2',
+        title: 'Module 2 — Luxury UX Patterns & Gift Builder',
+        description: 'Build luxury-grade UI components and the interactive Gift Builder feature.',
+        lessons: [
+          {
+            id: '3b-m2-l1',
+            title: 'Luxury UI Design Patterns for E-Commerce',
+            description: 'Master the visual patterns that convey luxury: typography, spacing, imagery, and micro-interactions.',
+            duration: '50 min',
+            videoUrl: SAMPLE_VIDEO_3,
+            steps: [
+              {
+                title: 'Luxury typography and spacing',
+                content: 'Luxury brands use generous whitespace, serif or refined sans-serif typefaces, and restrained color palettes. For 3 Boxes, use larger heading sizes with tight letter-spacing for elegance, body text in a clean sans-serif at comfortable reading sizes, and at least 2x the standard Tailwind spacing between sections. The "Curated Luxury" tagline on the 3 Boxes site exemplifies this approach — bold but not loud, premium but not pretentious.',
+              },
+              {
+                title: 'Product image presentation',
+                content: 'Luxury products demand high-quality imagery. Use `next/image` with proper aspect ratios (4:5 for fashion, 1:1 for jewelry), lazy loading for below-fold images, and hover zoom or 360-degree views. The 3 Boxes site uses clean white backgrounds with product-centered compositions. Implement smooth image transitions when switching between product images.',
+                tip: 'Always use WebP format with fallbacks, and set quality to 85 for luxury images — lower quality is immediately noticeable on premium product photos.',
+              },
+              {
+                title: 'Micro-interactions and transitions',
+                content: 'Subtle animations convey quality. Use 200-300ms transitions for hover effects, gentle scale transforms (1.02-1.05) on product cards, fade-in animations for product grid loading, and smooth sliding for category navigation. Avoid bouncy or playful animations — luxury interactions should feel smooth, slow, and deliberate.',
+              },
+            ],
+            quiz: [
+              {
+                id: '3b-m2-l1-q1',
+                question: 'What spacing approach is recommended for luxury e-commerce UIs?',
+                options: [
+                  'Use Tailwind default spacing',
+                  'Use at least 2x standard spacing between sections',
+                  'Use no spacing for a dense look',
+                  'Use random spacing for variety',
+                ],
+                correctAnswer: 1,
+                explanation: 'Generous whitespace (at least 2x standard spacing) is a hallmark of luxury design — it conveys exclusivity and breathing room.',
+              },
+              {
+                id: '3b-m2-l1-q2',
+                question: 'What animation style suits luxury e-commerce?',
+                options: [
+                  'Fast, bouncy animations',
+                  'Smooth, slow, and deliberate transitions (200-300ms)',
+                  'No animations at all',
+                  'Random animation speeds',
+                ],
+                correctAnswer: 1,
+                explanation: 'Luxury interactions should feel smooth, slow, and deliberate — conveying quality through restraint.',
+              },
+              {
+                id: '3b-m2-l1-q3',
+                question: 'What image quality setting is recommended for luxury product photos?',
+                options: ['50', '65', '75', '85'],
+                correctAnswer: 3,
+                explanation: 'Quality 85 provides the right balance for luxury images — lower quality is immediately noticeable on premium product photography.',
+              },
+            ],
+          },
+          {
+            id: '3b-m2-l2',
+            title: 'Building the Gift Builder Feature',
+            description: 'Create an interactive gift builder that lets users curate personalized gift sets from multiple categories.',
+            duration: '55 min',
+            videoUrl: SAMPLE_VIDEO_4,
+            steps: [
+              {
+                title: 'Gift Builder UX flow',
+                content: 'The Gift Builder on 3 Boxes allows users to curate personalized gift sets. The flow: (1) Choose a recipient (Him, Her, Couple, Kids), (2) Select an occasion (Birthday, Anniversary, etc.), (3) Browse and add products from any category, (4) Preview the curated gift box, (5) Add to cart as a bundle. This interactive feature drives higher average order value and differentiates the platform.',
+              },
+              {
+                title: 'Implementing the gift builder state machine',
+                content: 'Use a state machine approach to manage the gift builder flow. Each step has its own validation and navigation rules. Use Zustand for state management since the gift builder state needs to persist across page navigations.',
+                code: 'interface GiftBuilderState {\n  step: "recipient" | "occasion" | "products" | "preview";\n  recipient: string;\n  occasion: string;\n  selectedProducts: Product[];\n  giftBox: "classic" | "premium" | "luxury";\n  message: string;\n}\n\nconst useGiftBuilder = create<GiftBuilderState>((set) => ({\n  step: "recipient",\n  recipient: "",\n  occasion: "",\n  selectedProducts: [],\n  giftBox: "classic",\n  message: "",\n  setStep: (step) => set({ step }),\n  addProduct: (product) => set((s) => ({\n    selectedProducts: [...s.selectedProducts, product],\n  })),\n  removeProduct: (id) => set((s) => ({\n    selectedProducts: s.selectedProducts.filter(p => p.id !== id),\n  })),\n}));',
+                codeLanguage: 'typescript',
+              },
+              {
+                title: 'Bundle pricing and cart integration',
+                content: 'When a user adds a gift set to cart, apply bundle pricing rules: Classic box gets 5% off total, Premium box gets 10% off, Luxury box gets 15% off. The gift set appears as a single cart item with expandable details. Handle inventory checks for all items in the bundle before allowing checkout.',
+                tip: 'Show the savings amount prominently: "You save $12.64 with this gift set" — this drives conversions.',
+              },
+            ],
+            quiz: [
+              {
+                id: '3b-m2-l2-q1',
+                question: 'What are the steps in the Gift Builder flow?',
+                options: [
+                  'Search, Filter, Add to Cart',
+                  'Recipient, Occasion, Products, Preview',
+                  'Login, Select, Pay, Ship',
+                  'Browse, Compare, Purchase',
+                ],
+                correctAnswer: 1,
+                explanation: 'The Gift Builder flow: choose recipient, select occasion, browse and add products, preview the curated set.',
+              },
+              {
+                id: '3b-m2-l2-q2',
+                question: 'Why use a state machine for the Gift Builder?',
+                options: [
+                  'It is the only way to build forms',
+                  'Each step has its own validation and navigation rules',
+                  'It makes the code shorter',
+                  'State machines are required by Next.js',
+                ],
+                correctAnswer: 1,
+                explanation: 'A state machine ensures each step has clear validation rules and transitions, preventing users from skipping required steps.',
+              },
+              {
+                id: '3b-m2-l2-q3',
+                question: 'What discount does the Luxury gift box offer?',
+                options: ['5%', '10%', '15%', '20%'],
+                correctAnswer: 2,
+                explanation: 'Classic box = 5% off, Premium = 10% off, Luxury box = 15% off the total product value.',
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: '3b-m3',
+        title: 'Module 3 — AI Style Gallery & Payment Integration',
+        description: 'Build the AI Style Gallery community feature and integrate secure payment processing.',
+        lessons: [
+          {
+            id: '3b-m3-l1',
+            title: 'AI Style Gallery: Community-Powered Product Discovery',
+            description: 'Build the feature where users upload selfies and share styled looks with the community.',
+            duration: '50 min',
+            videoUrl: SAMPLE_VIDEO_5,
+            steps: [
+              {
+                title: 'AI Style Gallery architecture',
+                content: 'The AI Style Gallery on 3 Boxes shows "See How Others Style It" with real shoppers using AI to preview how products look on them. Users upload a selfie, select products, and the AI composites the product onto their image. Other users can browse these styled looks for inspiration. This drives engagement and reduces purchase hesitation by showing real people wearing/using the products.',
+              },
+              {
+                title: 'Selfie upload and AI processing pipeline',
+                content: 'Implement a secure image upload flow: (1) User selects or captures a photo, (2) Image is resized and compressed client-side, (3) Uploaded to a CDN via presigned URL, (4) AI processing service composites the product onto the image, (5) Result is stored and displayed in the gallery. Use Web Workers for client-side image processing to keep the UI responsive.',
+                code: '// AI Style Gallery upload flow\nasync function uploadStylePhoto(file: File, productId: string) {\n  // 1. Compress client-side\n  const compressed = await compressImage(file, { maxWidth: 1024, quality: 0.85 });\n  // 2. Get presigned upload URL\n  const { uploadUrl, photoId } = await fetch(`/api/photos/presign?productId=${productId}`).then(r => r.json());\n  // 3. Upload to CDN\n  await fetch(uploadUrl, { method: "PUT", body: compressed });\n  // 4. Trigger AI processing\n  await fetch("/api/photos/process", {\n    method: "POST",\n    body: JSON.stringify({ photoId, productId }),\n  });\n  // 5. Poll for result\n  return pollForResult(photoId);\n}',
+                codeLanguage: 'typescript',
+              },
+              {
+                title: 'Community gallery and moderation',
+                content: 'The gallery displays styled photos in a masonry grid with the user\'s name, the products used, and like/share buttons. Implement content moderation: AI-based automatic filtering for inappropriate content, user reporting, and admin review queue. Cache gallery results with ISR (Incremental Static Regeneration) for fast page loads while keeping content fresh.',
+                tip: 'Show the most recent and highest-rated style photos first — social proof drives conversions.',
+              },
+            ],
+            quiz: [
+              {
+                id: '3b-m3-l1-q1',
+                question: 'What is the purpose of the AI Style Gallery?',
+                options: [
+                  'To sell AI services',
+                  'To let users preview products on themselves and share styled looks',
+                  'To replace product photography',
+                  'To run ads',
+                ],
+                correctAnswer: 1,
+                explanation: 'The AI Style Gallery lets users see how products look on real people, reducing purchase hesitation and building community.',
+              },
+              {
+                id: '3b-m3-l1-q2',
+                question: 'Why compress images client-side before uploading?',
+                options: [
+                  'To reduce upload time and server costs',
+                  'Because the server cannot handle images',
+                  'It is required by the CDN',
+                  'To remove EXIF data only',
+                ],
+                correctAnswer: 0,
+                explanation: 'Client-side compression reduces upload time, bandwidth costs, and server processing load while maintaining quality.',
+              },
+              {
+                id: '3b-m3-l1-q3',
+                question: 'What caching strategy is recommended for the gallery?',
+                options: [
+                  'No caching — always fresh',
+                  'ISR (Incremental Static Regeneration)',
+                  'Client-side only caching',
+                  'Database-level caching only',
+                ],
+                correctAnswer: 1,
+                explanation: 'ISR provides fast page loads with static caching while periodically revalidating to show fresh community content.',
+              },
+            ],
+          },
+          {
+            id: '3b-m3-l2',
+            title: 'Secure Payment Integration & Checkout Flow',
+            description: 'Implement Stripe/Razorpay payment integration with a smooth luxury checkout experience.',
+            duration: '55 min',
+            videoUrl: SAMPLE_VIDEO_6,
+            steps: [
+              {
+                title: 'Checkout flow design for luxury commerce',
+                content: 'A luxury checkout must be frictionless yet secure. The 3 Boxes checkout flow: (1) Cart review with product images, (2) Shipping address with auto-complete, (3) Payment method selection, (4) Order confirmation with estimated delivery. Minimize form fields, use address auto-complete, and offer guest checkout. Display trust signals (SSL badge, secure payment icons) prominently.',
+              },
+              {
+                title: 'Stripe integration for international payments',
+                content: 'Integrate Stripe for international payments with support for USD, EUR, and INR. Use Stripe Elements for PCI-compliant card collection. Implement 3D Secure for European cards. Handle webhooks for payment confirmation, refund processing, and dispute management.',
+                code: '// Stripe checkout session creation\nimport Stripe from "stripe";\nconst stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);\n\nexport async function POST(req: Request) {\n  const { items, shipping } = await req.json();\n  const session = await stripe.checkout.sessions.create({\n    mode: "payment",\n    line_items: items.map(item => ({\n      price_data: {\n        currency: "usd",\n        product_data: { name: item.name, images: [item.image] },\n        unit_amount: Math.round(item.price * 100), // cents\n      },\n      quantity: item.quantity,\n    })),\n    success_url: `${HOST}/order/success?session_id={CHECKOUT_SESSION_ID}`,\n    cancel_url: `${HOST}/cart`,\n  });\n  return Response.json({ url: session.url });\n}',
+                codeLanguage: 'typescript',
+                tip: 'Always use server-side Stripe SDK for session creation — never expose your secret key on the client.',
+              },
+              {
+                title: 'Discount and coupon system',
+                content: 'Implement a coupon system that supports percentage discounts, fixed-amount discounts, and free shipping. Coupons can be category-specific (e.g., "20% off all Sarees") or sitewide. Validate coupons server-side to prevent tampering. Display savings prominently: "You saved $23.17 with code LUXURY20".',
+              },
+            ],
+            quiz: [
+              {
+                id: '3b-m3-l2-q1',
+                question: 'What payment security standard should you use for card collection?',
+                options: [
+                  'Store cards in localStorage',
+                  'Stripe Elements (PCI-compliant)',
+                  'Custom card input form',
+                  'Send card details via email',
+                ],
+                correctAnswer: 1,
+                explanation: 'Stripe Elements provides PCI-compliant card collection without your server ever touching raw card data.',
+              },
+              {
+                id: '3b-m3-l2-q2',
+                question: 'Why should coupon validation happen server-side?',
+                options: [
+                  'It is faster',
+                  'To prevent client-side tampering and fraud',
+                  'Because the client cannot do math',
+                  'It looks better in the code',
+                ],
+                correctAnswer: 1,
+                explanation: 'Server-side validation prevents users from modifying coupon values, expiry dates, or applicable categories in the browser.',
+              },
+              {
+                id: '3b-m3-l2-q3',
+                question: 'What is 3D Secure used for?',
+                options: [
+                  'Three-factor authentication',
+                  'Additional authentication for European card payments',
+                  '3D product rendering',
+                  'Three-step checkout',
+                ],
+                correctAnswer: 1,
+                explanation: '3D Secure adds an authentication step for card payments, required by many European banks and recommended for reducing fraud.',
+              },
+            ],
+          },
+        ],
+      },
+    ],
+    oneTimePrice: 0,    // Free for 3 Boxes employees
+    monthlyPrice: 0,
+    annualPrice: 0,
+    onDemand: true,
+    categoryIds: ['cat-ecommerce', 'cat-3boxes', 'cat-fullstack'],
+    expiresAfterDays: 730,
+  },
+
 ];
 
 export function findCourse(courseId: string | undefined): Course | undefined {
