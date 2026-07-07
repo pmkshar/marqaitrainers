@@ -238,3 +238,70 @@ video:focus {
 .animate-voice-pulse {
   animation: voice-pulse 1.5s ease-out infinite;
 }
+
+/* ===== Enhanced 3D Tutor Avatar Animations ===== */
+
+/* Subtle idle float — very gentle up/down bob */
+@keyframes tutor-idle-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-1px); }
+}
+
+/* Speaking energy bounce — more pronounced than head-bob */
+@keyframes tutor-speak-bounce {
+  0%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-2px); }
+  60% { transform: translateY(0.5px); }
+}
+
+/* Cheek blush pulse for happy/explaining */
+@keyframes cheek-pulse {
+  0%, 100% { opacity: 0.5; r: 9; }
+  50% { opacity: 0.7; r: 10; }
+}
+
+/* Expression transition ease — smooth morphing */
+@keyframes expression-morph {
+  0% { transform: scale(0.98); opacity: 0.8; }
+  50% { transform: scale(1.01); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Thinking hand subtle movement */
+@keyframes thinking-hand-tap {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-1.5px); }
+}
+.animate-thinking-hand {
+  animation: thinking-hand-tap 1.2s ease-in-out infinite;
+}
+
+/* Glasses subtle reflection shimmer */
+@keyframes glasses-shimmer {
+  0%, 100% { opacity: 0.12; }
+  50% { opacity: 0.2; }
+}
+
+/* Eye sparkle on curious/explaining */
+@keyframes eye-sparkle {
+  0%, 80%, 100% { opacity: 0.9; transform: scale(1); }
+  90% { opacity: 1; transform: scale(1.15); }
+}
+
+/* Floating tutor popup entrance */
+@keyframes popup-enter {
+  from { transform: scale(0.7); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.animate-popup-enter {
+  animation: popup-enter 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Floating tutor icon pulse */
+@keyframes tutor-icon-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+  50% { box-shadow: 0 0 0 12px rgba(16, 185, 129, 0); }
+}
+.animate-tutor-icon-pulse {
+  animation: tutor-icon-pulse 2s ease-in-out infinite;
+}

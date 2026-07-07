@@ -26,11 +26,6 @@ import { useAppStore } from '@/lib/store';
 export default function Home() {
   const view = useAppStore((s) => s.view);
   const currentUserId = useAppStore((s) => s.currentUserId);
-  const tutorSidebarExpanded = useAppStore((s) => s.tutorSidebarExpanded);
-
-  // Sidebar visibility - show only when logged in and not on home page
-  const showTutorSidebar = currentUserId !== null && view.name !== 'home';
-  const sidebarWidth = tutorSidebarExpanded ? 400 : 320;
 
   // Scroll to top whenever the view changes
   useEffect(() => {
@@ -56,10 +51,7 @@ export default function Home() {
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       {/* Wrap Navbar, Main, and Footer in a container that shifts when sidebar is visible */}
-      <div 
-        className="flex flex-col min-h-screen transition-all duration-300"
-        style={{ marginLeft: showTutorSidebar ? `${sidebarWidth}px` : 0 }}
-      >
+      <div className="flex flex-col min-h-screen">
         <Navbar />
         <main className="flex-1">
           <ErrorBoundary label={`view:${view.name}`}>

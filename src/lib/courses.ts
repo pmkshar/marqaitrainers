@@ -1,13 +1,30 @@
 import { Course, Lesson } from './types';
 
-// Sample video URLs — verified publicly accessible MP4s.
-// (Previous Google Cloud Storage URLs return HTTP 403 AccessDenied.)
-const SAMPLE_VIDEO_1 = 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/720/Big_Buck_Bunny_720_10s_5MB.mp4';
-const SAMPLE_VIDEO_2 = 'https://test-videos.co.uk/vids/sintel/mp4/h264/720/Sintel_720_10s_1MB.mp4';
-const SAMPLE_VIDEO_3 = 'https://www.w3schools.com/html/mov_bbb.mp4';
-const SAMPLE_VIDEO_4 = 'https://www.w3schools.com/html/movie.mp4';
-const SAMPLE_VIDEO_5 = 'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4';
-const SAMPLE_VIDEO_6 = 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4';
+// Course-specific YouTube video URLs — thematically relevant educational content.
+// AI & Machine Learning
+const AIML_VIDEO_1 = 'https://www.youtube.com/embed/rfscVS0vtbw';  // Python tutorial
+const AIML_VIDEO_2 = 'https://www.youtube.com/embed/NWONeJKn6kc';  // ML basics
+// Full-Stack / Java Web Development
+const WEBDEV_VIDEO_1 = 'https://www.youtube.com/embed/w7ejDZ8SWv8'; // React
+const WEBDEV_VIDEO_2 = 'https://www.youtube.com/embed/Oe421EPjeBE';  // Node.js
+// Data Science & .NET
+const DATA_VIDEO_1 = 'https://www.youtube.com/embed/LHBE6Q9XlzI';   // Data science
+const DATA_VIDEO_2 = 'https://www.youtube.com/embed/aq8Q8FzHs0k';   // Data analysis
+// Cloud & DevOps / Mobile
+const CLOUD_VIDEO_1 = 'https://www.youtube.com/embed/6h0MfJhWHeE';  // Docker
+const CLOUD_VIDEO_2 = 'https://www.youtube.com/embed/rXPMHc8N_4w';  // AWS
+// UI/UX Design / Flutter
+const UX_VIDEO_1 = 'https://www.youtube.com/embed/Fa1ap4UhhAw';     // UX design
+const UX_VIDEO_2 = 'https://www.youtube.com/embed/8pTEmbeENFw';     // Figma
+// Python Programming
+const PYTHON_VIDEO_1 = 'https://www.youtube.com/embed/rfscVS0vtbw'; // Python basics
+const PYTHON_VIDEO_2 = 'https://www.youtube.com/embed/_uQrJ0TkZlc'; // Python OOP
+// Soft Skills & Communication
+const SOFT_VIDEO_1 = 'https://www.youtube.com/embed/H1T_x-HM3pA';   // Communication
+const SOFT_VIDEO_2 = 'https://www.youtube.com/embed/8d4MiU0Ga10';   // Presentations
+// 3Boxes / E-commerce
+const ECOM_VIDEO_1 = 'https://www.youtube.com/embed/w7ejDZ8SWv8';   // React
+const ECOM_VIDEO_2 = 'https://www.youtube.com/embed/sj5eS8E4U5c';   // E-commerce
 
 export const COURSES: Course[] = [
   // ============================================================
@@ -56,7 +73,7 @@ export const COURSES: Course[] = [
             title: 'Setting Up Your AI Environment',
             description: 'Install Python, conda, Jupyter, and the core data-science libraries.',
             duration: '45 min',
-            videoUrl: SAMPLE_VIDEO_1,
+            videoUrl: AIML_VIDEO_1,
             steps: [
               {
                 title: 'Install Miniconda',
@@ -122,7 +139,7 @@ export const COURSES: Course[] = [
             title: 'NumPy & Pandas Crash Course',
             description: 'Vectorized operations, indexing, grouping, and the DataFrame mindset.',
             duration: '60 min',
-            videoUrl: SAMPLE_VIDEO_2,
+            videoUrl: AIML_VIDEO_2,
             steps: [
               {
                 title: 'Understand vectorization',
@@ -181,7 +198,7 @@ export const COURSES: Course[] = [
             title: 'Linear Regression from First Principles',
             description: 'Derive the cost function, implement gradient descent, then use sklearn.',
             duration: '75 min',
-            videoUrl: SAMPLE_VIDEO_3,
+            videoUrl: AIML_VIDEO_1,
             steps: [
               {
                 title: 'Frame the problem',
@@ -245,7 +262,7 @@ export const COURSES: Course[] = [
             title: 'Classification with Decision Trees & Random Forests',
             description: 'Tree-based models, ensemble learning, and the bias-variance trade-off.',
             duration: '70 min',
-            videoUrl: SAMPLE_VIDEO_4,
+            videoUrl: AIML_VIDEO_2,
             steps: [
               {
                 title: 'Grow a decision tree',
@@ -304,7 +321,7 @@ export const COURSES: Course[] = [
             title: 'Your First Neural Network',
             description: 'Build a feed-forward network to classify handwritten digits (MNIST).',
             duration: '90 min',
-            videoUrl: SAMPLE_VIDEO_5,
+            videoUrl: AIML_VIDEO_1,
             steps: [
               {
                 title: 'Define the model',
@@ -375,7 +392,7 @@ export const COURSES: Course[] = [
             title: 'Building a RAG Pipeline',
             description: 'Ground an LLM in your own documents using embeddings and vector search.',
             duration: '85 min',
-            videoUrl: SAMPLE_VIDEO_1,
+            videoUrl: AIML_VIDEO_2,
             steps: [
               {
                 title: 'Chunk your documents',
@@ -491,7 +508,7 @@ export const COURSES: Course[] = [
             title: 'Bootstrapping a Spring Boot Project',
             description: 'Use Spring Initializr, understand starters, and run your first app.',
             duration: '50 min',
-            videoUrl: SAMPLE_VIDEO_2,
+            videoUrl: WEBDEV_VIDEO_1,
             steps: [
               {
                 title: 'Generate the project',
@@ -553,7 +570,7 @@ export const COURSES: Course[] = [
             title: 'Building Your First REST API',
             description: 'Controllers, DTOs, validation, and HTTP status codes.',
             duration: '65 min',
-            videoUrl: SAMPLE_VIDEO_3,
+            videoUrl: WEBDEV_VIDEO_2,
             steps: [
               {
                 title: 'Create a controller',
@@ -619,7 +636,7 @@ export const COURSES: Course[] = [
             title: 'Modeling Entities & Relationships',
             description: 'JPA annotations, one-to-many, and cascade rules.',
             duration: '70 min',
-            videoUrl: SAMPLE_VIDEO_4,
+            videoUrl: WEBDEV_VIDEO_1,
             steps: [
               {
                 title: 'Define an entity',
@@ -685,7 +702,7 @@ export const COURSES: Course[] = [
             title: 'React Hooks & Data Fetching',
             description: 'useState, useEffect, and useQuery for clean server state.',
             duration: '80 min',
-            videoUrl: SAMPLE_VIDEO_5,
+            videoUrl: WEBDEV_VIDEO_2,
             steps: [
               {
                 title: 'Understand hooks',
@@ -756,7 +773,7 @@ export const COURSES: Course[] = [
             title: 'Containerizing Your Full Stack App',
             description: 'Multi-stage Dockerfiles, docker-compose, and a CI pipeline.',
             duration: '75 min',
-            videoUrl: SAMPLE_VIDEO_1,
+            videoUrl: WEBDEV_VIDEO_1,
             steps: [
               {
                 title: 'Write a multi-stage Dockerfile',
@@ -877,7 +894,7 @@ export const COURSES: Course[] = [
             title: 'Modern C# in 60 Minutes',
             description: 'Records, pattern matching, nullable reference types, and top-level statements.',
             duration: '60 min',
-            videoUrl: SAMPLE_VIDEO_3,
+            videoUrl: DATA_VIDEO_1,
             steps: [
               {
                 title: 'Use records for immutable data',
@@ -948,7 +965,7 @@ export const COURSES: Course[] = [
             title: 'Building APIs with Minimal APIs',
             description: 'Endpoint routing, DI, validation, and OpenAPI.',
             duration: '75 min',
-            videoUrl: SAMPLE_VIDEO_4,
+            videoUrl: DATA_VIDEO_2,
             steps: [
               {
                 title: 'Map endpoints',
@@ -1014,7 +1031,7 @@ export const COURSES: Course[] = [
             title: 'EF Core Code-First Workflow',
             description: 'DbContext, migrations, and LINQ querying.',
             duration: '70 min',
-            videoUrl: SAMPLE_VIDEO_5,
+            videoUrl: DATA_VIDEO_1,
             steps: [
               {
                 title: 'Define a DbContext',
@@ -1135,7 +1152,7 @@ export const COURSES: Course[] = [
             title: 'Your First Expo App',
             description: 'Bootstrap, run on device, and understand the Expo workflow.',
             duration: '50 min',
-            videoUrl: SAMPLE_VIDEO_4,
+            videoUrl: CLOUD_VIDEO_1,
             steps: [
               {
                 title: 'Create the project',
@@ -1199,7 +1216,7 @@ export const COURSES: Course[] = [
             title: 'Navigation & State',
             description: 'Expo Router, tabs, and Zustand for app state.',
             duration: '65 min',
-            videoUrl: SAMPLE_VIDEO_5,
+            videoUrl: CLOUD_VIDEO_2,
             steps: [
               {
                 title: 'Use Expo Router',
@@ -1275,7 +1292,7 @@ export const COURSES: Course[] = [
             title: 'Camera, Location & Push Notifications',
             description: 'Request permissions and use native device features.',
             duration: '80 min',
-            videoUrl: SAMPLE_VIDEO_1,
+            videoUrl: CLOUD_VIDEO_1,
             steps: [
               {
                 title: 'Request permissions',
@@ -1351,7 +1368,7 @@ export const COURSES: Course[] = [
             title: 'Shipping to App Store & Play Store',
             description: 'EAS Build, versioning, and store submission.',
             duration: '75 min',
-            videoUrl: SAMPLE_VIDEO_2,
+            videoUrl: CLOUD_VIDEO_2,
             steps: [
               {
                 title: 'Configure EAS',
@@ -1467,7 +1484,7 @@ export const COURSES: Course[] = [
             title: 'Dart 3 in One Hour',
             description: 'Null safety, records, pattern matching, and async.',
             duration: '55 min',
-            videoUrl: SAMPLE_VIDEO_3,
+            videoUrl: UX_VIDEO_1,
             steps: [
               {
                 title: 'Null safety',
@@ -1531,7 +1548,7 @@ export const COURSES: Course[] = [
             title: 'Building UIs with Widgets',
             description: 'Widget tree, layout, and Material 3 components.',
             duration: '70 min',
-            videoUrl: SAMPLE_VIDEO_4,
+            videoUrl: UX_VIDEO_2,
             steps: [
               {
                 title: 'Compose widgets',
@@ -1602,7 +1619,7 @@ export const COURSES: Course[] = [
             title: 'Riverpod Providers & AsyncValue',
             description: 'Clean state management without BuildContext.',
             duration: '75 min',
-            videoUrl: SAMPLE_VIDEO_5,
+            videoUrl: UX_VIDEO_1,
             steps: [
               {
                 title: 'Define providers',
@@ -1678,7 +1695,7 @@ export const COURSES: Course[] = [
             title: 'REST APIs & Local Storage',
             description: 'Dio client, interceptors, and Hive for offline-first storage.',
             duration: '70 min',
-            videoUrl: SAMPLE_VIDEO_1,
+            videoUrl: UX_VIDEO_2,
             steps: [
               {
                 title: 'Use Dio for HTTP',
@@ -1803,7 +1820,7 @@ export const COURSES: Course[] = [
             title: 'Setting Up Python 3.12 + Your First Program',
             description: 'Install Python, set up a virtual env, write hello world, run a script.',
             duration: '40 min',
-            videoUrl: SAMPLE_VIDEO_1,
+            videoUrl: PYTHON_VIDEO_1,
             steps: [
               {
                 title: 'Install Python 3.12',
@@ -1873,7 +1890,7 @@ export const COURSES: Course[] = [
             title: 'Variables, Types & Operators',
             description: 'int, float, str, bool, dynamic typing, type hints, arithmetic, comparison, logical operators.',
             duration: '55 min',
-            videoUrl: SAMPLE_VIDEO_2,
+            videoUrl: PYTHON_VIDEO_2,
             steps: [
               {
                 title: 'Dynamic typing basics',
@@ -1942,7 +1959,7 @@ export const COURSES: Course[] = [
             title: 'Control Flow — if / for / while',
             description: 'Conditionals, loops, range, enumerate, zip, break, continue, comprehensions.',
             duration: '60 min',
-            videoUrl: SAMPLE_VIDEO_3,
+            videoUrl: PYTHON_VIDEO_1,
             steps: [
               {
                 title: 'Conditionals and truthiness',
@@ -2015,7 +2032,7 @@ export const COURSES: Course[] = [
             title: 'Lists & Tuples',
             description: 'Mutable vs immutable sequences, slicing, list methods, tuple unpacking.',
             duration: '50 min',
-            videoUrl: SAMPLE_VIDEO_4,
+            videoUrl: PYTHON_VIDEO_2,
             steps: [
               {
                 title: 'Lists — ordered, mutable',
@@ -2083,7 +2100,7 @@ export const COURSES: Course[] = [
             title: 'Dictionaries & Sets',
             description: 'Hash maps, dict methods, defaultdict, Counter, set operations.',
             duration: '55 min',
-            videoUrl: SAMPLE_VIDEO_5,
+            videoUrl: PYTHON_VIDEO_1,
             steps: [
               {
                 title: 'Dicts — hash maps',
@@ -2150,7 +2167,7 @@ export const COURSES: Course[] = [
             title: 'Functions, *args, **kwargs',
             description: 'Defining, calling, default args, keyword args, varargs, type hints, lambdas.',
             duration: '50 min',
-            videoUrl: SAMPLE_VIDEO_6,
+            videoUrl: PYTHON_VIDEO_2,
             steps: [
               {
                 title: 'Function basics',
@@ -2218,7 +2235,7 @@ export const COURSES: Course[] = [
             title: 'Classes, Inheritance & Dunder Methods',
             description: 'Class basics, __init__, __repr__, __eq__, inheritance, super(), ABCs.',
             duration: '60 min',
-            videoUrl: SAMPLE_VIDEO_1,
+            videoUrl: PYTHON_VIDEO_1,
             steps: [
               {
                 title: 'Class basics and __init__',
@@ -2285,7 +2302,7 @@ export const COURSES: Course[] = [
             title: 'Decorators & Generators',
             description: 'Function decorators, @property, generator functions with yield, lazy evaluation.',
             duration: '55 min',
-            videoUrl: SAMPLE_VIDEO_2,
+            videoUrl: PYTHON_VIDEO_2,
             steps: [
               {
                 title: 'Decorators — wrap a function',
@@ -2363,7 +2380,7 @@ export const COURSES: Course[] = [
             title: 'Flask REST API in 60 Minutes',
             description: 'Routes, JSON, request parsing, blueprints, error handling, running the server.',
             duration: '60 min',
-            videoUrl: SAMPLE_VIDEO_3,
+            videoUrl: PYTHON_VIDEO_1,
             steps: [
               {
                 title: 'Install Flask and create the app',
@@ -2430,7 +2447,7 @@ export const COURSES: Course[] = [
             title: 'Django + DRF — Full Stack in One Hour',
             description: 'Project setup, models, migrations, serializers, viewsets, router, admin.',
             duration: '70 min',
-            videoUrl: SAMPLE_VIDEO_4,
+            videoUrl: PYTHON_VIDEO_2,
             steps: [
               {
                 title: 'Install Django + DRF and scaffold the project',
@@ -2507,7 +2524,7 @@ export const COURSES: Course[] = [
             title: 'NumPy Arrays & Vectorization',
             description: 'ndarray creation, indexing, broadcasting, vectorized ops vs Python loops.',
             duration: '55 min',
-            videoUrl: SAMPLE_VIDEO_5,
+            videoUrl: PYTHON_VIDEO_1,
             steps: [
               {
                 title: 'Install NumPy and create arrays',
@@ -2579,7 +2596,7 @@ export const COURSES: Course[] = [
             title: 'Pandas — DataFrames, groupby, joins',
             description: 'Loading CSV/Excel, selecting, filtering, groupby aggregations, merges, pivot tables.',
             duration: '65 min',
-            videoUrl: SAMPLE_VIDEO_6,
+            videoUrl: PYTHON_VIDEO_2,
             steps: [
               {
                 title: 'Install Pandas and load data',
@@ -2661,7 +2678,7 @@ export const COURSES: Course[] = [
             title: 'Testing with pytest',
             description: 'Test functions, fixtures, parametrize, coverage, mocking.',
             duration: '55 min',
-            videoUrl: SAMPLE_VIDEO_1,
+            videoUrl: PYTHON_VIDEO_1,
             steps: [
               {
                 title: 'Install pytest and write your first test',
@@ -2733,7 +2750,7 @@ export const COURSES: Course[] = [
             title: 'Async Programming with asyncio',
             description: 'async/await, event loop, asyncio.gather, aiohttp, async context managers.',
             duration: '60 min',
-            videoUrl: SAMPLE_VIDEO_2,
+            videoUrl: PYTHON_VIDEO_2,
             steps: [
               {
                 title: 'async/await fundamentals',
@@ -2800,7 +2817,7 @@ export const COURSES: Course[] = [
             title: 'Packaging, Type-checking, Linting & Deployment',
             description: 'pyproject.toml, mypy, ruff, uv, Docker, deploy to a PaaS.',
             duration: '60 min',
-            videoUrl: SAMPLE_VIDEO_3,
+            videoUrl: PYTHON_VIDEO_1,
             steps: [
               {
                 title: 'pyproject.toml — the modern project file',
@@ -2925,7 +2942,7 @@ export const COURSES: Course[] = [
             title: 'The Communication Framework',
             description: 'Learn the sender-receiver model, barriers to communication, and how to overcome noise in workplace conversations.',
             duration: '45 min',
-            videoUrl: SAMPLE_VIDEO_1,
+            videoUrl: SOFT_VIDEO_1,
             steps: [
               {
                 title: 'Understanding the communication model',
@@ -2992,7 +3009,7 @@ export const COURSES: Course[] = [
             title: 'Business Writing & Email Etiquette',
             description: 'Write clear, concise, and professional emails that get responses and drive action.',
             duration: '40 min',
-            videoUrl: SAMPLE_VIDEO_2,
+            videoUrl: SOFT_VIDEO_2,
             steps: [
               {
                 title: 'The BLUF framework',
@@ -3063,7 +3080,7 @@ export const COURSES: Course[] = [
             title: 'Designing Compelling Presentations',
             description: 'Learn to create slide decks that support your narrative instead of replacing it.',
             duration: '50 min',
-            videoUrl: SAMPLE_VIDEO_3,
+            videoUrl: SOFT_VIDEO_1,
             steps: [
               {
                 title: 'The 10-20-30 rule',
@@ -3118,7 +3135,7 @@ export const COURSES: Course[] = [
             title: 'Executive Presence & Confidence',
             description: 'Project authority, build influence, and command attention in meetings and presentations.',
             duration: '45 min',
-            videoUrl: SAMPLE_VIDEO_4,
+            videoUrl: SOFT_VIDEO_2,
             steps: [
               {
                 title: 'The three pillars of executive presence',
@@ -3185,7 +3202,7 @@ export const COURSES: Course[] = [
             title: 'Emotional Intelligence at Work',
             description: 'Understand and apply the four domains of EQ for better professional relationships.',
             duration: '45 min',
-            videoUrl: SAMPLE_VIDEO_5,
+            videoUrl: SOFT_VIDEO_1,
             steps: [
               {
                 title: 'The four domains of EQ',
@@ -3297,7 +3314,7 @@ export const COURSES: Course[] = [
             title: '3 Boxes Platform Overview & Architecture',
             description: 'Deep dive into the 3 Boxes luxury platform: categories (Couple, Men, Women, Kids, Home, Office), product types, and the tech stack.',
             duration: '55 min',
-            videoUrl: SAMPLE_VIDEO_1,
+            videoUrl: ECOM_VIDEO_1,
             steps: [
               {
                 title: 'Understanding the 3 Boxes luxury model',
@@ -3361,7 +3378,7 @@ export const COURSES: Course[] = [
             title: 'Building the Product Catalog with Advanced Filtering',
             description: 'Implement the multi-category product catalog with source, occasion, and price filtering.',
             duration: '60 min',
-            videoUrl: SAMPLE_VIDEO_2,
+            videoUrl: ECOM_VIDEO_2,
             steps: [
               {
                 title: 'Product listing page architecture',
@@ -3430,7 +3447,7 @@ export const COURSES: Course[] = [
             title: 'Luxury UI Design Patterns for E-Commerce',
             description: 'Master the visual patterns that convey luxury: typography, spacing, imagery, and micro-interactions.',
             duration: '50 min',
-            videoUrl: SAMPLE_VIDEO_3,
+            videoUrl: ECOM_VIDEO_1,
             steps: [
               {
                 title: 'Luxury typography and spacing',
@@ -3485,7 +3502,7 @@ export const COURSES: Course[] = [
             title: 'Building the Gift Builder Feature',
             description: 'Create an interactive gift builder that lets users curate personalized gift sets from multiple categories.',
             duration: '55 min',
-            videoUrl: SAMPLE_VIDEO_4,
+            videoUrl: ECOM_VIDEO_2,
             steps: [
               {
                 title: 'Gift Builder UX flow',
@@ -3549,7 +3566,7 @@ export const COURSES: Course[] = [
             title: 'AI Style Gallery: Community-Powered Product Discovery',
             description: 'Build the feature where users upload selfies and share styled looks with the community.',
             duration: '50 min',
-            videoUrl: SAMPLE_VIDEO_5,
+            videoUrl: ECOM_VIDEO_1,
             steps: [
               {
                 title: 'AI Style Gallery architecture',
@@ -3611,7 +3628,7 @@ export const COURSES: Course[] = [
             title: 'Secure Payment Integration & Checkout Flow',
             description: 'Implement Stripe/Razorpay payment integration with a smooth luxury checkout experience.',
             duration: '55 min',
-            videoUrl: SAMPLE_VIDEO_6,
+            videoUrl: ECOM_VIDEO_2,
             steps: [
               {
                 title: 'Checkout flow design for luxury commerce',

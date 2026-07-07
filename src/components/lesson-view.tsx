@@ -24,6 +24,7 @@ import { getTutorForCourse, type TutorPersona } from '@/lib/tutor-personas';
 import { CourseIcon } from './navbar';
 import { SyllabusSidebar, SyllabusDrawer, SyllabusDrawerToggle } from './syllabus-sidebar';
 import { Animated3DTutorAvatar, type Animated3DTutorAvatarProps } from './animated-tutor-avatar';
+import { FloatingTutorPopup } from './floating-tutor-popup';
 
 // ============================================================
 // TTS Helpers — with Google Translate fallback for Indian langs
@@ -1294,37 +1295,9 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
           </div>
         </div>
 
-        {/* Main layout: LEFT = AI Tutor Sidebar (always visible), RIGHT = Lesson Content */}
-        <div className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[260px_1fr] lg:px-8">
-          {/* LEFT: AI Tutor Sidebar — PERSISTENT, NEVER DISAPPEARS */}
-          <AITutorSidebar
-          tutor={tutor}
-          isSpeaking={isSpeaking}
-          voiceMode={voiceMode}
-          voicePlaying={voicePlaying}
-          voicePaused={voicePaused}
-          voicePhase={voicePhase}
-          voiceProgress={voiceProgress}
-          voiceLoading={voiceLoading}
-          voiceError={voiceError}
-          getPreferredLang={getPreferredLang}
-          onPlay={() => startVoiceOver()}
-          onPauseResume={togglePlayPause}
-          onStop={stopVoice}
-          onLangChange={handleLangChange}
-          onSpeedChange={handleSpeedChange}
-          onPrevSlide={handlePrevSlide}
-          onNextSlide={handleNextSlide}
-          currentSlide={activeStep}
-          totalSlides={totalSlides}
-          slideProgress={stepProgress}
-          isVoiceChatting={isVoiceChatting}
-          onStartVoiceChat={startVoiceChat}
-          onStopVoiceChat={stopVoiceChat}
-          tutorExpression={tutorExpression}
-        />
-
-        {/* RIGHT: Lesson Content */}
+        {/* Main layout: Full-width lesson content with floating AI tutor popup */}
+        <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
+        {/* Lesson Content */}
         <div ref={stepRef} className="min-w-0 space-y-5">
           {/* Video */}
           <Card className="overflow-hidden">
@@ -1334,41 +1307,54 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
               <span className="ml-auto text-xs text-muted-foreground">~{lesson.duration}</span>
             </div>
             <div className="relative aspect-video bg-black">
-              <video
-                key={lesson.videoUrl}
-                src={lesson.videoUrl}
-                controls
-                playsInline
-                preload="metadata"
-                controlsList="nodownload noremoteplayback"
-                className="h-full w-full"
-                onError={(e) => {
-                  const el = e.currentTarget;
-                  const fallback = el.nextElementSibling as HTMLElement | null;
-                  if (fallback) fallback.style.display = 'flex';
-                  el.style.display = 'none';
-                }}
-              >
-                Your browser does not support the video tag.
-              </video>
-              <div
-                style={{ display: 'none' }}
-                className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-zinc-900 to-zinc-800 p-6 text-center text-zinc-200"
-              >
-                <Video className="h-10 w-10 text-emerald-400" />
-                <p className="text-sm font-medium">Video preview unavailable</p>
-                <p className="max-w-md text-xs text-zinc-400">
-                  The walkthrough video could not be loaded right now. The step-by-step guide below is complete and self-contained.
-                </p>
-                <a
-                  href={lesson.videoUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-1 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700"
+              {lesson.videoUrl.includes('youtube.com/embed') ? (
+                <iframe
+                  key={lesson.videoUrl}
+                  src={lesson.videoUrl}
+                  title="Video Training"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="absolute inset-0 h-full w-full"
+                />
+              ) : (
+                <video
+                  key={lesson.videoUrl}
+                  src={lesson.videoUrl}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  controlsList="nodownload noremoteplayback"
+                  className="h-full w-full"
+                  onError={(e) => {
+                    const el = e.currentTarget;
+                    const fallback = el.nextElementSibling as HTMLElement | null;
+                    if (fallback) fallback.style.display = 'flex';
+                    el.style.display = 'none';
+                  }}
                 >
-                  Open video in new tab
-                </a>
-              </div>
+                  Your browser does not support the video tag.
+                </video>
+              )}
+              {!lesson.videoUrl.includes('youtube.com/embed') && (
+                <div
+                  style={{ display: 'none' }}
+                  className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-zinc-900 to-zinc-800 p-6 text-center text-zinc-200"
+                >
+                  <Video className="h-10 w-10 text-emerald-400" />
+                  <p className="text-sm font-medium">Video preview unavailable</p>
+                  <p className="max-w-md text-xs text-zinc-400">
+                    The walkthrough video could not be loaded right now. The step-by-step guide below is complete and self-contained.
+                  </p>
+                  <a
+                    href={lesson.videoUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-1 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700"
+                  >
+                    Open video in new tab
+                  </a>
+                </div>
+              )}
             </div>
             <CardContent className="p-4 text-sm text-muted-foreground">
               Watch the video walkthrough first, then follow the step-by-step guide below. Pause and code along — practice beats passive watching every time.
@@ -1851,6 +1837,39 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Floating AI Tutor Popup — always visible, draggable, zoomable */}
+      <FloatingTutorPopup
+        tutor={tutor}
+        courseId={courseId}
+        course={course}
+        isSpeaking={isSpeaking}
+        voiceMode={voiceMode}
+        voicePlaying={voicePlaying}
+        voicePaused={voicePaused}
+        voicePhase={voicePhase}
+        voiceProgress={voiceProgress}
+        voiceLoading={voiceLoading}
+        voiceError={voiceError}
+        getPreferredLang={getPreferredLang}
+        onPlay={() => startVoiceOver()}
+        onPauseResume={togglePlayPause}
+        onStop={stopVoice}
+        onLangChange={handleLangChange}
+        onSpeedChange={handleSpeedChange}
+        onPrevSlide={handlePrevSlide}
+        onNextSlide={handleNextSlide}
+        currentSlide={activeStep}
+        totalSlides={totalSlides}
+        slideProgress={stepProgress}
+        isVoiceChatting={isVoiceChatting}
+        onStartVoiceChat={startVoiceChat}
+        onStopVoiceChat={stopVoiceChat}
+        tutorExpression={tutorExpression}
+        showContinuePrompt={showContinuePrompt}
+        onContinueClass={handleContinueClass}
+        onStayInChat={handleStayInChat}
+      />
       </div>
     </div>
   );
