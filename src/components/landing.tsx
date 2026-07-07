@@ -99,14 +99,6 @@ export function CourseSearchBar() {
 
   return (
     <section className="relative border-b bg-gradient-to-b from-emerald-50/40 to-background dark:from-emerald-950/10">
-      {/* Hero Banner Image */}
-      <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
-        <img
-          src="/marqai-hero-banner.png"
-          alt="MarqAI Courses — Learn Software with AI Voice Tutor"
-          className="w-full rounded-2xl shadow-lg"
-        />
-      </div>
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Big search input */}
         <div className="relative">
@@ -260,6 +252,122 @@ export function ScrollingCourseIcons() {
             </div>
           </button>
         ))}
+      </div>
+    </section>
+  );
+}
+
+// ── Infographic Stats Section ──────────────────
+export function InfographicStats() {
+  const { openCorporate } = useAppStore();
+  const stats = [
+    { value: '6', label: 'Career Tracks', sub: 'AI/ML · Full Stack · .NET · Mobile · Flutter · Python', color: 'from-emerald-500 to-teal-600', icon: Layers },
+    { value: '24/7', label: 'MarqAI Tutor', sub: 'AI Voice Tutor Available Round the Clock', color: 'from-violet-500 to-purple-600', icon: Mic },
+    { value: '100+', label: 'Lessons', sub: 'Step-wise with Code, Videos & Quizzes', color: 'from-amber-500 to-orange-600', icon: BookOpen },
+    { value: '5+', label: 'Languages', sub: 'English · Hindi · Tamil · Telugu · Kannada', color: 'from-rose-500 to-pink-600', icon: MessageSquare },
+  ];
+
+  return (
+    <section className="bg-background py-16 lg:py-24">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-12 text-center">
+          <Badge variant="outline" className="mb-3 border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+            <Sparkles className="mr-1 h-3 w-3" /> MarqAI Courses at a Glance
+          </Badge>
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Powering the Next Generation of Tech Talent</h2>
+          <p className="mt-3 text-muted-foreground">Everything you need to upskill — AI voice tutoring, verified certificates, and corporate-ready training.</p>
+        </div>
+
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {stats.map((stat) => (
+            <Card key={stat.label} className="group relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${stat.color}`} />
+              <CardContent className="pt-8 pb-6 text-center">
+                <div className={`mx-auto mb-4 grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br ${stat.color} text-white shadow-md transition-transform group-hover:scale-110`}>
+                  <stat.icon className="h-7 w-7" />
+                </div>
+                <div className="text-4xl font-extrabold text-foreground">{stat.value}</div>
+                <div className="mt-1 text-lg font-semibold">{stat.label}</div>
+                <p className="mt-2 text-sm text-muted-foreground">{stat.sub}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Infographic image */}
+        <div className="mt-12">
+          <img
+            src="/infographic-stats.svg"
+            alt="MarqAI Courses Key Statistics"
+            className="w-full rounded-2xl shadow-md"
+          />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ── Infographic How It Works Section ──────────────────
+export function InfographicHowItWorks() {
+  const steps = [
+    { step: 1, icon: UserPlus, title: 'Register', desc: 'Create your free account in seconds. No credit card required.', color: 'from-emerald-500 to-emerald-600' },
+    { step: 2, icon: ShoppingCart, title: 'Enroll', desc: 'Pick a course or subscribe for unlimited access to all tracks.', color: 'from-sky-500 to-cyan-600' },
+    { step: 3, icon: Mic, title: 'MarqAI Teaches', desc: 'AI voice tutor guides you with personalized explanations in your language.', color: 'from-violet-500 to-purple-600' },
+    { step: 4, icon: Target, title: 'Practice', desc: 'Test knowledge with graded quizzes and hands-on coding exercises.', color: 'from-amber-500 to-orange-600' },
+    { step: 5, icon: Video, title: 'AI Interview', desc: 'Practice with AI-proctored video interviews for real-world readiness.', color: 'from-rose-500 to-pink-600' },
+    { step: 6, icon: GraduationCap, title: 'Get Certified', desc: 'Earn verified certificates from MarqAI Tech Pvt Ltd.', color: 'from-teal-500 to-cyan-600' },
+  ];
+
+  return (
+    <section className="bg-gradient-to-b from-muted/30 to-background py-16 lg:py-24">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* Infographic image */}
+        <img
+          src="/infographic-howitworks.svg"
+          alt="How MarqAI Courses Works - 6 Step Process"
+          className="w-full rounded-2xl shadow-md mb-12"
+        />
+
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {steps.map((s) => (
+            <div key={s.step} className="group relative flex items-start gap-4 rounded-2xl border bg-card p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg">
+              <div className={`relative grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${s.color} text-white shadow-md`}>
+                <s.icon className="h-6 w-6" />
+                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-white text-[10px] font-bold shadow dark:bg-zinc-900">
+                  {s.step}
+                </span>
+              </div>
+              <div>
+                <h3 className="font-semibold">{s.title}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{s.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ── Corporate CTA Banner ──────────────────
+export function CorporateCTABanner() {
+  const { openCorporate, setTutorOpen } = useAppStore();
+  return (
+    <section className="bg-background py-16 lg:py-20">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <img
+          src="/infographic-corporate.svg"
+          alt="MarqAI Corporate Training Solutions"
+          className="w-full rounded-2xl shadow-lg mb-8"
+        />
+        <div className="text-center">
+          <Button onClick={openCorporate} size="lg" className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg hover:from-emerald-600 hover:to-teal-700">
+            <Building2 className="mr-2 h-5 w-5" /> Explore Corporate Plans
+          </Button>
+          <Button onClick={() => setTutorOpen(true)} variant="outline" size="lg" className="ml-3">
+            <Sparkles className="mr-2 h-4 w-4" /> Talk to MarqAI
+          </Button>
+        </div>
       </div>
     </section>
   );

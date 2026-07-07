@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
-import { Hero, Features, TrainingFlow, CourseCarousel, CorporateTraining, CorporateClientsTicker, CorporatePlans, TrustedCompanies, MobileAppPromo, PricingSection, TutorsPreview, CtaSection, CourseSearchBar, ScrollingCourseIcons } from '@/components/landing';
+import { Hero, Features, TrainingFlow, CorporateTraining, CorporateClientsTicker, CorporatePlans, TrustedCompanies, MobileAppPromo, CtaSection, CourseSearchBar, ScrollingCourseIcons, InfographicStats, InfographicHowItWorks, CorporateCTABanner } from '@/components/landing';
 import { CourseDetail } from '@/components/course-detail';
 import { LessonView } from '@/components/lesson-view';
 import { QuizView } from '@/components/quiz-view';
@@ -65,19 +65,16 @@ export default function Home() {
           <ErrorBoundary label={`view:${view.name}`}>
             {view.name === 'home' && (
               <>
-                <CourseSearchBar />
                 <ScrollingCourseIcons />
-                <Hero />
-                <TrainingFlow />
-                <Features />
-                <CourseCarousel />
+                <CourseSearchBar />
+                <InfographicStats />
+                <InfographicHowItWorks />
                 <CorporateTraining />
                 <CorporateClientsTicker />
-                <CorporatePlans />
+                <CorporateCTABanner />
+                <Features />
                 <TrustedCompanies />
                 <MobileAppPromo />
-                <PricingSection />
-                <TutorsPreview />
                 <CtaSection />
               </>
             )}

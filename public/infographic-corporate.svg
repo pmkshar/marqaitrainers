@@ -1,0 +1,38 @@
+<svg width="1200" height="350" viewBox="0 0 1200 350" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="cgrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10B981"/>
+      <stop offset="50%" style="stop-color:#059669"/>
+      <stop offset="100%" style="stop-color:#047857"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="350" rx="24" fill="url(#cgrad)"/>
+  
+  <text x="600" y="70" font-family="Arial" font-size="36" font-weight="bold" fill="white" text-anchor="middle">Corporate Training Solutions</text>
+  <text x="600" y="105" font-family="Arial" font-size="18" fill="#D1FAE5" text-anchor="middle">Customized AI-Powered Training for Your Team</text>
+  
+  <!-- Feature boxes -->
+  <rect x="60" y="140" width="250" height="160" rx="16" fill="white" opacity="0.15"/>
+  <text x="185" y="190" font-family="Arial" font-size="40" fill="white" text-anchor="middle">&#128218;</text>
+  <text x="185" y="225" font-family="Arial" font-size="16" font-weight="bold" fill="white" text-anchor="middle">Custom Courses</text>
+  <text x="185" y="250" font-family="Arial" font-size="12" fill="#D1FAE5" text-anchor="middle">Tailored to your team's</text>
+  <text x="185" y="268" font-family="Arial" font-size="12" fill="#D1FAE5" text-anchor="middle">skill requirements</text>
+  
+  <rect x="340" y="140" width="250" height="160" rx="16" fill="white" opacity="0.15"/>
+  <text x="465" y="190" font-family="Arial" font-size="40" fill="white" text-anchor="middle">&#127908;</text>
+  <text x="465" y="225" font-family="Arial" font-size="16" font-weight="bold" fill="white" text-anchor="middle">MarqAI Voice Tutor</text>
+  <text x="465" y="250" font-family="Arial" font-size="12" fill="#D1FAE5" text-anchor="middle">24/7 personalized</text>
+  <text x="465" y="268" font-family="Arial" font-size="12" fill="#D1FAE5" text-anchor="middle">learning in Indian languages</text>
+  
+  <rect x="620" y="140" width="250" height="160" rx="16" fill="white" opacity="0.15"/>
+  <text x="745" y="190" font-family="Arial" font-size="40" fill="white" text-anchor="middle">&#127909;</text>
+  <text x="745" y="225" font-family="Arial" font-size="16" font-weight="bold" fill="white" text-anchor="middle">AI Interviews</text>
+  <text x="745" y="250" font-family="Arial" font-size="12" fill="#D1FAE5" text-anchor="middle">AI-proctored video</text>
+  <text x="745" y="268" font-family="Arial" font-size="12" fill="#D1FAE5" text-anchor="middle">assessments &amp; feedback</text>
+  
+  <rect x="900" y="140" width="250" height="160" rx="16" fill="white" opacity="0.15"/>
+  <text x="1025" y="190" font-family="Arial" font-size="40" fill="white" text-anchor="middle">&#127942;</text>
+  <text x="1025" y="225" font-family="Arial" font-size="16" font-weight="bold" fill="white" text-anchor="middle">Verified Certificates</text>
+  <text x="1025" y="250" font-family="Arial" font-size="12" fill="#D1FAE5" text-anchor="middle">MarqAI Tech Pvt Ltd</text>
+  <text x="1025" y="268" font-family="Arial" font-size="12" fill="#D1FAE5" text-anchor="middle">industry-recognized</text>
+</svg>
