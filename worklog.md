@@ -514,3 +514,35 @@ Stage Summary:
 - Big search bar with real-time filtering and course navigation
 - Scrolling course icons with gradient backgrounds, ratings, and level badges
 - Quick search tags: AI & ML, Full Stack Java, .NET, React Native, Flutter, Python
+
+---
+Task ID: floating-tutor-redesign
+Agent: main (Super Z)
+Task: Redesign AI tutor as floating popup with enhanced 3D avatar, add syllabus tab, update course videos
+
+Work Log:
+- Analyzed 9 user-uploaded reference images of 3D cartoon AI tutor characters using VLM
+- Completely redesigned Animated3DTutorAvatar with rich Pixar/DreamWorks-style SVG character
+  - Professional look: glasses, white shirt, burgundy tie, dark blazer
+  - 5 expressions: neutral, explaining, thinking, happy, curious
+  - 12 mouth shapes for lip-sync, blinking, head bob, breathing
+  - SVG filters for depth (dropShadow, softShadow, innerGlow)
+- Created new FloatingTutorPopup component
+  - Draggable, zoomable (mini/medium/large sizes)
+  - Chatbot-style floating icon that opens a popup window
+  - Two tabs: AI Tutor (voice controls, avatar, continue prompt) and Syllabus (expandable tree)
+  - SyllabusMini component with expandable modules and clickable lesson navigation
+- Updated lesson-view.tsx to use floating popup instead of left sidebar layout
+  - Removed 2-column grid layout, now full-width lesson content
+  - FloatingTutorPopup is fixed-positioned at bottom-right
+- Updated courses.ts with course-specific YouTube video URLs for all 8 courses
+- Updated video player to render YouTube embeds as iframes
+- Removed old sidebar margin shift from page.tsx
+- Added CSS animations: popup-enter, tutor-icon-pulse, plus enhanced tutor animations
+- Committed and pushed to GitHub (Vercel auto-deploys)
+
+Stage Summary:
+- All 7 tasks completed and deployed
+- Key files modified: animated-tutor-avatar.tsx, floating-tutor-popup.tsx (new), lesson-view.tsx, courses.ts, page.tsx, globals.css
+- Build succeeds with no new TypeScript errors
+- Git commit: 7661c66
