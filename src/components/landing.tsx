@@ -1273,11 +1273,15 @@ export function CoursesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLevel, setSelectedLevel] = useState<string>('All');
   const [showAccessDenied, setShowAccessDenied] = useState(false);
+  const [showBuyModal, setShowBuyModal] = useState<string | null>(null);
 
   // Separate regular courses from corporate-exclusive ones
   const CORPORATE_COURSE_IDS = ['3boxes-dev'];
   const regularCourses = COURSES.filter((c) => !CORPORATE_COURSE_IDS.includes(c.id));
   const corporateCourses = COURSES.filter((c) => CORPORATE_COURSE_IDS.includes(c.id));
+
+  // Check if user is a corporate employee
+  const isCorporateUser = !!currentUser?.corporateId || currentUser?.role === 'corporate_admin' || currentUser?.role === 'corporate_user';
 
   // Check if user has access to 3Boxes course
   const has3BoxesAccess = (() => {
@@ -1289,6 +1293,15 @@ export function CoursesPage() {
     }
     return false;
   })();
+
+  // Check if user has purchased/enrolled in a course or admin has approved
+  const hasCourseAccess = (courseId: string) => {
+    if (!currentUser) return false;
+    if (currentUser.role === 'super_admin' || currentUser.role === 'admin') return true;
+    if (currentUser.enrolledCourseIds?.includes(courseId)) return true;
+    if (currentUser.approvedCourseIds?.includes(courseId)) return true;
+    return false;
+  };
 
   const filteredCourses = regularCourses.filter((c) => {
     const matchesSearch = !searchQuery.trim() ||
@@ -1356,10 +1369,18 @@ export function CoursesPage() {
 
         {/* Course Grid */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredCourses.map((course) => (
+          {filteredCourses.map((course) => {
+            const hasAccess = hasCourseAccess(course.id);
+            return (
             <Card
               key={course.id}
-              onClick={() => openCourse(course.id)}
+              onClick={() => {
+                if (hasAccess) {
+                  openCourse(course.id);
+                } else {
+                  setShowBuyModal(course.id);
+                }
+              }}
               className="group flex cursor-pointer flex-col overflow-hidden border-border/60 transition-all hover:-translate-y-1 hover:shadow-xl"
             >
               <div className={`relative h-36 bg-gradient-to-br ${course.gradient}`}>
@@ -1370,9 +1391,13 @@ export function CoursesPage() {
                 <Badge className="absolute left-4 top-4 bg-white/20 text-white hover:bg-white/30" variant="secondary">
                   {course.level}
                 </Badge>
-                {course.onDemand && (
+                {hasAccess ? (
                   <Badge className="absolute left-4 bottom-3 bg-emerald-500/80 text-white hover:bg-emerald-500" variant="secondary">
-                    On-Demand
+                    <Check className="mr-1 h-3 w-3" /> Enrolled
+                  </Badge>
+                ) : (
+                  <Badge className="absolute left-4 bottom-3 bg-amber-500/90 text-white" variant="secondary">
+                    <ShoppingCart className="mr-1 h-3 w-3" /> Buy Course
                   </Badge>
                 )}
               </div>
@@ -1396,11 +1421,18 @@ export function CoursesPage() {
                     <span className="text-xs text-muted-foreground"> one-time · </span>
                     <span className="font-medium">${course.monthlyPrice}/mo</span>
                   </div>
-                  <span className="text-sm font-semibold text-emerald-600 transition-transform group-hover:translate-x-1 dark:text-emerald-400">View →</span>
+                  {hasAccess ? (
+                    <span className="text-sm font-semibold text-emerald-600 transition-transform group-hover:translate-x-1 dark:text-emerald-400">View →</span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-sm font-semibold text-amber-600 dark:text-amber-400 transition-transform group-hover:translate-x-1">
+                      <ShoppingCart className="h-3.5 w-3.5" /> Buy
+                    </span>
+                  )}
                 </div>
               </CardContent>
             </Card>
-          ))}
+            );
+          })}
 
           {/* Ask AI Card */}
           <Card className="flex flex-col items-center justify-center border-dashed border-emerald-500/40 bg-emerald-500/5 p-8 text-center">
@@ -1424,8 +1456,8 @@ export function CoursesPage() {
           </div>
         )}
 
-        {/* Corporate Training Section */}
-        {corporateCourses.length > 0 && (
+        {/* Corporate Training Section — only visible to corporate employees */}
+        {corporateCourses.length > 0 && isCorporateUser && (
           <div className="mt-16">
             <div className="mb-8 flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white">
@@ -1521,6 +1553,71 @@ export function CoursesPage() {
                   ✕
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Buy Course Modal */}
+        {showBuyModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div className="mx-4 w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl">
+              {(() => {
+                const course = COURSES.find((c) => c.id === showBuyModal);
+                if (!course) return null;
+                return (
+                  <>
+                    <div className="mb-4 flex items-center gap-3">
+                      <span className={`grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br ${course.gradient} text-white`}>
+                        <CourseIcon name={course.icon} className="h-6 w-6" />
+                      </span>
+                      <div>
+                        <h3 className="font-bold">{course.title}</h3>
+                        <p className="text-sm text-muted-foreground">{course.duration} · {course.lessonsCount} lessons</p>
+                      </div>
+                    </div>
+                    <div className="mb-4 space-y-2 rounded-lg border border-emerald-500/30 bg-emerald-50 p-4 dark:bg-emerald-950/30">
+                      <p className="text-sm font-medium text-emerald-800 dark:text-emerald-200">Purchase Options</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">One-time access</span>
+                        <span className="font-bold text-emerald-600 dark:text-emerald-400">${course.oneTimePrice}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">Monthly subscription</span>
+                        <span className="font-bold text-emerald-600 dark:text-emerald-400">${course.monthlyPrice}/mo</span>
+                      </div>
+                    </div>
+                    {!currentUser && (
+                      <p className="mb-3 text-sm text-amber-600 dark:text-amber-400">
+                        Please register and login first. After registration, the admin will review and approve your access.
+                      </p>
+                    )}
+                    {currentUser && !hasCourseAccess(course.id) && (
+                      <p className="mb-3 text-sm text-amber-600 dark:text-amber-400">
+                        After purchase, admin approval is required before you can access the course content.
+                      </p>
+                    )}
+                    <div className="flex gap-3">
+                      <Button
+                        className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700"
+                        onClick={() => {
+                          // Simulate purchase — in production this would go to Stripe
+                          if (currentUser) {
+                            alert('Course purchase initiated! After payment, admin will review and approve your access.');
+                          } else {
+                            alert('Please register and login first to purchase a course.');
+                          }
+                          setShowBuyModal(null);
+                        }}
+                      >
+                        <ShoppingCart className="mr-2 h-4 w-4" /> Buy Now
+                      </Button>
+                      <Button variant="outline" onClick={() => setShowBuyModal(null)} className="flex-1">
+                        Cancel
+                      </Button>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
         )}

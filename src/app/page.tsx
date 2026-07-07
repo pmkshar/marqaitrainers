@@ -27,6 +27,12 @@ import { useAppStore } from '@/lib/store';
 export default function Home() {
   const view = useAppStore((s) => s.view);
   const currentUserId = useAppStore((s) => s.currentUserId);
+  const currentUser = useAppStore((s) => {
+    const uid = s.currentUserId;
+    if (!uid) return null;
+    return s.users.find((u) => u.id === uid) ?? null;
+  });
+  const isCorporateUser = !!currentUser?.corporateId || currentUser?.role === 'corporate_admin' || currentUser?.role === 'corporate_user';
 
   // Scroll to top whenever the view changes
   useEffect(() => {
@@ -62,9 +68,13 @@ export default function Home() {
                 <CourseSearchBar />
                 <InfographicStats />
                 <InfographicHowItWorks />
-                <CorporateTraining />
-                <CorporateClientsTicker />
-                <CorporateCTABanner />
+                {isCorporateUser && (
+                  <>
+                    <CorporateTraining />
+                    <CorporateClientsTicker />
+                    <CorporateCTABanner />
+                  </>
+                )}
                 <Features />
                 <TrustedCompanies />
                 <MobileAppPromo />

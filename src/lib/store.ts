@@ -118,6 +118,8 @@ interface AppState {
   // Learning
   completedLessons: string[];
   passedLessonTests: string[];
+  courseProgress: Record<string, Record<string, number>>; // courseId -> lessonId -> progressPct (0-100)
+  setLessonProgress: (courseId: string, lessonId: string, progressPct: number) => void;
 
   // Auth
   currentUserId: string | null;
@@ -451,6 +453,19 @@ export const useAppStore = create<AppState>()(
       tutorVoiceLang: 'en',
       completedLessons: [],
       passedLessonTests: [],
+      courseProgress: {},
+
+      setLessonProgress: (courseId, lessonId, progressPct) => {
+        set((s) => ({
+          courseProgress: {
+            ...s.courseProgress,
+            [courseId]: {
+              ...(s.courseProgress[courseId] ?? {}),
+              [lessonId]: Math.min(100, Math.max(0, progressPct)),
+            },
+          },
+        }));
+      },
 
       currentUserId: null,
       users: SEED_USERS,
@@ -722,6 +737,12 @@ export const useAppStore = create<AppState>()(
         const alreadyDone = get().completedLessons.includes(lessonId);
         if (!alreadyDone) {
           set((s) => ({ completedLessons: [...s.completedLessons, lessonId] }));
+          // Also set courseProgress to 100 for this lesson across all courses
+          // (we find which course this lesson belongs to from the current view)
+          const view = get().view;
+          if (view.courseId) {
+            get().setLessonProgress(view.courseId, lessonId, 100);
+          }
           // Award first-lesson badge if applicable
           if (get().completedLessons.length === 1) {
             get().awardBadge('first-lesson');
@@ -1804,6 +1825,7 @@ export const useAppStore = create<AppState>()(
       partialize: (s) => ({
         completedLessons: s.completedLessons,
         passedLessonTests: s.passedLessonTests,
+        courseProgress: s.courseProgress,
         chatMessages: s.chatMessages.slice(-20),
         currentUserId: s.currentUserId,
         users: s.users,
@@ -1879,6 +1901,7 @@ export const useAppStore = create<AppState>()(
           friendships: arr('friendships'),
           completedLessons: arr('completedLessons'),
           passedLessonTests: arr('passedLessonTests'),
+          courseProgress: p.courseProgress && typeof p.courseProgress === 'object' ? p.courseProgress : current.courseProgress,
           chatMessages: arr('chatMessages'),
           // ---- corporate ----
           corporates: arr('corporates'),

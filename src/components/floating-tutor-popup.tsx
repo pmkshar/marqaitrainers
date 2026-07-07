@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   X, Maximize2, Minimize2, Volume2, VolumeX, Pause, Play,
   Square, ChevronLeft, ChevronRight, Mic, MicOff,
   Loader2, CheckCircle2, Sparkles, BookOpen, ChevronDown,
   ChevronRight as ChevronRightIcon, Clock, ListChecks, PlayCircle,
-  MessageSquare,
+  MessageSquare, PenTool, Circle, Folder, FolderOpen, Eraser,
+  Type, Trash2, Wand2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -22,7 +23,8 @@ import type { Course, Module, Lesson } from '@/lib/types';
 // FloatingTutorPopup — Draggable, zoomable AI tutor chatbot
 // ------------------------------------------------------------
 // A floating popup that shows the animated 3D tutor avatar with
-// voice controls, syllabus navigation, and chat. Can be:
+// voice controls, syllabus navigation, whiteboard, and chat.
+// Can be:
 //   - Minimized to a floating icon (bottom-right)
 //   - Expanded to a full popup panel
 //   - Zoomed in/out (small, medium, large)
@@ -30,6 +32,7 @@ import type { Course, Module, Lesson } from '@/lib/types';
 // ============================================================
 
 type PopupSize = 'mini' | 'medium' | 'large';
+type TabType = 'tutor' | 'syllabus' | 'whiteboard';
 
 interface FloatingTutorPopupProps {
   tutor: TutorPersona;
@@ -67,6 +70,24 @@ interface FloatingTutorPopupProps {
   onStayInChat?: () => void;
 }
 
+// ============================================================
+// HalfCircle progress icon — SVG half-filled circle
+// ============================================================
+function HalfCircleIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="12" cy="12" r="10" className="text-muted-foreground/30" stroke="currentColor" strokeWidth="2" />
+      <path
+        d="M12 2 A10 10 0 0 1 12 22 Z"
+        className="text-amber-500"
+        fill="currentColor"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+    </svg>
+  );
+}
+
 export function FloatingTutorPopup({
   tutor,
   courseId,
@@ -100,7 +121,7 @@ export function FloatingTutorPopup({
 }: FloatingTutorPopupProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [popupSize, setPopupSize] = useState<PopupSize>('medium');
-  const [activeTab, setActiveTab] = useState<'tutor' | 'syllabus'>('tutor');
+  const [activeTab, setActiveTab] = useState<TabType>('tutor');
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isZooming, setIsZooming] = useState(false);
@@ -293,7 +314,7 @@ export function FloatingTutorPopup({
         </div>
       </div>
 
-      {/* Tab Bar */}
+      {/* Tab Bar — 3 tabs */}
       <div className="flex border-b" data-nodrag>
         <button
           onClick={() => setActiveTab('tutor')}
@@ -314,6 +335,16 @@ export function FloatingTutorPopup({
           }`}
         >
           <BookOpen className="h-3.5 w-3.5" /> Syllabus
+        </button>
+        <button
+          onClick={() => setActiveTab('whiteboard')}
+          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-medium transition-colors ${
+            activeTab === 'whiteboard'
+              ? 'border-b-2 border-emerald-500 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/30'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <PenTool className="h-3.5 w-3.5" /> Whiteboard
         </button>
       </div>
 
@@ -484,10 +515,53 @@ export function FloatingTutorPopup({
               </Card>
             )}
           </div>
-        ) : (
-          /* Syllabus Tab */
+        ) : activeTab === 'syllabus' ? (
+          /* Syllabus Tab — Tree View */
           <div className="p-3" data-nodrag>
-            <SyllabusMini courseId={courseId} course={course} />
+            <SyllabusTree courseId={courseId} course={course} />
+          </div>
+        ) : (
+          /* Whiteboard Tab */
+          <div className="p-3 flex flex-col gap-2" data-nodrag>
+            {/* Toolbar */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" title="Pen tool">
+                <PenTool className="h-3 w-3" /> Pen
+              </Button>
+              <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" title="Eraser">
+                <Eraser className="h-3 w-3" /> Eraser
+              </Button>
+              <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" title="Text">
+                <Type className="h-3 w-3" /> Text
+              </Button>
+              <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1" title="Clear board">
+                <Trash2 className="h-3 w-3" /> Clear
+              </Button>
+              <Button
+                size="sm"
+                className="h-7 text-[10px] gap-1 bg-emerald-600 text-white hover:bg-emerald-700 ml-auto"
+                title="Ask AI to Explain"
+                onClick={() => alert('Coming soon - AI will draw and explain on the board!')}
+              >
+                <Wand2 className="h-3 w-3" /> Ask AI to Explain
+              </Button>
+            </div>
+
+            {/* Whiteboard iframe */}
+            <div className="relative flex-1 rounded-lg border overflow-hidden bg-white" style={{ minHeight: 320 }}>
+              <iframe
+                src="https://woowhiteboard.com/online-whiteboard-for-teaching"
+                className="w-full h-full border-0"
+                style={{ minHeight: 320 }}
+                title="Whiteboard"
+                allow="clipboard-read; clipboard-write"
+              />
+            </div>
+
+            {/* Note */}
+            <p className="text-[10px] text-muted-foreground text-center italic">
+              AI Tutor can explain concepts on this board. Use the tools to write or draw.
+            </p>
           </div>
         )}
       </ScrollArea>
@@ -496,11 +570,19 @@ export function FloatingTutorPopup({
 }
 
 // ============================================================
-// SyllabusMini — Compact syllabus tree for the popup
+// SyllabusTree — Tree-style syllabus with progress indicators
 // ============================================================
 
-function SyllabusMini({ courseId, course }: { courseId: string; course: Course }) {
-  const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
+function SyllabusTree({ courseId, course }: { courseId: string; course: Course }) {
+  const courseProgress = useAppStore((s) => s.courseProgress);
+
+  // Auto-expand first module via lazy initializer
+  const [expandedModules, setExpandedModules] = useState<Set<string>>(() => {
+    if (course.modules.length > 0) {
+      return new Set([course.modules[0].id]);
+    }
+    return new Set();
+  });
 
   const toggleModule = (moduleId: string) => {
     setExpandedModules((prev) => {
@@ -511,20 +593,48 @@ function SyllabusMini({ courseId, course }: { courseId: string; course: Course }
     });
   };
 
-  // Auto-expand first module
-  useEffect(() => {
-    if (course.modules.length > 0) {
-      setExpandedModules(new Set([course.modules[0].id]));
-    }
-  }, [course.modules]);
-
   const totalLessons = course.modules.reduce((acc, m) => acc + m.lessons.length, 0);
   const totalDuration = course.duration;
+
+  // Get progress for a specific lesson
+  const getLessonProgress = (lessonId: string): number => {
+    return courseProgress[courseId]?.[lessonId] ?? 0;
+  };
+
+  // Get progress status for a lesson
+  const getLessonStatus = (lessonId: string): 'completed' | 'in_progress' | 'not_started' => {
+    const pct = getLessonProgress(lessonId);
+    if (pct >= 100) return 'completed';
+    if (pct > 0) return 'in_progress';
+    return 'not_started';
+  };
+
+  // Calculate module progress percentage
+  const getModuleProgress = (mod: Module): number => {
+    if (mod.lessons.length === 0) return 0;
+    const totalPct = mod.lessons.reduce((sum, l) => sum + getLessonProgress(l.id), 0);
+    return Math.round(totalPct / mod.lessons.length);
+  };
+
+  // Calculate overall course progress
+  const getCourseProgress = (): number => {
+    if (totalLessons === 0) return 0;
+    const allLessons = course.modules.flatMap(m => m.lessons);
+    const totalPct = allLessons.reduce((sum, l) => sum + getLessonProgress(l.id), 0);
+    return Math.round(totalPct / allLessons.length);
+  };
+
+  // Count completed lessons in a module
+  const getModuleCompletedCount = (mod: Module): number => {
+    return mod.lessons.filter(l => getLessonStatus(l.id) === 'completed').length;
+  };
+
+  const coursePct = getCourseProgress();
 
   return (
     <div className="space-y-3">
       {/* Course info header */}
-      <div className="space-y-1">
+      <div className="space-y-1.5">
         <h4 className="text-sm font-bold">{course.title}</h4>
         <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
           <span className="flex items-center gap-0.5"><BookOpen className="h-3 w-3" /> {course.modules.length} modules</span>
@@ -533,44 +643,155 @@ function SyllabusMini({ courseId, course }: { courseId: string; course: Course }
           <span>·</span>
           <span className="flex items-center gap-0.5"><Clock className="h-3 w-3" /> {totalDuration}</span>
         </div>
+        {/* Overall course progress bar */}
+        <div className="space-y-0.5">
+          <div className="flex items-center justify-between text-[10px]">
+            <span className="text-muted-foreground">Course Progress</span>
+            <span className="font-semibold text-emerald-700 dark:text-emerald-300">{coursePct}%</span>
+          </div>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-500"
+              style={{ width: `${coursePct}%` }}
+            />
+          </div>
+        </div>
       </div>
 
-      {/* Modules & Lessons tree */}
-      <div className="space-y-1">
-        {course.modules.map((mod) => {
+      {/* Tree-style modules & lessons */}
+      <div className="space-y-0">
+        {course.modules.map((mod, modIdx) => {
           const isExpanded = expandedModules.has(mod.id);
+          const modPct = getModuleProgress(mod);
+          const completedCount = getModuleCompletedCount(mod);
+          const isLastModule = modIdx === course.modules.length - 1;
+
           return (
-            <div key={mod.id} className="rounded-lg border bg-card">
-              {/* Module header */}
-              <button
-                onClick={() => toggleModule(mod.id)}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-muted/50"
-              >
-                {isExpanded ? (
-                  <ChevronDown className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                ) : (
-                  <ChevronRightIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                )}
-                <span className="flex-1 text-xs font-semibold truncate">{mod.title}</span>
-                <Badge variant="outline" className="text-[9px] shrink-0">{mod.lessons.length}</Badge>
-              </button>
-              {/* Lessons list */}
-              {isExpanded && (
-                <div className="border-t px-3 py-1.5 space-y-0.5">
-                  {mod.lessons.map((lesson) => (
-                    <div
-                      key={lesson.id}
-                      className="flex items-center gap-2 rounded-md px-2 py-1.5 text-xs transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-950/30 cursor-pointer"
-                      onClick={() => {
-                        useAppStore.getState().openLesson(courseId, mod.id, lesson.id);
-                      }}
-                    >
-                      <PlayCircle className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                      <span className="flex-1 truncate">{lesson.title}</span>
-                      <span className="text-[9px] text-muted-foreground shrink-0">{lesson.duration}</span>
-                    </div>
-                  ))}
+            <div key={mod.id}>
+              {/* Module node — tree structure */}
+              <div className="flex items-start">
+                {/* Tree line column */}
+                <div className="relative w-5 shrink-0 flex flex-col items-center">
+                  {/* Vertical line from top — only if not first module */}
+                  {modIdx > 0 && (
+                    <div className="absolute top-0 h-2.5 w-px bg-emerald-300 dark:bg-emerald-700" />
+                  )}
+                  {/* Horizontal connector */}
+                  <div className="absolute top-3.5 h-px w-2.5 bg-emerald-300 dark:bg-emerald-700 left-1/2" />
+                  {/* Vertical line to children — only if expanded */}
+                  {isExpanded && (
+                    <div className="absolute top-4 bottom-0 w-px bg-emerald-200 dark:bg-emerald-800" />
+                  )}
                 </div>
+
+                {/* Module content */}
+                <div className="flex-1 min-w-0 pb-1">
+                  {/* Module header button */}
+                  <button
+                    onClick={() => toggleModule(mod.id)}
+                    className="flex w-full items-center gap-1.5 rounded-md px-1.5 py-1.5 text-left transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-950/30 group"
+                  >
+                    {/* Folder icon */}
+                    {isExpanded ? (
+                      <FolderOpen className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    ) : (
+                      <Folder className="h-4 w-4 text-muted-foreground shrink-0" />
+                    )}
+                    {/* Chevron */}
+                    {isExpanded ? (
+                      <ChevronDown className="h-3 w-3 text-emerald-600 shrink-0" />
+                    ) : (
+                      <ChevronRightIcon className="h-3 w-3 text-muted-foreground shrink-0" />
+                    )}
+                    {/* Module title */}
+                    <span className="flex-1 text-xs font-semibold truncate">{mod.title}</span>
+                    {/* Completed count badge */}
+                    <Badge
+                      variant="outline"
+                      className={`text-[9px] shrink-0 ${
+                        completedCount === mod.lessons.length && mod.lessons.length > 0
+                          ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
+                          : 'text-muted-foreground'
+                      }`}
+                    >
+                      {completedCount}/{mod.lessons.length}
+                    </Badge>
+                  </button>
+
+                  {/* Module progress bar */}
+                  <div className="ml-7 mr-1.5 mb-1 space-y-0.5">
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-500"
+                        style={{ width: `${modPct}%` }}
+                      />
+                    </div>
+                    <span className="text-[9px] text-muted-foreground tabular-nums">{modPct}% complete</span>
+                  </div>
+
+                  {/* Expanded lessons */}
+                  {isExpanded && (
+                    <div className="ml-4 mt-0.5 space-y-0">
+                      {mod.lessons.map((lesson, lessonIdx) => {
+                        const status = getLessonStatus(lesson.id);
+                        const progressPct = getLessonProgress(lesson.id);
+                        const isLastLesson = lessonIdx === mod.lessons.length - 1;
+
+                        return (
+                          <div key={lesson.id} className="flex items-start">
+                            {/* Tree line column for lesson */}
+                            <div className="relative w-4 shrink-0 flex flex-col items-center">
+                              {/* Vertical line from parent */}
+                              <div className={`w-px bg-emerald-200 dark:bg-emerald-800 ${isLastLesson ? 'h-3.5' : 'h-full'}`} />
+                              {/* Horizontal connector */}
+                              <div className="absolute top-2.5 h-px w-2 bg-emerald-200 dark:bg-emerald-800 left-1/2" />
+                            </div>
+
+                            {/* Lesson row */}
+                            <button
+                              className="flex items-center gap-1.5 rounded-md px-1.5 py-1 text-left transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-950/30 cursor-pointer w-full min-h-[32px]"
+                              onClick={() => {
+                                useAppStore.getState().openLesson(courseId, mod.id, lesson.id);
+                              }}
+                            >
+                              {/* Progress indicator icon */}
+                              {status === 'completed' ? (
+                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                              ) : status === 'in_progress' ? (
+                                <HalfCircleIcon className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                              ) : (
+                                <Circle className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" />
+                              )}
+
+                              {/* Lesson title */}
+                              <span className={`flex-1 text-[11px] truncate ${
+                                status === 'completed'
+                                  ? 'text-emerald-700 dark:text-emerald-300 font-medium'
+                                  : status === 'in_progress'
+                                  ? 'text-amber-700 dark:text-amber-300 font-medium'
+                                  : 'text-muted-foreground'
+                              }`}>
+                                {lesson.title}
+                              </span>
+
+                              {/* Progress pct or duration */}
+                              {status === 'in_progress' ? (
+                                <span className="text-[9px] text-amber-600 dark:text-amber-400 tabular-nums shrink-0">{progressPct}%</span>
+                              ) : (
+                                <span className="text-[9px] text-muted-foreground shrink-0">{lesson.duration}</span>
+                              )}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Vertical line after module (if not last) */}
+              {!isLastModule && !isExpanded && (
+                <div className="ml-2.5 w-px h-2 bg-emerald-200 dark:bg-emerald-800" />
               )}
             </div>
           );
@@ -579,5 +800,3 @@ function SyllabusMini({ courseId, course }: { courseId: string; course: Course }
     </div>
   );
 }
-
-

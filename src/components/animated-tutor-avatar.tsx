@@ -249,17 +249,20 @@ export function Animated3DTutorAvatar({
         style={{ transformOrigin: '100px 120px' }}
       >
         <defs>
-          {/* Skin gradient — warm 3D tone */}
+          {/* Skin gradient — realistic warm 3D tone with undertones */}
           <radialGradient id="skinGrad" cx="48%" cy="38%" r="52%" fx="45%" fy="35%">
-            <stop offset="0%" stopColor="#FFDBB4" />
-            <stop offset="45%" stopColor="#F5C090" />
-            <stop offset="85%" stopColor="#E8A870" />
-            <stop offset="100%" stopColor="#D4925A" />
+            <stop offset="0%" stopColor="#FDDCB5" />
+            <stop offset="20%" stopColor="#F8CCA0" />
+            <stop offset="45%" stopColor="#F0BA88" />
+            <stop offset="70%" stopColor="#E4A870" />
+            <stop offset="90%" stopColor="#D49660" />
+            <stop offset="100%" stopColor="#C08550" />
           </radialGradient>
 
-          {/* Skin highlight for forehead/nose bridge */}
+          {/* Skin highlight for forehead/nose bridge — enhanced */}
           <radialGradient id="skinHighlight" cx="50%" cy="30%" r="35%">
-            <stop offset="0%" stopColor="#FFE8D0" stopOpacity="0.6" />
+            <stop offset="0%" stopColor="#FFF0E0" stopOpacity="0.7" />
+            <stop offset="50%" stopColor="#FFE8D0" stopOpacity="0.3" />
             <stop offset="100%" stopColor="#FFE8D0" stopOpacity="0" />
           </radialGradient>
 
@@ -269,19 +272,23 @@ export function Animated3DTutorAvatar({
             <stop offset="100%" stopColor="#D4925A" />
           </radialGradient>
 
-          {/* Hair gradient — dark brown with shine */}
+          {/* Hair gradient — rich dark brown with realistic depth */}
           <linearGradient id="hairGrad" x1="0%" y1="0%" x2="80%" y2="100%">
-            <stop offset="0%" stopColor="#3D2212" />
-            <stop offset="30%" stopColor="#5C3A20" />
-            <stop offset="60%" stopColor="#4A2E18" />
+            <stop offset="0%" stopColor="#4A3020" />
+            <stop offset="15%" stopColor="#3D2212" />
+            <stop offset="30%" stopColor="#5C3A28" />
+            <stop offset="50%" stopColor="#4A2E1C" />
+            <stop offset="75%" stopColor="#3A2015" />
             <stop offset="100%" stopColor="#2C1810" />
           </linearGradient>
 
-          {/* Hair highlight shine */}
+          {/* Hair highlight shine — more natural */}
           <linearGradient id="hairShine" x1="30%" y1="0%" x2="70%" y2="40%">
             <stop offset="0%" stopColor="#7B5230" stopOpacity="0" />
-            <stop offset="40%" stopColor="#8B6340" stopOpacity="0.5" />
-            <stop offset="60%" stopColor="#7B5230" stopOpacity="0.3" />
+            <stop offset="25%" stopColor="#9B7350" stopOpacity="0.35" />
+            <stop offset="40%" stopColor="#A08060" stopOpacity="0.55" />
+            <stop offset="55%" stopColor="#8B6340" stopOpacity="0.4" />
+            <stop offset="75%" stopColor="#7B5230" stopOpacity="0.2" />
             <stop offset="100%" stopColor="#5C3A20" stopOpacity="0" />
           </linearGradient>
 
@@ -500,6 +507,30 @@ export function Animated3DTutorAvatar({
               strokeWidth="0.5"
               opacity="0.3"
             />
+
+            {/* Subtle smile lines (nasolabial folds) for realism */}
+            <path
+              d="M72,90 Q74,98 78,106"
+              fill="none"
+              stroke="#D49660"
+              strokeWidth="0.6"
+              opacity="0.25"
+              strokeLinecap="round"
+            />
+            <path
+              d="M128,90 Q126,98 122,106"
+              fill="none"
+              stroke="#D49660"
+              strokeWidth="0.6"
+              opacity="0.25"
+              strokeLinecap="round"
+            />
+            {/* Subtle forehead wrinkle lines */}
+            <path d="M78,56 Q88,54 98,56" fill="none" stroke="#D49660" strokeWidth="0.4" opacity="0.15" strokeLinecap="round" />
+            <path d="M82,60 Q92,58 102,60" fill="none" stroke="#D49660" strokeWidth="0.3" opacity="0.12" strokeLinecap="round" />
+            {/* Subtle under-eye lines */}
+            <path d="M73,86 Q82,88 91,86" fill="none" stroke="#D49660" strokeWidth="0.4" opacity="0.15" strokeLinecap="round" />
+            <path d="M109,86 Q118,88 127,86" fill="none" stroke="#D49660" strokeWidth="0.4" opacity="0.15" strokeLinecap="round" />
 
             {/* ===== EARS ===== */}
             {/* Left ear */}
