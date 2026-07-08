@@ -218,7 +218,6 @@ export function FloatingTutorPopup({
               speaking={isSpeaking}
               expression={expression}
               size={52}
-              gender="male"
             />
           </div>
           {/* Status indicator */}
@@ -272,7 +271,7 @@ export function FloatingTutorPopup({
           <div className="relative">
             {/* Circular avatar with white border */}
             <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-white/40 bg-emerald-700/30 overflow-hidden">
-              <Animated3DTutorAvatar speaking={isSpeaking} expression={expression} size={36} gender="male" />
+              <Animated3DTutorAvatar speaking={isSpeaking} expression={expression} size={36} />
             </div>
             {/* Online/speaking indicator dot */}
             <div className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-emerald-600 ${isSpeaking ? 'bg-green-400 animate-pulse' : 'bg-emerald-300'}`} />
@@ -383,7 +382,6 @@ export function FloatingTutorPopup({
                   speaking={isSpeaking}
                   expression={expression}
                   size={currentSize.avatarSize}
-                  gender="male"
                 />
                 {/* Voice chat button overlaid */}
                 {onStartVoiceChat && (

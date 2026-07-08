@@ -167,7 +167,8 @@ function AnimatedTutorAvatar({
   isSpeaking: boolean;
   size?: 'large' | 'small';
 }) {
-  const isFemale = tutor.gender === 'female';
+  // Marq AI uses a female avatar — always use female styling
+  const isFemale = true;
   const isLarge = size === 'large';
   const w = isLarge ? 200 : 48;
   const h = isLarge ? 200 : 48;
@@ -450,7 +451,8 @@ export function VoiceEnabledChapterTutor({
     if (!voices || voices.length === 0) return null;
 
     const preferredLang = getPreferredLang();
-    const isFemaleTutor = tutor.gender === 'female';
+    // Marq AI uses a female avatar — always use female voice
+    const isFemaleTutor = true;
 
     const bcp47Map: Record<string, string> = {
       en: 'en-IN', hi: 'hi-IN', ta: 'ta-IN', te: 'te-IN', kn: 'kn-IN',

@@ -512,7 +512,8 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
     if (!voices || voices.length === 0) return null;
 
     const preferredLang = getPreferredLang();
-    const isFemaleTutor = tutor.gender === 'female';
+    // Marq AI uses a female avatar — always use female voice patterns
+    const isFemaleTutor = true;
 
     const bcp47Map: Record<string, string> = {
       en: 'en-IN', hi: 'hi-IN', ta: 'ta-IN', te: 'te-IN', kn: 'kn-IN',
@@ -1624,7 +1625,7 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <div className={`grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br ${
-                tutor.gender === 'female' ? 'from-emerald-500 to-teal-600' : 'from-blue-500 to-indigo-600'
+                'from-emerald-500 to-teal-600'
               } text-white`}>
                 <span className="text-sm font-bold">{tutor.initial}</span>
               </div>

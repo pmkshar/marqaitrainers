@@ -509,7 +509,6 @@ export function GlobalTutorPopup() {
               speaking={false}
               expression="neutral"
               size={46}
-              gender="male"
             />
           </div>
           <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block">
@@ -545,7 +544,7 @@ export function GlobalTutorPopup() {
         <div className="flex items-center gap-3 bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-3">
           <div className="relative">
             <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-white/40 bg-emerald-700/30 overflow-hidden">
-              <Animated3DTutorAvatar speaking={isSpeaking || isTyping} expression={isSpeaking ? 'explaining' : isTyping ? 'explaining' : 'neutral'} size={36} gender="male" />
+              <Animated3DTutorAvatar speaking={isSpeaking || isTyping} expression={isSpeaking ? 'explaining' : isTyping ? 'explaining' : 'neutral'} size={36} />
             </div>
             <div className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-emerald-600 ${(isSpeaking || isTyping) ? 'bg-green-400 animate-pulse' : 'bg-emerald-300'}`} />
           </div>
@@ -617,7 +616,6 @@ export function GlobalTutorPopup() {
                   speaking={isSpeaking || isTyping}
                   expression={isSpeaking ? 'explaining' : isTyping ? 'explaining' : 'neutral'}
                   size={currentSize.avatarSize}
-                  gender="male"
                 />
                 {/* Voice chat button overlaid */}
                 <button
@@ -674,7 +672,7 @@ export function GlobalTutorPopup() {
                 {msg.role === 'assistant' && (
                   <div className="shrink-0 mt-1">
                     <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600">
-                      <Animated3DTutorAvatar speaking={false} expression="neutral" size={26} gender="male" />
+                      <Animated3DTutorAvatar speaking={false} expression="neutral" size={26} />
                     </div>
                   </div>
                 )}
@@ -698,7 +696,7 @@ export function GlobalTutorPopup() {
               <div className="flex gap-2.5 justify-start">
                 <div className="shrink-0 mt-1">
                   <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600">
-                    <Animated3DTutorAvatar speaking expression="explaining" size={26} gender="male" />
+                    <Animated3DTutorAvatar speaking expression="explaining" size={26} />
                   </div>
                 </div>
                 <div className="bg-muted/80 rounded-2xl rounded-bl-sm px-4 py-3 border border-border/50">
