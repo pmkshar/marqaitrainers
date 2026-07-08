@@ -546,3 +546,25 @@ Stage Summary:
 - Key files modified: animated-tutor-avatar.tsx, floating-tutor-popup.tsx (new), lesson-view.tsx, courses.ts, page.tsx, globals.css
 - Build succeeds with no new TypeScript errors
 - Git commit: 7661c66
+
+---
+Task ID: 1
+Agent: main
+Task: Redesign AI tutor to Korean woman avatar (cosmetic ad style), name everything Marq AI, deploy to Vercel
+
+Work Log:
+- Analyzed uploaded reference image using VLM - confirmed Korean woman, messy high bun, cosmetic lighting, classroom
+- Generated photorealistic avatar image using z-ai image generation CLI (864x1152 + 1024x1024 square icon)
+- Completely rewrote animated-tutor-avatar.tsx: replaced all SVG avatars with image-based photorealistic avatar
+- Added CSS animations: breathing, speaking pulse, sound waves, expression badges
+- Updated tutor-personas.ts: removed all MayaAI references, unified as Marq AI with female gender
+- Cleaned up gender="male" props from floating-tutor-popup.tsx, global-tutor-popup.tsx, lesson-view.tsx
+- Fixed voice-chapter-tutor.tsx to always use female voice patterns
+- Fixed lesson-view.tsx isFemaleTutor to always be true
+- Verified build succeeds with no errors
+- Committed and pushed to Git main branch
+
+Stage Summary:
+- AI tutor now shows as Korean woman with cosmetic ad lighting, messy high bun, classroom background
+- All references to MayaAI removed - universally "Marq AI"
+- Build passes, deployed to Vercel via Git push
