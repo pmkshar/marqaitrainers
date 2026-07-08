@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Animated3DTutorAvatar } from './animated-tutor-avatar';
 import { useAppStore } from '@/lib/store';
-import { getTutorForCourse } from '@/lib/tutor-personas';
+import { getHomeTutor } from '@/lib/tutor-personas';
 import type { ChatMessage } from '@/lib/types';
 
 // ============================================================
@@ -30,14 +30,14 @@ interface LocalMessage {
   timestamp: number;
 }
 
-// Default tutor persona for the global popup
-const defaultTutor = getTutorForCourse('ai-ml');
+// MayaAI — female home page tutor for course information & doubts
+const defaultTutor = getHomeTutor('ai-ml');
 
 // Greeting message shown when the popup first opens
 const GREETING: LocalMessage = {
   id: 'greeting',
   role: 'assistant',
-  content: `Hi there! 👋 I'm **${defaultTutor.name}**, your AI tutor on MarqAI Courses.\n\nI can help you with:\n- 📚 **Course concepts** — AI/ML, Java, .NET, Python, Mobile Dev, Flutter\n- 💻 **Code help** — write, debug, and review code\n- 🗺️ **Learning paths** — plan your study journey\n- ❓ **Questions** — ask me anything about software engineering\n\nWhat would you like to learn today?`,
+  content: `Hi there! 👋 I'm **${defaultTutor.name}**, your AI Course Advisor on MarqAI Courses.\n\nI can help you with:\n- 📚 **Course information** — details, pricing, and what each course covers\n- 🗺️ **Learning paths** — which course is right for you\n- ❓ **Platform questions** — how MarqAI Courses works\n- 💡 **Career guidance** — which skills to learn for your goals\n\nWhat would you like to know?`,
   timestamp: Date.now(),
 };
 
@@ -350,12 +350,13 @@ export function GlobalTutorPopup() {
               speaking={false}
               expression="neutral"
               size={46}
+              gender="female"
             />
           </div>
           {/* Tooltip */}
           <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block">
             <div className="whitespace-nowrap rounded-lg bg-popover px-3 py-1.5 text-xs font-medium text-popover-foreground shadow-lg border">
-              Chat with Marq AI Tutor
+              Chat with MayaAI
             </div>
           </div>
         </div>
@@ -390,7 +391,7 @@ export function GlobalTutorPopup() {
           {/* Avatar */}
           <div className="relative">
             <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-white/40 bg-emerald-700/30 overflow-hidden">
-              <Animated3DTutorAvatar speaking={isTyping} expression={isTyping ? 'explaining' : 'neutral'} size={36} />
+              <Animated3DTutorAvatar speaking={isTyping} expression={isTyping ? 'explaining' : 'neutral'} size={36} gender="female" />
             </div>
             <div className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-emerald-600 ${isTyping ? 'bg-green-400 animate-pulse' : 'bg-emerald-300'}`} />
           </div>
@@ -471,7 +472,7 @@ export function GlobalTutorPopup() {
             {msg.role === 'assistant' && (
               <div className="shrink-0 mt-1">
                 <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600">
-                  <Animated3DTutorAvatar speaking={false} expression="neutral" size={26} />
+                  <Animated3DTutorAvatar speaking={false} expression="neutral" size={26} gender="female" />
                 </div>
               </div>
             )}
@@ -505,7 +506,7 @@ export function GlobalTutorPopup() {
           <div className="flex gap-2.5 justify-start">
             <div className="shrink-0 mt-1">
               <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600">
-                <Animated3DTutorAvatar speaking expression="explaining" size={26} />
+                <Animated3DTutorAvatar speaking expression="explaining" size={26} gender="female" />
               </div>
             </div>
             <div className="bg-muted/80 rounded-2xl rounded-bl-sm px-4 py-3 border border-border/50">
@@ -597,7 +598,7 @@ export function GlobalTutorPopup() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Ask Marq AI anything..."
+              placeholder="Ask MayaAI about our courses..."
               rows={1}
               className="w-full resize-none rounded-xl border border-border/60 bg-muted/50 px-3.5 py-2 pr-10 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/30"
               style={{ maxHeight: 80 }}

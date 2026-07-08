@@ -129,7 +129,7 @@ export const SEED_USERS: User[] = [
   // Super admin
   {
     id: 'u-admin-1',
-    name: 'Maya Iyer',
+    name: 'Mahesh Kumar Parvathareddy',
     email: 'admin@marqai.dev',
     role: 'super_admin',
     avatarColor: 'from-rose-500 to-pink-600',
@@ -535,9 +535,9 @@ export const PRICING_PLANS: PricingPlan[] = [
 // ============================================================
 
 export const SEED_AUDIT_LOGS: AuditLog[] = [
-  { id: 'a-1', actorId: 'u-admin-1', actorName: 'Maya Iyer', action: 'Approved tutor application', target: 'Aisha Patel', timestamp: now - 30 * day },
-  { id: 'a-2', actorId: 'u-admin-1', actorName: 'Maya Iyer', action: 'Updated pricing', target: 'marqaicourses Annual → $349', timestamp: now - 21 * day },
-  { id: 'a-3', actorId: 'u-admin-1', actorName: 'Maya Iyer', action: 'Connected integration', target: 'Slack', timestamp: now - 14 * day },
-  { id: 'a-4', actorId: 'u-admin-1', actorName: 'Maya Iyer', action: 'Suspended user', target: 'spam@example.com', timestamp: now - 7 * day },
-  { id: 'a-5', actorId: 'u-admin-1', actorName: 'Maya Iyer', action: 'Edited role permissions', target: 'Tutor role', timestamp: now - 2 * day },
+  { id: 'a-1', actorId: 'u-admin-1', actorName: 'Mahesh Kumar Parvathareddy', action: 'Approved tutor application', target: 'Aisha Patel', timestamp: now - 30 * day },
+  { id: 'a-2', actorId: 'u-admin-1', actorName: 'Mahesh Kumar Parvathareddy', action: 'Updated pricing', target: 'marqaicourses Annual → $349', timestamp: now - 21 * day },
+  { id: 'a-3', actorId: 'u-admin-1', actorName: 'Mahesh Kumar Parvathareddy', action: 'Connected integration', target: 'Slack', timestamp: now - 14 * day },
+  { id: 'a-4', actorId: 'u-admin-1', actorName: 'Mahesh Kumar Parvathareddy', action: 'Suspended user', target: 'spam@example.com', timestamp: now - 7 * day },
+  { id: 'a-5', actorId: 'u-admin-1', actorName: 'Mahesh Kumar Parvathareddy', action: 'Edited role permissions', target: 'Tutor role', timestamp: now - 2 * day },
 ];

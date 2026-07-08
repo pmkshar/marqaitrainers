@@ -83,10 +83,53 @@ function WelcomeIntroVideo() {
   const [isPaused, setIsPaused] = useState(false);
   const [activeLine, setActiveLine] = useState(-1);
   const [progress, setProgress] = useState(0);
+  const [voicesReady, setVoicesReady] = useState(false);
+  const [speechError, setSpeechError] = useState<string | null>(null);
   const cancelRef = useRef(false);
   const utterancesRef = useRef<SpeechSynthesisUtterance[]>([]);
+  const voicesRetryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const supported = typeof window !== 'undefined' && 'speechSynthesis' in window;
+
+  // Load voices: wait for voiceschanged event, with a fallback timeout
+  useEffect(() => {
+    if (!supported) {
+      setSpeechError('Speech is not supported in this browser.');
+      return;
+    }
+
+    const checkVoices = () => {
+      const voices = window.speechSynthesis.getVoices();
+      if (voices.length > 0) {
+        setVoicesReady(true);
+      }
+    };
+
+    // Check immediately (voices may already be cached)
+    checkVoices();
+
+    // Listen for voiceschanged (fires when voices finish loading)
+    const handleVoicesChanged = () => {
+      checkVoices();
+    };
+    window.speechSynthesis.addEventListener('voiceschanged', handleVoicesChanged);
+
+    // Fallback: some browsers don't fire voiceschanged, so retry after a delay
+    voicesRetryRef.current = setTimeout(() => {
+      const voices = window.speechSynthesis.getVoices();
+      if (voices.length > 0) {
+        setVoicesReady(true);
+      } else {
+        // Even if still empty, mark as ready after timeout so user can try
+        setVoicesReady(true);
+      }
+    }, 1500);
+
+    return () => {
+      window.speechSynthesis.removeEventListener('voiceschanged', handleVoicesChanged);
+      if (voicesRetryRef.current) clearTimeout(voicesRetryRef.current);
+    };
+  }, [supported]);
 
   const stopSpeech = useCallback(() => {
     cancelRef.current = true;
@@ -96,7 +139,27 @@ function WelcomeIntroVideo() {
   }, []);
 
   const speak = useCallback(() => {
-    if (!supported) return;
+    if (!supported) {
+      setSpeechError('Speech is not supported in this browser.');
+      return;
+    }
+
+    // Ensure voices are loaded before speaking
+    const voices = window.speechSynthesis.getVoices();
+    // If still no voices, try waiting briefly
+    if (voices.length === 0) {
+      setSpeechError('Loading voices... please try again in a moment.');
+      // Trigger a voiceschanged listener attempt
+      const handleVoices = () => {
+        window.speechSynthesis.removeEventListener('voiceschanged', handleVoices);
+        setSpeechError(null);
+        setVoicesReady(true);
+      };
+      window.speechSynthesis.addEventListener('voiceschanged', handleVoices);
+      return;
+    }
+
+    setSpeechError(null);
     stopSpeech();
     cancelRef.current = false;
     setIsPlaying(true);
@@ -104,9 +167,9 @@ function WelcomeIntroVideo() {
     setActiveLine(0);
     setProgress(0);
 
-    const voices = window.speechSynthesis.getVoices();
     const enIN = voices.find(v => v.lang === 'en-IN') ?? voices.find(v => v.lang.startsWith('en')) ?? null;
 
+    utterancesRef.current = [];
     INTRO_SCRIPT.forEach((text, idx) => {
       const u = new SpeechSynthesisUtterance(text);
       u.lang = 'en-IN';
@@ -128,13 +191,26 @@ function WelcomeIntroVideo() {
           }
         }
       };
-      u.onerror = () => {
+      u.onerror = (e) => {
+        if (!cancelRef.current) {
+          setSpeechError('Speech playback encountered an error. Please try again.');
+        }
         setIsPlaying(false);
         setIsPaused(false);
       };
       utterancesRef.current.push(u);
       window.speechSynthesis.speak(u);
     });
+
+    // Chrome bug workaround: speechSynthesis can pause if tab is in background.
+    // Periodically call resume() to keep it going.
+    const keepAlive = setInterval(() => {
+      if (cancelRef.current || !window.speechSynthesis.speaking) {
+        clearInterval(keepAlive);
+        return;
+      }
+      window.speechSynthesis.resume();
+    }, 5000);
   }, [supported, stopSpeech]);
 
   const pauseResume = useCallback(() => {
@@ -149,7 +225,10 @@ function WelcomeIntroVideo() {
   }, [isPlaying, isPaused]);
 
   useEffect(() => {
-    return () => { try { window.speechSynthesis.cancel(); } catch {} };
+    return () => {
+      cancelRef.current = true;
+      try { window.speechSynthesis.cancel(); } catch {}
+    };
   }, []);
 
   return (
@@ -197,12 +276,25 @@ function WelcomeIntroVideo() {
         )}
       </div>
 
+      {/* Speech error message */}
+      {speechError && (
+        <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-950/30 border-b border-amber-200 dark:border-amber-800">
+          <span className="text-xs text-amber-700 dark:text-amber-400">{speechError}</span>
+          <button
+            onClick={() => setSpeechError(null)}
+            className="ml-auto text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </div>
+      )}
+
       {/* Player controls */}
       <div className="flex items-center gap-2 px-4 py-2.5 bg-card/80 border-t">
         {!isPlaying ? (
-          <Button onClick={speak} disabled={!supported} size="sm" className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700">
+          <Button onClick={speak} disabled={!supported || !voicesReady} size="sm" className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700 disabled:opacity-50">
             <Play className="mr-1.5 h-4 w-4" />
-            Play Introduction
+            {voicesReady ? 'Play Introduction' : 'Loading Voices...'}
           </Button>
         ) : (
           <Button onClick={pauseResume} size="sm" variant="outline" className="border-emerald-500/30">

@@ -1462,7 +1462,7 @@ export function HeroSection() {
         </div>
       </div>
 
-      {/* ── Horizontal Course Carousel ── */}
+      {/* ── Auto-Scrolling Course Icons Carousel ── */}
       <div className="relative bg-background py-10 sm:py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-6 flex items-center justify-between">
@@ -1470,112 +1470,54 @@ export function HeroSection() {
               <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Explore Our Courses</h2>
               <p className="mt-1 text-sm text-muted-foreground">Career-track programs with AI voice tutoring</p>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => scrollBy('left')}
-                disabled={!canScrollLeft}
-                className="grid h-10 w-10 place-items-center rounded-full border bg-card shadow-sm transition-all hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
-                aria-label="Scroll left"
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </button>
-              <button
-                onClick={() => scrollBy('right')}
-                disabled={!canScrollRight}
-                className="grid h-10 w-10 place-items-center rounded-full border bg-card shadow-sm transition-all hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
-                aria-label="Scroll right"
-              >
-                <ChevronRight className="h-5 w-5" />
-              </button>
+            <div className="hidden items-center gap-1 text-xs text-muted-foreground sm:flex">
+              <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
+              Auto-scrolling · Hover to pause
             </div>
           </div>
         </div>
 
-        {/* Scrollable track */}
-        <div
-          ref={scrollRef}
-          className="flex gap-5 overflow-x-auto px-4 sm:px-6 lg:px-8 scroll-smooth pb-4 scrollbar-hide"
-        >
-          {/* Left spacer for centering on large screens */}
-          <div className="hidden lg:block w-[calc((100vw-80rem)/2)] shrink-0" />
+        {/* CSS-animated marquee track — pauses on hover, continuous scroll */}
+        <div className="group/marquee relative">
+          {/* Fade edges */}
+          <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-16 bg-gradient-to-r from-background to-transparent" />
+          <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-16 bg-gradient-to-l from-background to-transparent" />
 
-          {COURSES.map((course) => (
-            <div
-              key={course.id}
-              className="group flex w-72 shrink-0 flex-col overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl cursor-pointer sm:w-80"
-              onClick={() => openCourse(course.id)}
-            >
-              {/* Gradient header */}
-              <div className={`relative h-32 bg-gradient-to-br ${course.gradient}`}>
-                <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-10" />
-                <span className="absolute right-4 top-4 grid h-14 w-14 place-items-center rounded-xl bg-white/15 text-white backdrop-blur">
-                  <CourseIcon name={course.icon} className="h-7 w-7" />
-                </span>
-                <Badge className="absolute left-4 top-4 bg-white/20 text-white hover:bg-white/30" variant="secondary">
-                  {course.level}
-                </Badge>
-              </div>
-
-              {/* Card body */}
-              <div className="flex flex-1 flex-col p-5">
-                <h3 className="text-base font-semibold leading-tight">{course.title}</h3>
-                <p className="mt-1.5 line-clamp-2 text-sm text-muted-foreground">{course.subtitle}</p>
-
-                {/* Tags */}
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {course.tags.slice(0, 3).map((t) => (
-                    <Badge key={t} variant="outline" className="text-[10px] font-medium">{t}</Badge>
-                  ))}
-                  {course.tags.length > 3 && (
-                    <Badge variant="outline" className="text-[10px] font-medium">+{course.tags.length - 3}</Badge>
-                  )}
-                </div>
-
-                {/* Meta row */}
-                <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
-                  <span className="inline-flex items-center gap-1"><PlayCircle className="h-3.5 w-3.5" /> {course.lessonsCount} lessons</span>
-                  <span>·</span>
-                  <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {course.duration}</span>
-                  <span>·</span>
-                  <span className="inline-flex items-center gap-1"><Star className="h-3 w-3 fill-amber-400 text-amber-500" /> {course.rating}</span>
-                </div>
-
-                {/* Price + CTA */}
-                <div className="mt-auto flex items-center justify-between border-t pt-3">
-                  <div className="text-sm">
-                    <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                      {formatPrice(course.oneTimePrice, currency)}
-                    </span>
-                    <span className="text-xs text-muted-foreground"> one-time</span>
-                  </div>
-                  <span className="inline-flex items-center gap-1 text-sm font-semibold text-emerald-600 transition-transform group-hover:translate-x-1 dark:text-emerald-400">
-                    View <ArrowRight className="h-3.5 w-3.5" />
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))}
-
-          {/* Ask MarqAI card */}
           <div
-            className="flex w-72 shrink-0 flex-col items-center justify-center rounded-2xl border border-dashed border-emerald-500/40 bg-emerald-500/5 p-8 text-center transition-all hover:bg-emerald-500/10 cursor-pointer sm:w-80"
-            onClick={() => setTutorOpen(true)}
+            className="flex gap-4 px-4"
+            style={{
+              animation: 'marqai-scroll 30s linear infinite',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.animationPlayState = 'paused'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.animationPlayState = 'running'; }}
           >
-            <span className="grid h-14 w-14 place-items-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg">
-              <Sparkles className="h-7 w-7" />
-            </span>
-            <h3 className="mt-4 text-lg font-semibold">Not sure where to start?</h3>
-            <p className="mt-2 text-sm text-muted-foreground">Ask our AI tutor for a personalized recommendation.</p>
-            <Button
-              onClick={(e) => { e.stopPropagation(); setTutorOpen(true); }}
-              className="mt-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700"
-            >
-              <Sparkles className="mr-1.5 h-4 w-4" /> Ask MarqAI
-            </Button>
+            {[...COURSES, ...COURSES, ...COURSES].map((course, idx) => (
+              <button
+                key={`hero-${course.id}-${idx}`}
+                onClick={() => openCourse(course.id)}
+                className="group flex items-center gap-3 rounded-2xl border border-border/50 bg-card px-4 py-3 shadow-sm transition-all hover:shadow-md hover:border-emerald-400/40 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/30 hover:-translate-y-0.5"
+                style={{ flexShrink: 0 }}
+              >
+                <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${course.gradient} text-white shadow-sm transition-transform group-hover:scale-110`}>
+                  <CourseIcon name={course.icon} className="h-5 w-5" />
+                </span>
+                <div className="text-left min-w-0">
+                  <span className="text-sm font-semibold whitespace-nowrap block">{course.title}</span>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <Badge variant="secondary" className="text-[9px] shrink-0 px-1.5 py-0">{course.level}</Badge>
+                    <div className="flex items-center gap-0.5 text-amber-500">
+                      <Star className="h-2.5 w-2.5 fill-amber-400" />
+                      <span className="text-[9px] font-medium">{course.rating}</span>
+                    </div>
+                    <span className="text-[9px] text-muted-foreground">{course.lessonsCount} lessons</span>
+                  </div>
+                </div>
+                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap ml-2">
+                  {formatPrice(course.oneTimePrice, currency)}
+                </span>
+              </button>
+            ))}
           </div>
-
-          {/* Right spacer */}
-          <div className="hidden lg:block w-[calc((100vw-80rem)/2)] shrink-0" />
         </div>
       </div>
     </section>
@@ -1743,10 +1685,10 @@ export function CoursesPage() {
                     <span className="font-medium">{formatPrice(course.monthlyPrice, currency)}/mo</span>
                   </div>
                   {hasAccess ? (
-                    <span className="text-sm font-semibold text-emerald-600 transition-transform group-hover:translate-x-1 dark:text-emerald-400">View →</span>
+                    <span className="text-sm font-semibold text-emerald-600 transition-transform group-hover:translate-x-1 dark:text-emerald-400">View Course →</span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 text-sm font-semibold text-amber-600 dark:text-amber-400 transition-transform group-hover:translate-x-1">
-                      <ShoppingCart className="h-3.5 w-3.5" /> Buy
+                    <span className="inline-flex items-center gap-1 text-sm font-bold text-amber-600 dark:text-amber-400 transition-transform group-hover:translate-x-1">
+                      <ShoppingCart className="h-3.5 w-3.5" /> Buy Course
                     </span>
                   )}
                 </div>

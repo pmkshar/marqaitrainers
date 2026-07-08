@@ -31,7 +31,7 @@ export const SEED_CERT_TEMPLATES: CertificateTemplate[] = [
       { id: 'e7', type: 'score', x: 50, y: 70, w: 80, fontSize: 16, fontWeight: 500, color: '#475569', text: 'Final score: {{score}}%', align: 'center' },
       { id: 'e8', type: 'date', x: 25, y: 85, w: 30, fontSize: 14, fontWeight: 500, color: '#475569', text: 'Issued: {{date}}', align: 'left' },
       { id: 'e9', type: 'code', x: 75, y: 85, w: 30, fontSize: 14, fontWeight: 500, color: '#475569', text: 'Code: {{code}}', align: 'right' },
-      { id: 'e10', type: 'signature', x: 25, y: 92, w: 30, fontSize: 14, fontWeight: 600, color: '#1e293b', text: 'Maya Iyer, Founder', align: 'left' },
+      { id: 'e10', type: 'signature', x: 25, y: 92, w: 30, fontSize: 14, fontWeight: 600, color: '#1e293b', text: 'Mahesh Kumar Parvathareddy, Founder', align: 'left' },
     ],
   },
   {

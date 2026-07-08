@@ -1,136 +1,240 @@
-<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <!-- 3D Background gradient with depth -->
-    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#34D399"/>
-      <stop offset="35%" style="stop-color:#10B981"/>
-      <stop offset="70%" style="stop-color:#059669"/>
-      <stop offset="100%" style="stop-color:#047857"/>
+    <!-- Background gradient - dark navy with subtle variation -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="40%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#020617"/>
     </linearGradient>
-    <!-- Inner glow for 3D depth -->
-    <radialGradient id="innerGlow" cx="40%" cy="35%" r="60%">
-      <stop offset="0%" style="stop-color:#6EE7B7;stop-opacity:0.4"/>
-      <stop offset="100%" style="stop-color:#047857;stop-opacity:0"/>
-    </radialGradient>
-    <!-- Gold gradient for 3D tassel -->
-    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFE066"/>
-      <stop offset="50%" style="stop-color:#FFD700"/>
-      <stop offset="100%" style="stop-color:#B8860B"/>
+
+    <!-- Background rim highlight gradient -->
+    <linearGradient id="bgRimGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#334155"/>
+      <stop offset="50%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
     </linearGradient>
-    <!-- Brain node glow -->
-    <radialGradient id="nodeGlow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" style="stop-color:#6EE7B7;stop-opacity:0.8"/>
-      <stop offset="100%" style="stop-color:#10B981;stop-opacity:0"/>
+
+    <!-- Primary emerald gradient for the M -->
+    <linearGradient id="emeraldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="35%" stop-color="#10b981"/>
+      <stop offset="70%" stop-color="#059669"/>
+      <stop offset="100%" stop-color="#047857"/>
+    </linearGradient>
+
+    <!-- Lighter emerald for highlights -->
+    <linearGradient id="emeraldHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#6ee7b7"/>
+      <stop offset="100%" stop-color="#10b981"/>
+    </linearGradient>
+
+    <!-- Side shadow gradient for M legs (3D depth) -->
+    <linearGradient id="emeraldDark" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#059669"/>
+      <stop offset="100%" stop-color="#065f46"/>
+    </linearGradient>
+
+    <!-- Graduation cap top gradient -->
+    <linearGradient id="capTopGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="50%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+
+    <!-- Tassel gradient -->
+    <linearGradient id="tasselGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+
+    <!-- Button/jewel on cap -->
+    <radialGradient id="capButton" cx="50%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="#fde68a"/>
+      <stop offset="60%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#b45309"/>
     </radialGradient>
-    <!-- Shadow filter for 3D effect -->
-    <filter id="dropShadow" x="-10%" y="-10%" width="130%" height="130%">
-      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000000" flood-opacity="0.3"/>
+
+    <!-- Glow behind the logo -->
+    <radialGradient id="emeraldGlow" cx="50%" cy="55%" r="35%">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.3"/>
+      <stop offset="60%" stop-color="#059669" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#0f172a" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Top edge highlight on rounded square -->
+    <linearGradient id="topEdgeHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.15"/>
+      <stop offset="30%" stop-color="#ffffff" stop-opacity="0.03"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- Inner shadow on the rounded square -->
+    <linearGradient id="innerShadow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="85%" stop-color="#000000" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.35"/>
+    </linearGradient>
+
+    <!-- Drop shadow filter for the M -->
+    <filter id="dropShadow" x="-10%" y="-10%" width="130%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000000" flood-opacity="0.5"/>
     </filter>
-    <!-- Cap shadow -->
-    <filter id="capShadow" x="-5%" y="-5%" width="115%" height="115%">
-      <feDropShadow dx="2" dy="3" stdDeviation="3" flood-color="#000000" flood-opacity="0.25"/>
+
+    <!-- Subtle inner glow on M -->
+    <filter id="innerGlow" x="-5%" y="-5%" width="110%" height="110%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur"/>
+      <feOffset dx="0" dy="0"/>
+      <feComposite in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1"/>
+      <feFlood flood-color="#6ee7b7" flood-opacity="0.4"/>
+      <feComposite in2="SourceAlpha" operator="in"/>
+      <feGaussianBlur stdDeviation="2"/>
+      <feComposite in2="SourceGraphic" operator="over"/>
     </filter>
+
+    <!-- Soft glow filter -->
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="12" result="glow"/>
+      <feMerge>
+        <feMergeNode in="glow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
     <!-- Text shadow -->
-    <filter id="textShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.3"/>
+    <filter id="textShadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000000" flood-opacity="0.6"/>
     </filter>
+
+    <!-- Cap shadow -->
+    <filter id="capShadow" x="-10%" y="-10%" width="130%" height="140%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000000" flood-opacity="0.4"/>
+    </filter>
+
+    <!-- Clip for rounded square -->
+    <clipPath id="roundedClip">
+      <rect x="16" y="16" width="480" height="480" rx="96" ry="96"/>
+    </clipPath>
   </defs>
 
-  <!-- 3D Rounded Background -->
-  <rect width="512" height="512" rx="96" fill="url(#bgGradient)" filter="url(#dropShadow)"/>
-  <!-- Inner glow overlay for 3D depth -->
-  <rect width="512" height="512" rx="96" fill="url(#innerGlow)"/>
-  <!-- Subtle border for 3D edge -->
-  <rect x="2" y="2" width="508" height="508" rx="95" fill="none" stroke="#6EE7B7" stroke-width="1" opacity="0.3"/>
-  
-  <!-- Graduation Cap — 3D with shadow -->
-  <g transform="translate(96, 80)" filter="url(#capShadow)">
-    <!-- Cap Board — 3D perspective -->
-    <polygon points="60,175 320,175 280,95 100,95" fill="#FFFFFF" opacity="0.95"/>
-    <!-- Cap underside for 3D depth -->
-    <polygon points="60,175 320,175 320,185 60,185" fill="#D1D5DB" opacity="0.6"/>
-    <!-- Cap base rim -->
-    <rect x="40" y="175" width="280" height="14" rx="4" fill="#FFFFFF"/>
-    <!-- Diamond pattern on cap -->
-    <polygon points="190,100 200,110 190,120 180,110" fill="url(#goldGrad)" opacity="0.6"/>
-    <!-- Button on top — 3D sphere effect -->
-    <circle cx="190" cy="95" r="14" fill="url(#goldGrad)"/>
-    <circle cx="187" cy="91" r="5" fill="#FFF8DC" opacity="0.6"/>
-    <!-- Tassel — 3D rope -->
-    <path d="M190,95 C190,120 240,140 260,175" stroke="url(#goldGrad)" stroke-width="5" fill="none" stroke-linecap="round"/>
-    <path d="M190,95 C195,120 245,140 265,175" stroke="#B8860B" stroke-width="2" fill="none" opacity="0.3"/>
-    <!-- Tassel end — 3D ball -->
-    <circle cx="260" cy="175" r="10" fill="url(#goldGrad)"/>
-    <circle cx="258" cy="172" r="3.5" fill="#FFF8DC" opacity="0.5"/>
+  <!-- ==================== ROUNDED SQUARE BACKGROUND ==================== -->
+
+  <!-- Outer shadow of the whole icon -->
+  <rect x="16" y="16" width="480" height="480" rx="96" ry="96" fill="#000000" opacity="0.4" transform="translate(0,4)"/>
+
+  <!-- Main background rounded square -->
+  <rect x="16" y="16" width="480" height="480" rx="96" ry="96" fill="url(#bgGrad)"/>
+
+  <!-- Rim/border gradient for 3D edge -->
+  <rect x="16" y="16" width="480" height="480" rx="96" ry="96" fill="none" stroke="url(#bgRimGrad)" stroke-width="2"/>
+
+  <!-- Top edge highlight (light source from top-left) -->
+  <rect x="16" y="16" width="480" height="480" rx="96" ry="96" fill="url(#topEdgeHighlight)"/>
+
+  <!-- Bottom inner shadow -->
+  <rect x="16" y="16" width="480" height="480" rx="96" ry="96" fill="url(#innerShadow)"/>
+
+  <!-- ==================== AMBIENT GLOW ==================== -->
+  <ellipse cx="256" cy="260" rx="180" ry="170" fill="url(#emeraldGlow)" clip-path="url(#roundedClip)"/>
+
+  <!-- ==================== STYLIZED 3D "M" LETTER ==================== -->
+
+  <!-- The M is built from geometric shapes to give a 3D faceted look -->
+  <!-- M shadow layer -->
+  <g filter="url(#dropShadow)" clip-path="url(#roundedClip)">
+
+    <!-- Left leg of M - dark side (3D depth) -->
+    <polygon points="90,370 140,370 140,200 90,230" fill="#065f46" opacity="0.9"/>
+
+    <!-- Left leg of M - front face -->
+    <polygon points="90,370 140,370 140,200 90,230" fill="url(#emeraldGrad)"/>
+
+    <!-- Left leg highlight edge -->
+    <polygon points="90,230 140,200 140,205 90,235" fill="url(#emeraldHighlight)" opacity="0.6"/>
+
+    <!-- Right leg of M - dark side (3D depth) -->
+    <polygon points="372,370 422,370 422,230 372,200" fill="#065f46" opacity="0.9"/>
+
+    <!-- Right leg of M - front face -->
+    <polygon points="372,370 422,370 422,230 372,200" fill="url(#emeraldGrad)"/>
+
+    <!-- Right leg highlight edge -->
+    <polygon points="372,200 422,230 422,235 372,205" fill="url(#emeraldHighlight)" opacity="0.6"/>
+
+    <!-- Center V of M - the diagonal strokes -->
+    <!-- Left diagonal (going from top-left down to center) -->
+    <polygon points="140,200 256,290 256,310 140,225" fill="url(#emeraldGrad)"/>
+
+    <!-- Right diagonal (going from top-right down to center) -->
+    <polygon points="372,200 256,290 256,310 372,225" fill="url(#emeraldDark)"/>
+
+    <!-- Center V highlight -->
+    <polygon points="140,200 256,290 256,296 140,208" fill="url(#emeraldHighlight)" opacity="0.5"/>
+    <polygon points="372,200 256,290 256,296 372,208" fill="#6ee7b7" opacity="0.2"/>
+
+    <!-- Bottom connecting bar of M for stability -->
+    <rect x="90" y="355" width="332" height="20" rx="4" fill="url(#emeraldGrad)"/>
+    <rect x="90" y="355" width="332" height="5" rx="2" fill="url(#emeraldHighlight)" opacity="0.3"/>
+
   </g>
 
-  <!-- AI Brain Circuit — 3D with glow effects -->
-  <g transform="translate(160, 255)">
-    <!-- Brain outline — 3D double stroke -->
-    <path d="M96,35 C55,35 35,68 35,100 C35,145 68,165 96,165 C135,165 155,130 155,100 C155,55 135,35 96,35" 
-          stroke="#6EE7B7" stroke-width="12" fill="none" opacity="0.3"/>
-    <path d="M96,40 C60,40 40,70 40,100 C40,140 70,160 96,160 C130,160 150,128 150,100 C150,58 130,40 96,40" 
-          stroke="#FFFFFF" stroke-width="6" fill="none"/>
-    
-    <!-- Neural connections — 3D glowing lines -->
-    <line x1="58" y1="78" x2="96" y2="78" stroke="#6EE7B7" stroke-width="5" opacity="0.5"/>
-    <line x1="58" y1="78" x2="96" y2="78" stroke="#10B981" stroke-width="3"/>
-    <line x1="96" y1="78" x2="134" y2="78" stroke="#6EE7B7" stroke-width="5" opacity="0.5"/>
-    <line x1="96" y1="78" x2="134" y2="78" stroke="#10B981" stroke-width="3"/>
-    <line x1="58" y1="122" x2="96" y2="122" stroke="#6EE7B7" stroke-width="5" opacity="0.5"/>
-    <line x1="58" y1="122" x2="96" y2="122" stroke="#10B981" stroke-width="3"/>
-    <line x1="96" y1="122" x2="134" y2="122" stroke="#6EE7B7" stroke-width="5" opacity="0.5"/>
-    <line x1="96" y1="122" x2="134" y2="122" stroke="#10B981" stroke-width="3"/>
-    <line x1="96" y1="78" x2="96" y2="122" stroke="#6EE7B7" stroke-width="5" opacity="0.5"/>
-    <line x1="96" y1="78" x2="96" y2="122" stroke="#10B981" stroke-width="3"/>
-    
-    <!-- Cross connections -->
-    <line x1="58" y1="78" x2="96" y2="100" stroke="#10B981" stroke-width="2" opacity="0.4"/>
-    <line x1="134" y1="78" x2="96" y2="100" stroke="#10B981" stroke-width="2" opacity="0.4"/>
-    <line x1="58" y1="122" x2="96" y2="100" stroke="#10B981" stroke-width="2" opacity="0.4"/>
-    <line x1="134" y1="122" x2="96" y2="100" stroke="#10B981" stroke-width="2" opacity="0.4"/>
-    
-    <!-- Center node — 3D glow -->
-    <circle cx="96" cy="100" r="14" fill="url(#nodeGlow)"/>
-    <circle cx="96" cy="100" r="8" fill="#FFFFFF"/>
-    <circle cx="94" cy="98" r="3" fill="#E0F2FE" opacity="0.6"/>
-    
-    <!-- Nodes — 3D spheres -->
-    <circle cx="58" cy="78" r="9" fill="url(#nodeGlow)"/>
-    <circle cx="58" cy="78" r="7" fill="#10B981"/>
-    <circle cx="56" cy="76" r="2.5" fill="#6EE7B7" opacity="0.7"/>
-    
-    <circle cx="96" cy="78" r="11" fill="url(#nodeGlow)"/>
-    <circle cx="96" cy="78" r="9" fill="#FFFFFF"/>
-    <circle cx="94" cy="76" r="3" fill="#E0F2FE" opacity="0.6"/>
-    
-    <circle cx="134" cy="78" r="9" fill="url(#nodeGlow)"/>
-    <circle cx="134" cy="78" r="7" fill="#10B981"/>
-    <circle cx="132" cy="76" r="2.5" fill="#6EE7B7" opacity="0.7"/>
-    
-    <circle cx="58" cy="122" r="9" fill="url(#nodeGlow)"/>
-    <circle cx="58" cy="122" r="7" fill="#10B981"/>
-    <circle cx="56" cy="120" r="2.5" fill="#6EE7B7" opacity="0.7"/>
-    
-    <circle cx="96" cy="122" r="11" fill="url(#nodeGlow)"/>
-    <circle cx="96" cy="122" r="9" fill="#FFFFFF"/>
-    <circle cx="94" cy="120" r="3" fill="#E0F2FE" opacity="0.6"/>
-    
-    <circle cx="134" cy="122" r="9" fill="url(#nodeGlow)"/>
-    <circle cx="134" cy="122" r="7" fill="#10B981"/>
-    <circle cx="132" cy="120" r="2.5" fill="#6EE7B7" opacity="0.7"/>
+  <!-- M inner highlight overlay -->
+  <g filter="url(#innerGlow)" clip-path="url(#roundedClip)" opacity="0.5">
+    <polygon points="90,230 140,200 256,290 372,200 422,230 422,370 372,370 372,225 256,310 140,225 140,370 90,370" fill="none" stroke="#6ee7b7" stroke-width="2"/>
   </g>
 
-  <!-- Text: MARQAI — 3D with shadow -->
-  <text x="256" y="420" font-family="'Segoe UI', Arial, sans-serif" font-size="52" font-weight="bold" fill="#FFFFFF" text-anchor="middle" filter="url(#textShadow)" letter-spacing="3">
-    MARQAI
-  </text>
-  <!-- Subtle text highlight for 3D -->
-  <text x="256" y="419" font-family="'Segoe UI', Arial, sans-serif" font-size="52" font-weight="bold" fill="#FFFFFF" text-anchor="middle" opacity="0.15" letter-spacing="3">
-    MARQAI
-  </text>
-  <text x="256" y="462" font-family="'Segoe UI', Arial, sans-serif" font-size="28" font-weight="600" fill="#6EE7B7" text-anchor="middle" filter="url(#textShadow)" letter-spacing="6">
+  <!-- ==================== GRADUATION CAP ==================== -->
+
+  <g filter="url(#capShadow)" clip-path="url(#roundedClip)">
+
+    <!-- Cap mortarboard (diamond shape) - sits above the M -->
+    <polygon points="256,100 370,148 256,196 142,148" fill="url(#capTopGrad)"/>
+
+    <!-- Cap mortarboard top highlight -->
+    <polygon points="256,100 370,148 256,148 142,148" fill="url(#emeraldHighlight)" opacity="0.4"/>
+
+    <!-- Cap mortarboard edge (3D thickness) -->
+    <polygon points="142,148 256,196 256,202 142,154" fill="#047857"/>
+    <polygon points="370,148 256,196 256,202 370,154" fill="#065f46"/>
+
+    <!-- Cap base (skull cap) -->
+    <path d="M190,165 Q190,145 210,140 L256,148 L302,140 Q322,145 322,165 L322,175 Q322,190 256,196 Q190,190 190,175 Z" fill="url(#emeraldGrad)"/>
+
+    <!-- Cap base highlight -->
+    <path d="M200,158 Q200,148 215,144 L256,150 L256,158 Z" fill="url(#emeraldHighlight)" opacity="0.4"/>
+
+    <!-- Button on top of cap -->
+    <circle cx="256" cy="148" r="8" fill="url(#capButton)"/>
+    <circle cx="254" cy="146" r="3" fill="#fef3c7" opacity="0.7"/>
+
+    <!-- Tassel string -->
+    <path d="M264,148 Q280,165 285,195 Q287,210 283,225" stroke="url(#tasselGrad)" stroke-width="3" fill="none" stroke-linecap="round"/>
+
+    <!-- Tassel end -->
+    <rect x="279" y="222" width="8" height="18" rx="3" fill="url(#tasselGrad)"/>
+    <rect x="280" y="222" width="3" height="18" rx="1.5" fill="#fde68a" opacity="0.5"/>
+
+  </g>
+
+  <!-- ==================== SUBTLE REFLECTION ==================== -->
+  <g clip-path="url(#roundedClip)" opacity="0.04">
+    <ellipse cx="256" cy="120" rx="200" ry="80" fill="#ffffff"/>
+  </g>
+
+  <!-- ==================== "MarqAI" TEXT ==================== -->
+  <g filter="url(#textShadow)">
+    <text x="256" y="430" text-anchor="middle" font-family="'SF Pro Display', 'Segoe UI', system-ui, -apple-system, sans-serif" font-size="48" font-weight="700" letter-spacing="2">
+      <tspan fill="#10b981">Marq</tspan><tspan fill="#ffffff">AI</tspan>
+    </text>
+  </g>
+
+  <!-- "Courses" subtitle -->
+  <text x="256" y="458" text-anchor="middle" font-family="'SF Pro Display', 'Segoe UI', system-ui, -apple-system, sans-serif" font-size="18" font-weight="400" fill="#94a3b8" letter-spacing="6" opacity="0.8">
     COURSES
   </text>
+
+  <!-- ==================== CORNER ACCENT LIGHTS ==================== -->
+  <!-- Subtle emerald light spots for extra depth -->
+  <circle cx="80" cy="80" r="40" fill="#10b981" opacity="0.03" clip-path="url(#roundedClip)"/>
+  <circle cx="432" cy="432" r="40" fill="#10b981" opacity="0.02" clip-path="url(#roundedClip)"/>
+
 </svg>

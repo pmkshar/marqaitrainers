@@ -96,7 +96,7 @@ function LessonItem({
       )}
 
       <div
-        className={`flex items-start gap-2 px-3 py-2 cursor-pointer overflow-hidden ${
+        className={`flex items-start gap-2 px-3 py-2 cursor-pointer min-w-0 overflow-hidden ${
           isCurrentLesson ? 'pl-4' : ''
         }`}
         onClick={onSelect}
@@ -116,9 +116,9 @@ function LessonItem({
 
         {/* Lesson info */}
         <div className="min-w-0 flex-1 overflow-hidden">
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 min-w-0">
             <p
-              className={`text-xs leading-tight truncate ${
+              className={`text-[11px] leading-tight truncate overflow-hidden text-ellipsis whitespace-nowrap ${
                 isCurrentLesson
                   ? 'font-semibold text-emerald-700 dark:text-emerald-400'
                   : isCompleted
@@ -138,15 +138,15 @@ function LessonItem({
               </Badge>
             )}
           </div>
-          <div className="flex items-center gap-2 mt-0.5 text-[10px] text-muted-foreground">
-            <span className="inline-flex items-center gap-0.5">
+          <div className="flex items-center gap-1.5 mt-0.5 text-[9px] text-muted-foreground overflow-hidden whitespace-nowrap">
+            <span className="inline-flex items-center gap-0.5 shrink-0">
               <Clock className="h-2.5 w-2.5" /> {lesson.duration}
             </span>
-            <span className="inline-flex items-center gap-0.5">
+            <span className="inline-flex items-center gap-0.5 shrink-0">
               <ListChecks className="h-2.5 w-2.5" /> {stepCount}
             </span>
             {quizCount > 0 && (
-              <span className="inline-flex items-center gap-0.5">
+              <span className="inline-flex items-center gap-0.5 shrink-0">
                 <FileQuestion className="h-2.5 w-2.5" /> {quizCount}Q
               </span>
             )}
@@ -173,16 +173,16 @@ function LessonItem({
 
       {/* Expandable steps list — with smooth animation */}
       {isExpanded && stepCount > 0 && (
-        <div className="ml-12 mr-4 pb-3 space-y-1 animate-accordion-down">
+        <div className="ml-12 mr-4 pb-3 space-y-1 animate-accordion-down overflow-hidden">
           {lesson.steps.map((step, i) => (
             <div
               key={i}
-              className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs bg-muted/20 hover:bg-muted/40 transition-colors"
+              className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs bg-muted/20 hover:bg-muted/40 transition-colors min-w-0 overflow-hidden"
             >
               <span className="shrink-0 h-4.5 w-4.5 grid place-items-center rounded-sm bg-background text-muted-foreground text-[10px] font-medium border border-border/50">
                 {i + 1}
               </span>
-              <span className="truncate text-muted-foreground">{step.title}</span>
+              <span className="truncate text-muted-foreground text-[11px] overflow-hidden text-ellipsis whitespace-nowrap">{step.title}</span>
             </div>
           ))}
         </div>
@@ -233,7 +233,7 @@ function ModuleSection({
         {/* Module header */}
         <CollapsibleTrigger asChild>
           <button
-            className={`w-full flex items-center gap-2 px-3 py-2.5 hover:bg-muted/40 transition-colors text-left overflow-hidden ${
+            className={`w-full flex items-center gap-2 px-3 py-2.5 hover:bg-muted/40 transition-colors text-left min-w-0 overflow-hidden ${
               isExpanded ? 'bg-muted/20' : ''
             } ${hasCurrentLesson ? 'bg-emerald-50/30 dark:bg-emerald-950/10' : ''}`}
           >
@@ -249,20 +249,20 @@ function ModuleSection({
               {isComplete ? <CheckCircle2 className="h-4 w-4" /> : String(moduleIndex + 1).padStart(2, '0')}
             </span>
 
-            <div className="min-w-0 flex-1">
-              <p className="font-semibold text-xs truncate leading-tight">{module.title}</p>
-              <div className="flex items-center gap-2 mt-1">
+            <div className="min-w-0 flex-1 overflow-hidden">
+              <p className="font-semibold text-[11px] truncate overflow-hidden text-ellipsis whitespace-nowrap leading-tight">{module.title}</p>
+              <div className="flex items-center gap-1.5 mt-1 min-w-0 overflow-hidden">
                 {/* Module progress bar */}
                 <Progress value={moduleProgress} className="h-1 flex-1 max-w-[80px]" />
-                <span className="text-[10px] text-muted-foreground tabular-nums">
+                <span className="text-[9px] text-muted-foreground tabular-nums shrink-0">
                   {completedCount}/{module.lessons.length}
                 </span>
                 {passedCount > 0 && (
-                  <span className="inline-flex items-center gap-0.5 text-[10px] text-emerald-600 dark:text-emerald-400">
+                  <span className="inline-flex items-center gap-0.5 text-[9px] text-emerald-600 dark:text-emerald-400 shrink-0">
                     <Award className="h-3 w-3" /> {passedCount}
                   </span>
                 )}
-                <span className="text-[10px] text-muted-foreground opacity-60">
+                <span className="text-[9px] text-muted-foreground opacity-60 shrink-0">
                   · {formatTotalDuration(totalDuration)}
                 </span>
               </div>
@@ -391,7 +391,7 @@ function SyllabusContent({
         </div>
 
         {/* Course title */}
-        <p className="text-xs text-muted-foreground truncate mb-3">{course.title}</p>
+        <p className="text-xs text-muted-foreground truncate overflow-hidden text-ellipsis whitespace-nowrap mb-3">{course.title}</p>
 
         {/* Progress section */}
         <div className="space-y-2 bg-muted/30 rounded-lg p-3">
@@ -410,8 +410,8 @@ function SyllabusContent({
       </div>
 
       {/* Scrollable curriculum */}
-      <ScrollArea className="flex-1">
-        <div>
+      <ScrollArea className="flex-1 overflow-hidden">
+        <div className="overflow-hidden break-words">
           {course.modules.map((module, moduleIndex) => (
             <ModuleSection
               key={module.id}
@@ -446,7 +446,7 @@ export function SyllabusSidebar({
   if (!course) return null;
 
   return (
-    <aside className="hidden lg:block sticky top-0 h-screen w-[260px] shrink-0 border-r bg-background z-10 shadow-sm overflow-y-auto overflow-x-hidden">
+    <aside className="hidden lg:block sticky top-0 h-screen w-[260px] min-w-[260px] max-w-[260px] shrink-0 border-r bg-background z-10 shadow-sm overflow-y-auto overflow-x-hidden">
       <SyllabusContent
         course={course}
         currentModuleId={currentModuleId}

@@ -1,10 +1,12 @@
 // ============================================================
 // Tutor Personas
 // ------------------------------------------------------------
-// Each course has a named AI tutor — branded as "Marq AI".
-// The super admin can assign either a female or male voice
-// per course. The gender controls voice selection in the
-// browser's TTS.
+// Two distinct AI tutors:
+//   1. MayaAI — Female AI tutor on the home page for clearing
+//      doubts about course information
+//   2. Marq AI — Male AI tutor inside the lesson/chapter view
+//      with full controls (play, pause, stop, voice chat,
+//      whiteboard, syllabus)
 // ============================================================
 
 export type TutorGender = 'female' | 'male';
@@ -18,7 +20,7 @@ export interface TutorPersona {
   tagline: string;
   /** Voice ID for ZAI TTS API */
   voice: 'tongtong' | 'chuichui' | 'xiaochen' | 'jam' | 'kazi' | 'douji' | 'luodo';
-  /** Gender — used to pick the right browser voice for voice-over */
+  /** Gender — used to pick the right browser voice for voice-over and avatar */
   gender: TutorGender;
   /** Tailwind gradient classes for avatar */
   avatarGradient: string;
@@ -30,35 +32,86 @@ export interface TutorPersona {
   introText: string;
 }
 
-// Female tutor — Marq AI
-const MAYA_BASE: Omit<TutorPersona, 'title' | 'tagline' | 'introText' | 'avatarGradient'> = {
-  name: 'Marq AI',
+// ────────────── MayaAI — Female home page tutor ──────────────
+
+const MAYAAI_BASE: Omit<TutorPersona, 'title' | 'tagline' | 'introText' | 'avatarGradient'> = {
+  name: 'MayaAI',
   voice: 'tongtong',
   gender: 'female',
   initial: 'M',
   speed: 0.95,
 };
 
-// Male tutor — Arjun
-const ARJUN_BASE: Omit<TutorPersona, 'title' | 'tagline' | 'introText' | 'avatarGradient'> = {
-  name: 'Arjun',
+// ────────────── Marq AI — Male lesson/chapter tutor ──────────────
+
+const MARQAI_BASE: Omit<TutorPersona, 'title' | 'tagline' | 'introText' | 'avatarGradient'> = {
+  name: 'Marq AI',
   voice: 'jam',
   gender: 'male',
-  initial: 'A',
+  initial: 'M',
   speed: 0.95,
 };
 
-// Default persona — used when no course context
+// Default persona for home page (MayaAI)
 export const DEFAULT_TUTOR: TutorPersona = {
-  ...MAYA_BASE,
+  ...MAYAAI_BASE,
+  title: 'Your AI Course Advisor',
+  tagline: 'Here to help you find the right course.',
+  avatarGradient: 'from-emerald-500 to-teal-600',
+  introText: `Hello! I am MayaAI, your AI Course Advisor. I can help you understand our courses, pricing, and learning paths. Feel free to ask me anything about our platform — from course details to career guidance. I am here to help you make the best choice for your learning journey!`,
+};
+
+// Marq AI default for lesson view
+export const DEFAULT_LESSON_TUTOR: TutorPersona = {
+  ...MARQAI_BASE,
   title: 'Your AI Software Engineering Tutor',
   tagline: 'Always here to help you learn.',
   avatarGradient: 'from-emerald-500 to-teal-600',
   introText: `Hello! I am Marq AI, your AI Software Engineering Tutor. I have years of experience in software engineering and I am passionate about helping learners like you master programming and technology. I believe in interactive learning — I will explain concepts step by step, ask you questions along the way to make sure you are following, and give you real-world examples so everything clicks. If you ever give a wrong answer, don't worry — I will gently remind you to listen carefully, and then we will continue together. Let us begin!`,
 };
 
-// Per-course female tutors (Marq AI)
-const FEMALE_TUTORS: Record<string, Omit<TutorPersona, 'gender' | 'voice' | 'speed' | 'name' | 'initial'>> = {
+// Per-course MayaAI tutors (home page — for course info queries)
+const MAYAAI_TUTORS: Record<string, Omit<TutorPersona, 'gender' | 'voice' | 'speed' | 'name' | 'initial'>> = {
+  'ai-ml': {
+    title: 'AI & Machine Learning Advisor',
+    tagline: 'I can help you understand our AI/ML course.',
+    avatarGradient: 'from-emerald-500 to-teal-600',
+    introText: `Hello! I am MayaAI, your AI and Machine Learning Course Advisor. I can help you understand what this course covers, the career opportunities it opens up, and whether it is the right fit for you. Ask me anything!`,
+  },
+  'java-fullstack': {
+    title: 'Full Stack Java Advisor',
+    tagline: 'I can help you understand our Java course.',
+    avatarGradient: 'from-orange-500 to-red-600',
+    introText: `Hello! I am MayaAI, your Full Stack Java Course Advisor. I can help you understand what this course covers, from JVM internals to enterprise Spring Boot applications. Ask me about the curriculum, prerequisites, or career outcomes!`,
+  },
+  'dotnet-fullstack': {
+    title: '.NET & C# Advisor',
+    tagline: 'I can help you understand our .NET course.',
+    avatarGradient: 'from-violet-500 to-purple-600',
+    introText: `Hello! I am MayaAI, your .NET and C# Course Advisor. I can help you understand what this course covers, from ASP.NET Core to production-grade applications. Ask me anything about the curriculum or career paths!`,
+  },
+  'mobile-dev': {
+    title: 'Mobile App Dev Advisor',
+    tagline: 'I can help you understand our Mobile Dev course.',
+    avatarGradient: 'from-sky-500 to-indigo-600',
+    introText: `Hello! I am MayaAI, your Mobile App Development Course Advisor. I can help you understand what this course covers, from React Native to shipping apps to the stores. Ask me about the curriculum or career opportunities!`,
+  },
+  'flutter-dev': {
+    title: 'Flutter & Dart Advisor',
+    tagline: 'I can help you understand our Flutter course.',
+    avatarGradient: 'from-cyan-500 to-blue-600',
+    introText: `Hello! I am MayaAI, your Flutter and Dart Course Advisor. I can help you understand what this course covers, from cross-platform UI to deploying beautiful apps. Ask me anything!`,
+  },
+  'python-pro': {
+    title: 'Python Programming Advisor',
+    tagline: 'I can help you understand our Python course.',
+    avatarGradient: 'from-yellow-500 to-amber-600',
+    introText: `Hello! I am MayaAI, your Python Programming Course Advisor. I can help you understand what this course covers, from basics to async programming and data science. Ask me about the curriculum or career paths!`,
+  },
+};
+
+// Per-course Marq AI tutors (lesson view — for actual teaching)
+const MARQAI_TUTORS: Record<string, Omit<TutorPersona, 'gender' | 'voice' | 'speed' | 'name' | 'initial'>> = {
   'ai-ml': {
     title: 'AI & Machine Learning Tutor',
     tagline: 'I make neural networks and transformers click.',
@@ -97,55 +150,39 @@ const FEMALE_TUTORS: Record<string, Omit<TutorPersona, 'gender' | 'voice' | 'spe
   },
 };
 
-// Per-course male tutors (Arjun) — same titles but male intro text
-const MALE_TUTORS: Record<string, Omit<TutorPersona, 'gender' | 'voice' | 'speed' | 'name' | 'initial'>> = {};
-for (const [courseId, femaleConfig] of Object.entries(FEMALE_TUTORS)) {
-  MALE_TUTORS[courseId] = {
-    ...femaleConfig,
-    introText: femaleConfig.introText.replace(/I am Marq AI/g, 'I am Arjun'),
-  };
+// Course-specific MayaAI mapping (home page — for course info)
+export const HOME_TUTORS: Record<string, TutorPersona> = {};
+for (const [courseId, config] of Object.entries(MAYAAI_TUTORS)) {
+  HOME_TUTORS[courseId] = { ...MAYAAI_BASE, ...config };
 }
 
-// Course-specific tutor mapping (defaults to female/Marq AI)
+// Course-specific Marq AI mapping (lesson view — for teaching)
 export const COURSE_TUTORS: Record<string, TutorPersona> = {};
-for (const [courseId, config] of Object.entries(FEMALE_TUTORS)) {
-  COURSE_TUTORS[courseId] = { ...MAYA_BASE, ...config };
+for (const [courseId, config] of Object.entries(MARQAI_TUTORS)) {
+  COURSE_TUTORS[courseId] = { ...MARQAI_BASE, ...config };
 }
 
-export function getTutorForCourse(courseId?: string): TutorPersona {
+/** Get MayaAI tutor for home page (course info / doubts) */
+export function getHomeTutor(courseId?: string): TutorPersona {
   if (!courseId) return DEFAULT_TUTOR;
+  return HOME_TUTORS[courseId] ?? DEFAULT_TUTOR;
+}
 
-  // Check if super admin has overridden the gender for this course
-  if (typeof window !== 'undefined') {
-    try {
-      const raw = window.localStorage.getItem('marq-ai-tutor-gender-overrides');
-      if (raw) {
-        const overrides: Record<string, TutorGender> = JSON.parse(raw);
-        const gender = overrides[courseId];
-        if (gender === 'male') {
-          const maleConfig = MALE_TUTORS[courseId];
-          if (maleConfig) return { ...ARJUN_BASE, ...maleConfig };
-          // Fallback: create a male variant
-          const femaleConfig = FEMALE_TUTORS[courseId];
-          if (femaleConfig) return { ...ARJUN_BASE, ...femaleConfig, introText: femaleConfig.introText.replace(/I am Marq AI/g, 'I am Arjun') };
-          return { ...ARJUN_BASE, title: DEFAULT_TUTOR.title, tagline: DEFAULT_TUTOR.tagline, avatarGradient: 'from-blue-500 to-indigo-600', introText: DEFAULT_TUTOR.introText.replace(/I am Marq AI/g, 'I am Arjun') };
-        }
-      }
-    } catch { /* noop */ }
-  }
-
-  return COURSE_TUTORS[courseId] ?? DEFAULT_TUTOR;
+/** Get Marq AI tutor for lesson/chapter view (teaching with controls) */
+export function getTutorForCourse(courseId?: string): TutorPersona {
+  if (!courseId) return DEFAULT_LESSON_TUTOR;
+  return COURSE_TUTORS[courseId] ?? DEFAULT_LESSON_TUTOR;
 }
 
 /** Get the current gender override for a course (used by admin UI). */
 export function getCourseTutorGender(courseId: string): TutorGender {
-  if (typeof window === 'undefined') return 'female';
+  if (typeof window === 'undefined') return 'male';
   try {
     const raw = window.localStorage.getItem('marq-ai-tutor-gender-overrides');
     if (raw) {
       const overrides: Record<string, TutorGender> = JSON.parse(raw);
-      return overrides[courseId] ?? 'female';
+      return overrides[courseId] ?? 'male';
     }
   } catch { /* noop */ }
-  return 'female';
+  return 'male';
 }
