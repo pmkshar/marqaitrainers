@@ -11,6 +11,9 @@ import Image from 'next/image';
 // CSS animations simulate speaking, expressions, and micro-
 // movements for a lifelike feel.
 //
+// When speaking, a subtle mouth overlay animation makes the
+// tutor look like she is actively talking to the candidate.
+//
 // All instances are named "Marq AI" — no gender variants needed.
 // The 'gender' prop is kept for backward compatibility but
 // ignored; everyone gets the same photorealistic avatar.
@@ -54,6 +57,7 @@ function PhotorealisticAvatar({
 }: Animated3DTutorAvatarProps) {
   const [mounted, setMounted] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [talkFrame, setTalkFrame] = useState(0);
   const breathPhase = useRef(0);
 
   useEffect(() => {
@@ -69,6 +73,18 @@ function PhotorealisticAvatar({
     frame = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(frame);
   }, []);
+
+  // Animate the mouth when speaking — cycle through mouth shapes
+  useEffect(() => {
+    if (!speaking) {
+      setTalkFrame(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setTalkFrame(prev => (prev + 1) % 4);
+    }, 180); // ~5.5 mouth cycles per second — natural speaking rate
+    return () => clearInterval(interval);
+  }, [speaking]);
 
   // Expression-based CSS filters and transforms
   const expressionStyles: Record<string, React.CSSProperties> = {
@@ -90,6 +106,21 @@ function PhotorealisticAvatar({
   };
 
   const currentExpressionStyle = expressionStyles[expression] || expressionStyles.neutral;
+
+  // Mouth overlay positioning — the mouth area is roughly at 55-72% from top, 35-65% from left
+  // Different mouth shapes for talking animation
+  const mouthShapes = [
+    // Frame 0: closed/slight smile (rest)
+    { width: size * 0.18, height: size * 0.03, borderRadius: '50%', opacity: 0.7 },
+    // Frame 1: slightly open
+    { width: size * 0.2, height: size * 0.07, borderRadius: '45%', opacity: 0.85 },
+    // Frame 2: wide open
+    { width: size * 0.22, height: size * 0.12, borderRadius: '40%', opacity: 0.9 },
+    // Frame 3: medium open (oh shape)
+    { width: size * 0.16, height: size * 0.1, borderRadius: '50%', opacity: 0.85 },
+  ];
+
+  const currentMouth = speaking ? mouthShapes[talkFrame] : mouthShapes[0];
 
   // If image fails to load, show a simple gradient avatar with "M" initial
   if (imgError) {
@@ -159,6 +190,77 @@ function PhotorealisticAvatar({
           sizes={`${size}px`}
           onError={() => setImgError(true)}
         />
+
+        {/* ──── Talking mouth overlay ──── */}
+        {mounted && (
+          <div
+            className="absolute pointer-events-none"
+            style={{
+              // Position over the mouth area of the face
+              left: '38%',
+              top: speaking ? '62%' : '64%',
+              width: currentMouth.width,
+              height: currentMouth.height,
+              borderRadius: currentMouth.borderRadius,
+              background: speaking
+                ? 'radial-gradient(ellipse, rgba(180,60,80,0.65) 30%, rgba(120,30,50,0.45) 70%, transparent 100%)'
+                : 'radial-gradient(ellipse, rgba(180,60,80,0.35) 30%, rgba(120,30,50,0.2) 70%, transparent 100%)',
+              opacity: currentMouth.opacity,
+              transition: speaking ? 'all 0.12s ease' : 'all 0.4s ease',
+              zIndex: 2,
+              // Subtle inner highlight for lip realism
+              boxShadow: speaking
+                ? 'inset 0 -1px 2px rgba(255,255,255,0.15), inset 0 1px 2px rgba(0,0,0,0.2)'
+                : 'inset 0 -0.5px 1px rgba(255,255,255,0.1)',
+            }}
+          />
+        )}
+
+        {/* ──── Cheek blush when speaking (subtle warmth) ──── */}
+        {mounted && speaking && (
+          <>
+            <div
+              className="absolute pointer-events-none"
+              style={{
+                left: '22%',
+                top: '52%',
+                width: size * 0.12,
+                height: size * 0.08,
+                borderRadius: '50%',
+                background: 'radial-gradient(ellipse, rgba(255,120,130,0.15) 0%, transparent 70%)',
+                zIndex: 2,
+              }}
+            />
+            <div
+              className="absolute pointer-events-none"
+              style={{
+                right: '22%',
+                top: '52%',
+                width: size * 0.12,
+                height: size * 0.08,
+                borderRadius: '50%',
+                background: 'radial-gradient(ellipse, rgba(255,120,130,0.15) 0%, transparent 70%)',
+                zIndex: 2,
+              }}
+            />
+          </>
+        )}
+
+        {/* ──── Eye blink when speaking (subtle) ──── */}
+        {mounted && speaking && talkFrame === 2 && (
+          <div
+            className="absolute pointer-events-none"
+            style={{
+              left: '25%',
+              top: '42%',
+              width: '50%',
+              height: size * 0.02,
+              background: 'linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.08) 20%, rgba(0,0,0,0.12) 50%, rgba(0,0,0,0.08) 80%, transparent 100%)',
+              borderRadius: '50%',
+              zIndex: 2,
+            }}
+          />
+        )}
       </div>
 
       {/* Speaking indicator — animated sound waves */}
@@ -216,6 +318,11 @@ function PhotorealisticAvatar({
         @keyframes avatarSoundWave {
           0% { opacity: 0.6; transform: scale(0.9); }
           100% { opacity: 0; transform: scale(1.2); }
+        }
+        @keyframes avatarMouthOpen {
+          0% { transform: scaleY(0.3); }
+          50% { transform: scaleY(1); }
+          100% { transform: scaleY(0.3); }
         }
       `}</style>
     </div>

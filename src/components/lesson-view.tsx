@@ -426,6 +426,7 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
   const [voiceChatTranscript, setVoiceChatTranscript] = useState('');
   const [voiceChatResponse, setVoiceChatResponse] = useState('');
   const [voiceChatLoading, setVoiceChatLoading] = useState(false);
+  const [isClassHeld, setIsClassHeld] = useState(false);
   const [tutorExpression, setTutorExpression] = useState<'neutral' | 'explaining' | 'thinking' | 'happy' | 'curious'>('neutral');
   const speechRecognitionRef = useRef<any>(null);
 
@@ -1013,32 +1014,18 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
   };
 
   // ============================================================
-  // VOICE CHAT — Web Speech API with pause/resume chapter logic
+  // VOICE CHAT — Web Speech API with "hold class" logic
+  // ------------------------------------------------------------
+  // When the candidate starts voice chat during active tutoring,
+  // the tutor announces "I'm holding the class" and pauses the
+  // lesson. After answering doubts, it asks "Anything else?"
+  // and waits. When the candidate is done, the held class resumes.
   // ============================================================
-  const startVoiceChat = useCallback(() => {
+
+  // Inner function: start SpeechRecognition listening
+  const beginSpeechRecognition = useCallback((classWasHeld: boolean) => {
     if (typeof window === 'undefined') return;
 
-    // Pause current chapter if playing
-    if (voiceMode && voicePlaying) {
-      setChapterPausedAt(activeStep);
-      // Pause the current TTS
-      if (window.speechSynthesis) {
-        window.speechSynthesis.pause();
-      }
-      setVoicePaused(true);
-      setVoicePlaying(false);
-    } else if (voiceMode) {
-      setChapterPausedAt(activeStep);
-    } else {
-      setChapterPausedAt(null);
-    }
-
-    setIsVoiceChatting(true);
-    setTutorExpression('curious');
-    setVoiceChatTranscript('');
-    setVoiceChatResponse('');
-
-    // Start SpeechRecognition
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
       setVoiceError('Voice recognition not supported in this browser.');
@@ -1081,16 +1068,27 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
         const answer = data.content;
         setVoiceChatResponse(answer);
         setVoiceChatLoading(false);
-        setTutorExpression('happy');
+        setTutorExpression('explaining');
 
-        // Speak the answer via TTS
+        // Speak the answer via TTS, then ask "Anything else?"
         if (typeof window !== 'undefined' && window.speechSynthesis) {
           const utterance = new SpeechSynthesisUtterance(answer);
           utterance.rate = 0.9;
           utterance.onend = () => {
-            // After TTS finishes, show continue prompt
-            setShowContinuePrompt(true);
-            setTutorExpression('neutral');
+            // After answering, ask "Anything else?" if class was held
+            if (classWasHeld) {
+              const followUp = new SpeechSynthesisUtterance("Anything else you'd like to ask? If not, we can continue the class.");
+              followUp.rate = 0.9;
+              followUp.onend = () => {
+                setShowContinuePrompt(true);
+                setTutorExpression('curious');
+              };
+              window.speechSynthesis.speak(followUp);
+              setTutorExpression('curious');
+            } else {
+              setShowContinuePrompt(true);
+              setTutorExpression('neutral');
+            }
           };
           window.speechSynthesis.speak(utterance);
         } else {
@@ -1113,15 +1111,68 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
 
     recognition.onend = () => {
       // Only reset if we didn't get a result (user cancelled)
-      if (!voiceChatTranscript) {
-        setIsVoiceChatting(false);
-        setTutorExpression('neutral');
-      }
+      setVoiceChatTranscript(prev => {
+        if (!prev) {
+          setIsVoiceChatting(false);
+          setTutorExpression('neutral');
+        }
+        return prev;
+      });
     };
 
     recognition.start();
     speechRecognitionRef.current = recognition;
-  }, [voiceMode, voicePlaying, activeStep, course.id, course.title, course.subtitle, lesson.title, step.title, step.content, step.code, step.codeLanguage, voiceChatTranscript]);
+  }, [course.id, course.title, course.subtitle, lesson.title, step.title, step.content, step.code, step.codeLanguage]);
+
+  const startVoiceChat = useCallback(() => {
+    if (typeof window === 'undefined') return;
+
+    const isClassActive = voiceMode && voicePlaying;
+    let classWasHeld = false;
+
+    // Pause current chapter if playing — hold the class
+    if (isClassActive) {
+      setChapterPausedAt(activeStep);
+      // Pause the current TTS
+      if (window.speechSynthesis) {
+        window.speechSynthesis.pause();
+      }
+      setVoicePaused(true);
+      setVoicePlaying(false);
+      setIsClassHeld(true);
+      classWasHeld = true;
+
+      // Announce "I'm holding the class" via TTS, then listen
+      if (window.speechSynthesis) {
+        const holdMsg = new SpeechSynthesisUtterance("I'm holding the class for you. Please share your doubts, I'm here to help.");
+        holdMsg.rate = 0.9;
+        holdMsg.onend = () => {
+          // After announcement, start listening
+          beginSpeechRecognition(true);
+        };
+        window.speechSynthesis.speak(holdMsg);
+        setTutorExpression('explaining');
+        setIsVoiceChatting(true);
+        setVoiceChatTranscript('');
+        setVoiceChatResponse('');
+        return; // Don't start listening yet — wait for TTS to finish
+      }
+    } else if (voiceMode) {
+      setChapterPausedAt(activeStep);
+      setIsClassHeld(true);
+      classWasHeld = true;
+    } else {
+      setChapterPausedAt(null);
+      setIsClassHeld(false);
+    }
+
+    // Start listening directly if class wasn't actively playing
+    setIsVoiceChatting(true);
+    setTutorExpression('curious');
+    setVoiceChatTranscript('');
+    setVoiceChatResponse('');
+    beginSpeechRecognition(classWasHeld);
+  }, [voiceMode, voicePlaying, activeStep, beginSpeechRecognition]);
 
   const stopVoiceChat = useCallback(() => {
     if (speechRecognitionRef.current) {
@@ -1130,12 +1181,14 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
     }
     setIsVoiceChatting(false);
     setTutorExpression('neutral');
+    // If class was held but candidate stops chat without continuing, keep class held
   }, []);
 
   const handleContinueClass = useCallback(() => {
     setShowContinuePrompt(false);
     setVoiceChatTranscript('');
     setVoiceChatResponse('');
+    setIsClassHeld(false);
 
     // Resume chapter from where it was paused
     if (chapterPausedAt !== null) {
@@ -1891,6 +1944,10 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
         showContinuePrompt={showContinuePrompt}
         onContinueClass={handleContinueClass}
         onStayInChat={handleStayInChat}
+        voiceChatTranscript={voiceChatTranscript}
+        voiceChatResponse={voiceChatResponse}
+        voiceChatLoading={voiceChatLoading}
+        isClassHeld={isClassHeld}
         isOpen={floatingTutorOpen}
         onOpenChange={setFloatingTutorOpen}
         defaultOpen={true}

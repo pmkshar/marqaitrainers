@@ -7,7 +7,7 @@ import {
   Loader2, CheckCircle2, Sparkles, BookOpen, ChevronDown,
   ChevronRight as ChevronRightIcon, Clock, ListChecks, PlayCircle,
   MessageSquare, PenTool, Circle, Folder, FolderOpen, Eraser,
-  Type, Trash2, Wand2,
+  Type, Trash2, Wand2, Phone, PhoneOff, Send,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -22,17 +22,19 @@ import type { Course, Module, Lesson } from '@/lib/types';
 // ============================================================
 // FloatingTutorPopup — Draggable, zoomable AI tutor chatbot
 // ------------------------------------------------------------
-// A floating popup that shows the animated 3D tutor avatar with
-// voice controls, syllabus navigation, whiteboard, and chat.
-// Can be:
-//   - Minimized to a floating icon (bottom-right)
-//   - Expanded to a full popup panel
-//   - Zoomed in/out (small, medium, large)
-//   - Dragged around the screen
+// Three tabs:
+//   1. AI Tutor   — avatar + voice controls (play/pause/stop)
+//   2. Voice Chat — dedicated voice chat with "hold class" logic
+//   3. Whiteboard — drawing/annotation board
+//
+// When the candidate starts voice chat, the tutor announces it
+// is holding the class (if tutoring is active). After answering
+// doubts, it asks "Anything else?" and then continues the held
+// class.
 // ============================================================
 
 type PopupSize = 'mini' | 'medium' | 'large' | 'fullscreen';
-type TabType = 'tutor' | 'syllabus' | 'whiteboard';
+type TabType = 'tutor' | 'voicechat' | 'whiteboard';
 
 interface FloatingTutorPopupProps {
   tutor: TutorPersona;
@@ -68,6 +70,12 @@ interface FloatingTutorPopupProps {
   showContinuePrompt?: boolean;
   onContinueClass?: () => void;
   onStayInChat?: () => void;
+  // Voice chat transcript/response
+  voiceChatTranscript?: string;
+  voiceChatResponse?: string;
+  voiceChatLoading?: boolean;
+  // Class holding state
+  isClassHeld?: boolean;
   // External open/close control
   defaultOpen?: boolean;
   isOpen?: boolean;
@@ -122,6 +130,10 @@ export function FloatingTutorPopup({
   showContinuePrompt,
   onContinueClass,
   onStayInChat,
+  voiceChatTranscript,
+  voiceChatResponse,
+  voiceChatLoading,
+  isClassHeld,
   defaultOpen = false,
   isOpen: isOpenProp,
   onOpenChange,
@@ -139,6 +151,13 @@ export function FloatingTutorPopup({
   const [isZooming, setIsZooming] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
   const dragStartRef = useRef({ x: 0, y: 0, posX: 0, posY: 0 });
+
+  // Auto-switch to voice chat tab when voice chat starts
+  useEffect(() => {
+    if (isVoiceChatting) {
+      setActiveTab('voicechat');
+    }
+  }, [isVoiceChatting]);
 
   // Derive expression
   const expression = tutorExpression ?? (
@@ -231,10 +250,15 @@ export function FloatingTutorPopup({
               <Mic className="h-3 w-3 text-white" />
             </div>
           )}
+          {isClassHeld && (
+            <div className="absolute -bottom-1 -left-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 ring-2 ring-background">
+              <Pause className="h-2.5 w-2.5 text-white" />
+            </div>
+          )}
           {/* Tooltip */}
           <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block">
             <div className="whitespace-nowrap rounded-lg bg-popover px-3 py-1.5 text-xs font-medium text-popover-foreground shadow-lg border">
-              {isSpeaking ? 'AI Tutor is speaking...' : 'Click to open AI Tutor'}
+              {isVoiceChatting ? 'Voice chat active...' : isSpeaking ? 'AI Tutor is speaking...' : 'Click to open AI Tutor'}
             </div>
           </div>
         </div>
@@ -334,10 +358,15 @@ export function FloatingTutorPopup({
           </div>
           <span className="text-[9px] text-amber-600 dark:text-amber-400 font-medium bg-amber-500/10 px-1.5 py-0.5 rounded">8+ years</span>
           <span className="text-[9px] text-muted-foreground">1,800+ sessions</span>
+          {isClassHeld && (
+            <span className="text-[9px] text-amber-600 dark:text-amber-400 font-semibold bg-amber-500/20 px-1.5 py-0.5 rounded animate-pulse">
+              <Pause className="h-2.5 w-2.5 inline mr-0.5" /> Class on hold
+            </span>
+          )}
         </div>
       </div>
 
-      {/* Tab Bar — 3 tabs */}
+      {/* Tab Bar — 3 tabs: AI Tutor, Voice Chat, Whiteboard */}
       <div className="flex border-b" data-nodrag>
         <button
           onClick={() => setActiveTab('tutor')}
@@ -350,14 +379,17 @@ export function FloatingTutorPopup({
           <Sparkles className="h-3.5 w-3.5" /> AI Tutor
         </button>
         <button
-          onClick={() => setActiveTab('syllabus')}
-          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-medium transition-colors ${
-            activeTab === 'syllabus'
+          onClick={() => setActiveTab('voicechat')}
+          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-medium transition-colors relative ${
+            activeTab === 'voicechat'
               ? 'border-b-2 border-emerald-500 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/30'
               : 'text-muted-foreground hover:text-foreground'
           }`}
         >
-          <BookOpen className="h-3.5 w-3.5" /> Syllabus
+          <Mic className="h-3.5 w-3.5" /> Voice Chat
+          {isVoiceChatting && (
+            <span className="absolute top-1.5 right-3 h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
+          )}
         </button>
         <button
           onClick={() => setActiveTab('whiteboard')}
@@ -383,24 +415,6 @@ export function FloatingTutorPopup({
                   expression={expression}
                   size={currentSize.avatarSize}
                 />
-                {/* Voice chat button overlaid */}
-                {onStartVoiceChat && (
-                  <button
-                    onClick={isVoiceChatting ? onStopVoiceChat : onStartVoiceChat}
-                    className={`absolute -bottom-1 -right-1 z-20 flex h-8 w-8 items-center justify-center rounded-full shadow-lg transition-all ${
-                      isVoiceChatting
-                        ? 'bg-rose-500 text-white hover:bg-rose-600'
-                        : 'bg-emerald-500 text-white hover:bg-emerald-600'
-                    }`}
-                    title={isVoiceChatting ? 'Stop voice chat' : 'Start voice chat'}
-                  >
-                    {isVoiceChatting ? <MicOff className="h-3.5 w-3.5" /> : <Mic className="h-3.5 w-3.5" />}
-                  </button>
-                )}
-                {/* Voice chat pulse ring */}
-                {isVoiceChatting && (
-                  <div className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full border-2 border-emerald-400 animate-voice-pulse" />
-                )}
               </div>
               {/* Status badges */}
               <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5">
@@ -432,6 +446,11 @@ export function FloatingTutorPopup({
                     <Loader2 className="mr-1 h-3 w-3 animate-spin" /> Loading...
                   </Badge>
                 )}
+                {isClassHeld && (
+                  <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-300 text-[10px]">
+                    <Pause className="mr-1 h-3 w-3" /> Class held
+                  </Badge>
+                )}
               </div>
             </div>
 
@@ -449,69 +468,6 @@ export function FloatingTutorPopup({
             {voiceError && (
               <p className="text-[11px] text-rose-600 dark:text-rose-400 text-center">{voiceError}</p>
             )}
-
-            {/* Voice Chat Section */}
-            <Card className="overflow-hidden border-2 border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/20">
-              <CardContent className="p-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Voice Chat</p>
-                  {isVoiceChatting && (
-                    <Badge className="bg-rose-500/15 text-rose-700 dark:text-rose-300 animate-pulse text-[9px]">
-                      <Mic className="mr-1 h-2.5 w-2.5" /> Live
-                    </Badge>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    onClick={isVoiceChatting ? onStopVoiceChat : onStartVoiceChat}
-                    className={`flex-1 h-9 text-xs font-medium transition-all ${
-                      isVoiceChatting
-                        ? 'bg-rose-500 text-white hover:bg-rose-600'
-                        : 'bg-emerald-600 text-white hover:bg-emerald-700'
-                    }`}
-                    disabled={!onStartVoiceChat}
-                  >
-                    {isVoiceChatting ? (
-                      <><MicOff className="mr-1.5 h-4 w-4" /> Stop Voice Chat</>
-                    ) : (
-                      <><Mic className="mr-1.5 h-4 w-4" /> Start Voice Chat</>
-                    )}
-                  </Button>
-                </div>
-                {isVoiceChatting && (
-                  <div className="flex items-center justify-center gap-1 py-1">
-                    {[...Array(5)].map((_, i) => (
-                      <div
-                        key={i}
-                        className="w-1.5 bg-emerald-500 rounded-full animate-voice-bar"
-                        style={{
-                          height: `${8 + Math.random() * 16}px`,
-                          animationDelay: `${i * 0.1}s`,
-                          animationDuration: `${0.4 + Math.random() * 0.3}s`,
-                        }}
-                      />
-                    ))}
-                    <span className="text-[9px] text-emerald-600 dark:text-emerald-400 ml-1">Listening...</span>
-                    {[...Array(5)].map((_, i) => (
-                      <div
-                        key={`r-${i}`}
-                        className="w-1.5 bg-emerald-500 rounded-full animate-voice-bar"
-                        style={{
-                          height: `${8 + Math.random() * 16}px`,
-                          animationDelay: `${(5 + i) * 0.1}s`,
-                          animationDuration: `${0.4 + Math.random() * 0.3}s`,
-                        }}
-                      />
-                    ))}
-                  </div>
-                )}
-                <p className="text-[9px] text-muted-foreground text-center">
-                  {isVoiceChatting
-                    ? 'Speak naturally — Marq AI is listening'
-                    : 'Ask questions by voice during the lesson'}
-                </p>
-              </CardContent>
-            </Card>
 
             {/* Voice Controls */}
             <Card className="overflow-hidden">
@@ -601,12 +557,176 @@ export function FloatingTutorPopup({
               </Card>
             )}
           </div>
-        ) : activeTab === 'syllabus' ? (
-          /* Syllabus Tab — Tree View (compact, no overflow) */
-          <div className="flex-1 overflow-y-auto overflow-x-hidden" data-nodrag>
-            <div className="p-2 overflow-hidden">
-              <SyllabusTree courseId={courseId} course={course} />
+        ) : activeTab === 'voicechat' ? (
+          /* Voice Chat Tab — dedicated voice chat with hold class behavior */
+          <div className="p-4 space-y-4" data-nodrag>
+            {/* Avatar with speaking animation */}
+            <div className="flex flex-col items-center">
+              <div className="relative">
+                <Animated3DTutorAvatar
+                  speaking={isSpeaking || isVoiceChatting}
+                  expression={isVoiceChatting ? 'curious' : expression}
+                  size={currentSize.avatarSize * 0.8}
+                />
+                {/* Live indicator */}
+                {isVoiceChatting && (
+                  <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 ring-2 ring-background animate-pulse">
+                    <Mic className="h-2.5 w-2.5 text-white" />
+                  </div>
+                )}
+              </div>
             </div>
+
+            {/* Class held notice */}
+            {isClassHeld && (
+              <Card className="border-amber-500/40 bg-amber-50 dark:bg-amber-950/30">
+                <CardContent className="p-3 space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <Pause className="h-4 w-4 text-amber-600" />
+                    <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">Class is on hold</p>
+                  </div>
+                  <p className="text-[11px] text-amber-700 dark:text-amber-300">
+                    I am holding the class for you. Please share your doubts and I will explain everything. Once you are done, we will continue the class.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Voice Chat Button */}
+            <Card className="overflow-hidden border-2 border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/20">
+              <CardContent className="p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Voice Chat with Tutor</p>
+                  {isVoiceChatting && (
+                    <Badge className="bg-rose-500/15 text-rose-700 dark:text-rose-300 animate-pulse text-[9px]">
+                      <Phone className="mr-1 h-2.5 w-2.5" /> Live
+                    </Badge>
+                  )}
+                </div>
+
+                {/* Start/Stop button */}
+                <Button
+                  onClick={isVoiceChatting ? onStopVoiceChat : onStartVoiceChat}
+                  className={`w-full h-11 text-sm font-medium transition-all ${
+                    isVoiceChatting
+                      ? 'bg-rose-500 text-white hover:bg-rose-600 shadow-lg shadow-rose-500/20'
+                      : 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-700 hover:to-teal-700 shadow-lg shadow-emerald-500/20'
+                  }`}
+                  disabled={!onStartVoiceChat}
+                >
+                  {isVoiceChatting ? (
+                    <><PhoneOff className="mr-2 h-5 w-5" /> End Voice Chat</>
+                  ) : (
+                    <><Phone className="mr-2 h-5 w-5" /> Start Voice Chat</>
+                  )}
+                </Button>
+
+                {/* Live waveform visualization */}
+                {isVoiceChatting && (
+                  <div className="flex items-center justify-center gap-1 py-2">
+                    {[...Array(8)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="w-2 bg-emerald-500 rounded-full animate-voice-bar"
+                        style={{
+                          height: `${12 + Math.random() * 20}px`,
+                          animationDelay: `${i * 0.08}s`,
+                          animationDuration: `${0.4 + Math.random() * 0.3}s`,
+                        }}
+                      />
+                    ))}
+                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 ml-2 font-medium">Listening to you...</span>
+                  </div>
+                )}
+
+                <p className="text-[10px] text-muted-foreground text-center">
+                  {isVoiceChatting
+                    ? 'Speak naturally — Marq AI is listening to your doubts'
+                    : isClassHeld
+                    ? 'You have doubts on hold. Tap to resume voice chat.'
+                    : 'Tap to ask your doubts by voice. The tutor will hold the class for you.'}
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Transcript section */}
+            {voiceChatTranscript && (
+              <Card className="border-blue-500/30 bg-blue-50/50 dark:bg-blue-950/20">
+                <CardContent className="p-3 space-y-2">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">Your Question</p>
+                  <p className="text-sm text-foreground">{voiceChatTranscript}</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Loading */}
+            {voiceChatLoading && (
+              <Card className="border-emerald-500/20">
+                <CardContent className="p-3 flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-emerald-600" />
+                  <p className="text-xs text-muted-foreground">Marq AI is thinking about your question...</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Response section */}
+            {voiceChatResponse && !voiceChatLoading && (
+              <Card className="border-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-950/20">
+                <CardContent className="p-3 space-y-2">
+                  <div className="flex items-center gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5 text-emerald-600" />
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Marq AI Response</p>
+                  </div>
+                  <p className="text-sm text-foreground leading-relaxed">{voiceChatResponse}</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Continue prompt in voice chat tab */}
+            {showContinuePrompt && onContinueClass && (
+              <Card className="border-emerald-500/40 bg-emerald-50 dark:bg-emerald-950/30">
+                <CardContent className="p-3 space-y-2">
+                  <div className="flex items-center gap-1.5">
+                    <Sparkles className="h-4 w-4 text-emerald-600" />
+                    <p className="text-sm font-medium text-emerald-800 dark:text-emerald-200">Anything else you want to ask?</p>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">If you are done with your doubts, we can continue the class.</p>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={onStartVoiceChat} className="flex-1 h-8 text-xs border-emerald-500/40 text-emerald-700 dark:text-emerald-300">
+                      <Mic className="mr-1 h-3.5 w-3.5" /> Ask another doubt
+                    </Button>
+                    <Button size="sm" onClick={onContinueClass} className="flex-1 bg-emerald-600 text-white hover:bg-emerald-700 h-8 text-xs">
+                      <Play className="mr-1 h-3.5 w-3.5" /> Continue class
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Info section */}
+            <Card className="border-muted">
+              <CardContent className="p-3 space-y-2">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">How Voice Chat Works</p>
+                <ul className="text-[10px] text-muted-foreground space-y-1">
+                  <li className="flex items-start gap-1.5">
+                    <span className="text-emerald-500 mt-0.5">1.</span>
+                    <span>Tap &quot;Start Voice Chat&quot; to begin speaking with Marq AI</span>
+                  </li>
+                  <li className="flex items-start gap-1.5">
+                    <span className="text-emerald-500 mt-0.5">2.</span>
+                    <span>If a class is in progress, the tutor will hold it for you</span>
+                  </li>
+                  <li className="flex items-start gap-1.5">
+                    <span className="text-emerald-500 mt-0.5">3.</span>
+                    <span>Ask your doubts naturally — the tutor will explain everything</span>
+                  </li>
+                  <li className="flex items-start gap-1.5">
+                    <span className="text-emerald-500 mt-0.5">4.</span>
+                    <span>After answering, you can ask more or continue the class</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
           </div>
         ) : (
           /* Whiteboard Tab */
@@ -653,225 +773,6 @@ export function FloatingTutorPopup({
           </div>
         )}
       </ScrollArea>
-    </div>
-  );
-}
-
-// ============================================================
-// SyllabusTree — Tree-style syllabus with progress indicators
-// ============================================================
-
-function SyllabusTree({ courseId, course }: { courseId: string; course: Course }) {
-  const courseProgress = useAppStore((s) => s.courseProgress);
-
-  // Auto-expand first module via lazy initializer
-  const [expandedModules, setExpandedModules] = useState<Set<string>>(() => {
-    if (course.modules.length > 0) {
-      return new Set([course.modules[0].id]);
-    }
-    return new Set();
-  });
-
-  const toggleModule = (moduleId: string) => {
-    setExpandedModules((prev) => {
-      const next = new Set(prev);
-      if (next.has(moduleId)) next.delete(moduleId);
-      else next.add(moduleId);
-      return next;
-    });
-  };
-
-  const totalLessons = course.modules.reduce((acc, m) => acc + m.lessons.length, 0);
-  const totalDuration = course.duration;
-
-  // Get progress for a specific lesson
-  const getLessonProgress = (lessonId: string): number => {
-    return courseProgress[courseId]?.[lessonId] ?? 0;
-  };
-
-  // Get progress status for a lesson
-  const getLessonStatus = (lessonId: string): 'completed' | 'in_progress' | 'not_started' => {
-    const pct = getLessonProgress(lessonId);
-    if (pct >= 100) return 'completed';
-    if (pct > 0) return 'in_progress';
-    return 'not_started';
-  };
-
-  // Calculate module progress percentage
-  const getModuleProgress = (mod: Module): number => {
-    if (mod.lessons.length === 0) return 0;
-    const totalPct = mod.lessons.reduce((sum, l) => sum + getLessonProgress(l.id), 0);
-    return Math.round(totalPct / mod.lessons.length);
-  };
-
-  // Calculate overall course progress
-  const getCourseProgress = (): number => {
-    if (totalLessons === 0) return 0;
-    const allLessons = course.modules.flatMap(m => m.lessons);
-    const totalPct = allLessons.reduce((sum, l) => sum + getLessonProgress(l.id), 0);
-    return Math.round(totalPct / allLessons.length);
-  };
-
-  // Count completed lessons in a module
-  const getModuleCompletedCount = (mod: Module): number => {
-    return mod.lessons.filter(l => getLessonStatus(l.id) === 'completed').length;
-  };
-
-  const coursePct = getCourseProgress();
-
-  return (
-    <div className="space-y-1.5 overflow-hidden" style={{ maxWidth: '100%' }}>
-      {/* Course info header — compact */}
-      <div className="space-y-0.5 overflow-hidden">
-        <h4 className="text-[11px] font-bold truncate max-w-full">{course.title}</h4>
-        <div className="flex items-center gap-1 text-[8px] text-muted-foreground flex-wrap">
-          <span className="flex items-center gap-0.5"><BookOpen className="h-2 w-2" /> {course.modules.length} modules</span>
-          <span>·</span>
-          <span className="flex items-center gap-0.5"><ListChecks className="h-2 w-2" /> {totalLessons} lessons</span>
-          <span>·</span>
-          <span className="flex items-center gap-0.5"><Clock className="h-2 w-2" /> {totalDuration}</span>
-        </div>
-        {/* Overall course progress bar */}
-        <div className="space-y-0.5">
-          <div className="flex items-center justify-between text-[9px]">
-            <span className="text-muted-foreground">Progress</span>
-            <span className="font-semibold text-emerald-700 dark:text-emerald-300">{coursePct}%</span>
-          </div>
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-500"
-              style={{ width: `${coursePct}%` }}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Tree-style modules & lessons — compact, no overflow */}
-      <div className="space-y-0 overflow-hidden">
-        {course.modules.map((mod, modIdx) => {
-          const isExpanded = expandedModules.has(mod.id);
-          const modPct = getModuleProgress(mod);
-          const completedCount = getModuleCompletedCount(mod);
-          const isLastModule = modIdx === course.modules.length - 1;
-
-          return (
-            <div key={mod.id} className="overflow-hidden">
-              {/* Module node — tree structure */}
-              <div className="flex items-start">
-                {/* Tree line column */}
-                <div className="relative w-4 shrink-0 flex flex-col items-center">
-                  {modIdx > 0 && (
-                    <div className="absolute top-0 h-2 w-px bg-emerald-300 dark:bg-emerald-700" />
-                  )}
-                  <div className="absolute top-3 h-px w-2 bg-emerald-300 dark:bg-emerald-700 left-1/2" />
-                  {isExpanded && (
-                    <div className="absolute top-3.5 bottom-0 w-px bg-emerald-200 dark:bg-emerald-800" />
-                  )}
-                </div>
-
-                {/* Module content */}
-                <div className="flex-1 min-w-0 pb-0.5">
-                  {/* Module header button — compact */}
-                  <button
-                    onClick={() => toggleModule(mod.id)}
-                    className="flex w-full items-center gap-1 rounded-md px-1 py-1 text-left transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-950/30 group"
-                  >
-                    {isExpanded ? (
-                      <FolderOpen className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                    ) : (
-                      <Folder className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    )}
-                    {isExpanded ? (
-                      <ChevronDown className="h-2.5 w-2.5 text-emerald-600 shrink-0" />
-                    ) : (
-                      <ChevronRightIcon className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
-                    )}
-                    <span className="flex-1 text-[11px] font-semibold truncate">{mod.title}</span>
-                    <Badge
-                      variant="outline"
-                      className={`text-[8px] shrink-0 px-1 py-0 ${
-                        completedCount === mod.lessons.length && mod.lessons.length > 0
-                          ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
-                          : 'text-muted-foreground'
-                      }`}
-                    >
-                      {completedCount}/{mod.lessons.length}
-                    </Badge>
-                  </button>
-
-                  {/* Module progress bar — compact */}
-                  <div className="ml-5 mr-1 mb-0.5 space-y-0">
-                    <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-500"
-                        style={{ width: `${modPct}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Expanded lessons — compact */}
-                  {isExpanded && (
-                    <div className="ml-3 mt-0.5 space-y-0">
-                      {mod.lessons.map((lesson, lessonIdx) => {
-                        const status = getLessonStatus(lesson.id);
-                        const progressPct = getLessonProgress(lesson.id);
-                        const isLastLesson = lessonIdx === mod.lessons.length - 1;
-
-                        return (
-                          <div key={lesson.id} className="flex items-start">
-                            {/* Tree line column for lesson */}
-                            <div className="relative w-3 shrink-0 flex flex-col items-center">
-                              <div className={`w-px bg-emerald-200 dark:bg-emerald-800 ${isLastLesson ? 'h-2.5' : 'h-full'}`} />
-                              <div className="absolute top-2 h-px w-1.5 bg-emerald-200 dark:bg-emerald-800 left-1/2" />
-                            </div>
-
-                            {/* Lesson row — compact, no overflow */}
-                            <button
-                              className="flex items-center gap-1 rounded-md px-1 py-0.5 text-left transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-950/30 cursor-pointer w-full min-h-[24px] overflow-hidden"
-                              onClick={() => {
-                                useAppStore.getState().openLesson(courseId, mod.id, lesson.id);
-                              }}
-                            >
-                              {status === 'completed' ? (
-                                <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                              ) : status === 'in_progress' ? (
-                                <HalfCircleIcon className="h-3 w-3 text-amber-500 shrink-0" />
-                              ) : (
-                                <Circle className="h-3 w-3 text-muted-foreground/40 shrink-0" />
-                              )}
-
-                              <span className={`flex-1 text-[9px] truncate min-w-0 ${
-                                status === 'completed'
-                                  ? 'text-emerald-700 dark:text-emerald-300 font-medium'
-                                  : status === 'in_progress'
-                                  ? 'text-amber-700 dark:text-amber-300 font-medium'
-                                  : 'text-muted-foreground'
-                              }`}>
-                                {lesson.title}
-                              </span>
-
-                              {status === 'in_progress' ? (
-                                <span className="text-[8px] text-amber-600 dark:text-amber-400 tabular-nums shrink-0">{progressPct}%</span>
-                              ) : (
-                                <span className="text-[8px] text-muted-foreground shrink-0">{lesson.duration}</span>
-                              )}
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Vertical line after module (if not last) */}
-              {!isLastModule && !isExpanded && (
-                <div className="ml-2 w-px h-1.5 bg-emerald-200 dark:bg-emerald-800" />
-              )}
-            </div>
-          );
-        })}
-      </div>
     </div>
   );
 }
