@@ -68,14 +68,10 @@ export default function Home() {
             {view.name === 'home' && (
               <>
                 <HeroSection />
-                {isCorporateUser && (
-                  <>
-                    <CorporateTraining />
-                    <CorporateClientsTicker />
-                    <CorporateCTABanner />
-                  </>
-                )}
                 <Features />
+                <CorporateTraining />
+                <CorporateClientsTicker />
+                <CorporateCTABanner />
                 <TrustedCompanies />
                 <MobileAppPromo />
                 <CtaSection />

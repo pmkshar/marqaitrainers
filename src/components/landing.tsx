@@ -668,27 +668,66 @@ export function CourseCarousel() {
 }
 
 export function Features() {
+  // Compact elegant icons for the "Why Learn" section
+  const whyLearnItems = [
+    { icon: BookOpen, title: 'Structured Courses', desc: '6 career-track courses with step-wise lessons', color: 'from-emerald-500 to-teal-600', img: '/infographic-stats.svg' },
+    { icon: Video, title: 'Video Walkthroughs', desc: 'Guided video for every lesson', color: 'from-rose-500 to-pink-600', img: '/infographic-howitworks.svg' },
+    { icon: FileQuestion, title: 'Graded Quizzes', desc: 'Auto-graded MCQ quizzes with explanations', color: 'from-amber-500 to-orange-600', img: '/infographic-stats.svg' },
+    { icon: MessageSquare, title: 'MarqAI Tutor Chat', desc: 'Instant AI answers with code snippets', color: 'from-violet-500 to-purple-600', img: '/infographic-howitworks.svg' },
+    { icon: Users, title: 'Human Tutors', desc: '1:1 live mentoring & code reviews', color: 'from-sky-500 to-cyan-600', img: '/infographic-stats.svg' },
+    { icon: CreditCard, title: 'Flexible Pricing', desc: 'Subscribe or buy individual courses', color: 'from-fuchsia-500 to-pink-600', img: '/infographic-howitworks.svg' },
+  ];
+
   return (
-    <section className="border-t bg-background py-16 lg:py-24">
+    <section className="bg-background py-12 lg:py-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Why learn with marqaicourses?</h2>
-          <p className="mt-4 text-muted-foreground">
-            Structured courses with video lessons, graded tests, certificates, AI tutor for instant help, human tutors for live mentoring, and flexible pricing — everything you need to advance your career.
+          <Badge variant="outline" className="mb-3 border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+            <Sparkles className="mr-1 h-3 w-3" /> Why MarqAI Courses?
+          </Badge>
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Why Learn with MarqAI Courses?</h2>
+          <p className="mt-3 text-muted-foreground">
+            Everything you need to advance your career — AI tutoring, video lessons, graded tests, certificates, and flexible pricing.
           </p>
         </div>
-        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {FEATURES.map((f) => (
-            <Card key={f.title} className="group relative overflow-hidden border-border/60 transition-shadow hover:shadow-lg">
-              <CardContent className="p-6">
-                <span className={`mb-4 grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br ${f.color} text-white shadow-sm`}>
-                  <f.icon className="h-6 w-6" />
-                </span>
-                <h3 className="text-lg font-semibold">{f.title}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{f.description}</p>
-              </CardContent>
-            </Card>
+
+        {/* Compact icon row with infographic */}
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+          {whyLearnItems.map((item) => (
+            <div
+              key={item.title}
+              className="group flex items-center gap-2.5 rounded-xl border border-border/60 bg-card px-4 py-2.5 shadow-sm transition-all hover:shadow-md hover:border-emerald-400/40 hover:-translate-y-0.5"
+            >
+              <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br ${item.color} text-white shadow-sm transition-transform group-hover:scale-110`}>
+                <item.icon className="h-4 w-4" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold leading-tight">{item.title}</p>
+                <p className="text-[11px] text-muted-foreground leading-tight">{item.desc}</p>
+              </div>
+            </div>
           ))}
+        </div>
+
+        {/* Infographic banner */}
+        <div className="mt-8 rounded-2xl border border-border/40 bg-gradient-to-br from-emerald-50 via-background to-teal-50 p-6 dark:from-emerald-950/20 dark:to-teal-950/20">
+          <div className="flex flex-col items-center gap-6 lg:flex-row lg:justify-between">
+            <div className="max-w-md text-center lg:text-left">
+              <h3 className="text-xl font-bold">Complete Learning Ecosystem</h3>
+              <p className="mt-2 text-sm text-muted-foreground">From AI voice tutoring in 5 Indian languages to human mentor sessions, verified certificates, and corporate-ready training — all in one platform.</p>
+              <div className="mt-4 flex flex-wrap justify-center gap-2 lg:justify-start">
+                <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30">6 Career Tracks</Badge>
+                <Badge className="bg-violet-500/15 text-violet-700 dark:text-violet-300 border-violet-500/30">5+ Languages</Badge>
+                <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30">100+ Lessons</Badge>
+                <Badge className="bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30">24/7 AI Tutor</Badge>
+              </div>
+            </div>
+            <img
+              src="/infographic-stats.svg"
+              alt="MarqAI Courses Learning Ecosystem"
+              className="max-w-sm w-full rounded-xl shadow-sm"
+            />
+          </div>
         </div>
       </div>
     </section>
@@ -920,7 +959,7 @@ export function CtaSection() {
                 </Button>
               )}
               <Button onClick={() => setTutorOpen(true)} variant="outline" size="lg" className="border-white/40 bg-white/10 text-white hover:bg-white/20">
-                <Sparkles className="mr-2 h-4 w-4" /> Ask MarqAI
+                <Sparkles className="mr-2 h-4 w-4" /> Ask MayaAI
               </Button>
             </div>
           </div>
@@ -932,36 +971,186 @@ export function CtaSection() {
 
 // ---- Corporate Training section ----
 export function CorporateTraining() {
-  const { openCorporate } = useAppStore();
-  const corpFeatures = [
-    { icon: BookOpen, title: 'Customized Courses', description: 'Tailor courses to your team\'s specific skills and goals.', color: 'from-blue-500 to-blue-600' },
-    { icon: Mic, title: 'MarqAI Voice Tutor', description: 'Provide 24/7 personalized support and feedback in multiple languages.', color: 'from-emerald-500 to-teal-600' },
-    { icon: ClipboardCheck, title: 'AI Assessments & Feedback', description: 'Engage learners with interactive quizzes and real-time feedback.', color: 'from-purple-500 to-purple-600' },
-    { icon: Award, title: 'Verified Certificates', description: 'Issue certificates verified by MarqAI Tech Pvt Ltd upon completion.', color: 'from-amber-500 to-orange-600' },
+  const { openCorporate, currency } = useAppStore();
+
+  const corpBenefits = [
+    { icon: BookOpen, title: 'Curated Courses', desc: 'Exclusive courses tailored to your company\'s tech stack and skill gaps, from onboarding to advanced specializations.', color: 'from-blue-500 to-blue-600' },
+    { icon: Mic, title: 'MarqAI Voice Tutor', desc: '24/7 personalized AI tutoring in 5 Indian languages for every employee, reducing trainer dependency by 80%.', color: 'from-emerald-500 to-teal-600' },
+    { icon: ClipboardCheck, title: 'AI Assessments', desc: 'Automated skill assessments, progress tracking, and real-time feedback with detailed analytics dashboards.', color: 'from-purple-500 to-purple-600' },
+    { icon: Award, title: 'Verified Certificates', desc: 'Industry-recognized certificates from MarqAI Tech Pvt Ltd upon course completion for every employee.', color: 'from-amber-500 to-orange-600' },
+    { icon: Target, title: 'Skill Gap Analysis', desc: 'AI-driven skill gap identification and personalized learning paths to upskill your workforce efficiently.', color: 'from-rose-500 to-pink-600' },
+    { icon: Briefcase, title: 'Dedicated Support', desc: 'Dedicated account manager, custom onboarding, priority support, and quarterly business reviews.', color: 'from-sky-500 to-cyan-600' },
   ];
+
+  const corpPricingPlans = [
+    {
+      name: 'Single Course',
+      subtitle: 'For All Employees',
+      desc: 'One curated course accessible to your entire organization. Ideal for focused upskilling initiatives.',
+      price: '₹4,999',
+      period: '/employee/month',
+      features: [
+        '1 curated course for all employees',
+        'MarqAI Voice Tutor access',
+        'Progress tracking dashboard',
+        'AI assessments & certificates',
+        'Email support',
+      ],
+      highlighted: false,
+      color: 'from-sky-500 to-cyan-600',
+    },
+    {
+      name: 'Multi-Course Bundle',
+      subtitle: 'For All Employees',
+      desc: 'Full library access for your entire team. Best value for comprehensive workforce development.',
+      price: '₹9,999',
+      period: '/employee/month',
+      features: [
+        'All 6+ career tracks for all employees',
+        'MarqAI Voice Tutor in 5 languages',
+        'Skill gap analysis & learning paths',
+        'Admin dashboard & analytics',
+        'Dedicated account manager',
+        'Priority support & onboarding',
+        'Custom course curation',
+      ],
+      highlighted: true,
+      color: 'from-emerald-500 to-teal-600',
+    },
+    {
+      name: 'Individual Plan',
+      subtitle: 'Per Employee',
+      desc: 'Flexible per-employee pricing. Choose any single course for individual team members.',
+      price: '₹2,499',
+      period: '/employee/month',
+      features: [
+        '1 course per employee (choose any)',
+        'MarqAI Voice Tutor access',
+        'Basic progress tracking',
+        'Certificate on completion',
+        'Standard support',
+      ],
+      highlighted: false,
+      color: 'from-violet-500 to-purple-600',
+    },
+  ];
+
   return (
-    <section className="py-16 lg:py-24">
+    <section className="bg-gradient-to-b from-slate-50 via-background to-background dark:from-slate-950/30 py-16 lg:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <h2 className="text-center text-3xl font-bold">Customized AI-Powered Training for Your Team</h2>
-        <p className="mx-auto mt-4 max-w-2xl text-center text-muted-foreground">
-          We create custom training programs tailored to your team&apos;s unique needs. Our AI tutor provides personalized learning paths for every employee.
-        </p>
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {corpFeatures.map((f) => (
-            <Card key={f.title} className="text-center">
-              <CardContent className="flex flex-col items-center p-6">
-                <span className={`grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br ${f.color} text-white`}>
-                  <f.icon className="h-6 w-6" />
-                </span>
-                <h3 className="mt-3 font-semibold">{f.title}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">{f.description}</p>
-              </CardContent>
-            </Card>
+        {/* Section Header */}
+        <div className="mx-auto max-w-3xl text-center">
+          <Badge variant="outline" className="mb-3 border-blue-500/40 bg-blue-500/10 text-blue-700 dark:text-blue-300">
+            <Building2 className="mr-1 h-3 w-3" /> Corporate Training
+          </Badge>
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            AI-Powered Training for <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Your Entire Organization</span>
+          </h2>
+          <p className="mt-4 text-muted-foreground">
+            Curated courses exclusively for your company, with flexible pricing for single or multiple courses — for all employees or individual team members. Reduce training costs by 60% with MarqAI.
+          </p>
+        </div>
+
+        {/* Benefits Grid - Compact Icons */}
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {corpBenefits.map((b) => (
+            <div key={b.title} className="group flex items-start gap-3 rounded-xl border border-border/60 bg-card p-4 shadow-sm transition-all hover:shadow-md hover:border-blue-400/40">
+              <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br ${b.color} text-white shadow-sm transition-transform group-hover:scale-110`}>
+                <b.icon className="h-4 w-4" />
+              </span>
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold">{b.title}</h3>
+                <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">{b.desc}</p>
+              </div>
+            </div>
           ))}
         </div>
-        <div className="mt-8 text-center">
-          <Button onClick={openCorporate} className="bg-purple-600 text-white hover:bg-purple-700">
-            <Building2 className="mr-2 h-4 w-4" /> Explore Corporate Training
+
+        {/* Corporate Infographic */}
+        <div className="mt-10 rounded-2xl border border-blue-200/40 bg-gradient-to-br from-blue-50 via-background to-indigo-50 p-6 dark:from-blue-950/20 dark:to-indigo-950/20">
+          <div className="flex flex-col items-center gap-6 lg:flex-row lg:justify-between">
+            <div className="max-w-md text-center lg:text-left">
+              <h3 className="text-xl font-bold">How Corporate Training Works</h3>
+              <p className="mt-2 text-sm text-muted-foreground">We curate courses aligned to your company goals. Employees learn at their own pace with MarqAI voice tutoring, take AI-proctored assessments, and earn verified certificates — all tracked from your admin dashboard.</p>
+              <div className="mt-4 flex flex-wrap justify-center gap-2 lg:justify-start">
+                <Badge className="bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30">Custom Curation</Badge>
+                <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30">AI Proctored</Badge>
+                <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30">Admin Dashboard</Badge>
+              </div>
+            </div>
+            <img
+              src="/infographic-corporate.svg"
+              alt="MarqAI Corporate Training Solutions"
+              className="max-w-sm w-full rounded-xl shadow-sm"
+            />
+          </div>
+        </div>
+
+        {/* Corporate Pricing Plans */}
+        <div className="mt-12">
+          <h3 className="text-center text-2xl font-bold">Curated Pricing for Your Company</h3>
+          <p className="mx-auto mt-2 max-w-xl text-center text-sm text-muted-foreground">
+            Flexible monthly plans — choose single or multiple courses for all employees, or per-individual pricing.
+          </p>
+          <div className="mt-8 grid gap-6 lg:grid-cols-3">
+            {corpPricingPlans.map((plan) => (
+              <Card
+                key={plan.name}
+                className={`relative flex flex-col transition-all hover:-translate-y-1 hover:shadow-xl ${
+                  plan.highlighted
+                    ? 'border-2 border-emerald-500/60 shadow-xl ring-1 ring-emerald-500/30'
+                    : 'border-border/60'
+                }`}
+              >
+                {plan.highlighted && (
+                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white">
+                    Best Value
+                  </Badge>
+                )}
+                <CardContent className="flex flex-1 flex-col p-6">
+                  <div className="flex items-center gap-2">
+                    <span className={`grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br ${plan.color} text-white`}>
+                      <Building2 className="h-4 w-4" />
+                    </span>
+                    <div>
+                      <h3 className="text-base font-bold leading-tight">{plan.name}</h3>
+                      <p className="text-[11px] text-muted-foreground">{plan.subtitle}</p>
+                    </div>
+                  </div>
+                  <p className="mt-3 text-xs text-muted-foreground">{plan.desc}</p>
+                  <div className="mt-4">
+                    <span className="text-3xl font-extrabold">{plan.price}</span>
+                    <span className="text-sm text-muted-foreground">{plan.period}</span>
+                  </div>
+                  <ul className="mt-4 flex-1 space-y-2">
+                    {plan.features.map((f) => (
+                      <li key={f} className="flex items-start gap-2 text-sm">
+                        <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" />
+                        <span className="text-xs">{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Button
+                    onClick={openCorporate}
+                    className={`mt-5 w-full ${
+                      plan.highlighted
+                        ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700'
+                        : ''
+                    }`}
+                    variant={plan.highlighted ? 'default' : 'outline'}
+                  >
+                    Get Started
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* CTA */}
+        <div className="mt-10 text-center">
+          <Button onClick={openCorporate} className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 shadow-lg" size="lg">
+            <Building2 className="mr-2 h-5 w-5" /> Register Your Company
           </Button>
         </div>
       </div>
@@ -1367,7 +1556,7 @@ export function HeroSection() {
                 size="lg"
                 className="bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-lg hover:from-amber-500 hover:to-orange-600 font-bold text-base px-8"
               >
-                <Mic className="mr-2 h-4 w-4" /> Talk to MarqAI
+                <Mic className="mr-2 h-4 w-4" /> Talk to MayaAI
               </Button>
             </div>
 
@@ -1463,15 +1652,15 @@ export function HeroSection() {
       </div>
 
       {/* ── Auto-Scrolling Course Icons Carousel ── */}
-      <div className="relative bg-background py-10 sm:py-14">
+      <div className="relative bg-background py-8 sm:py-10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-6 flex items-center justify-between">
+          <div className="mb-4 flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Explore Our Courses</h2>
-              <p className="mt-1 text-sm text-muted-foreground">Career-track programs with AI voice tutoring</p>
+              <h2 className="text-xl font-bold tracking-tight sm:text-2xl">Explore Our Courses</h2>
+              <p className="mt-0.5 text-xs text-muted-foreground">Career-track programs · Click to buy or view</p>
             </div>
-            <div className="hidden items-center gap-1 text-xs text-muted-foreground sm:flex">
-              <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
+            <div className="hidden items-center gap-1 text-[10px] text-muted-foreground sm:flex">
+              <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
               Auto-scrolling · Hover to pause
             </div>
           </div>
@@ -1480,13 +1669,13 @@ export function HeroSection() {
         {/* CSS-animated marquee track — pauses on hover, continuous scroll */}
         <div className="group/marquee relative">
           {/* Fade edges */}
-          <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-16 bg-gradient-to-r from-background to-transparent" />
-          <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-16 bg-gradient-to-l from-background to-transparent" />
+          <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-12 bg-gradient-to-r from-background to-transparent" />
+          <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-12 bg-gradient-to-l from-background to-transparent" />
 
           <div
-            className="flex gap-4 px-4"
+            className="flex gap-3 px-4"
             style={{
-              animation: 'marqai-scroll 30s linear infinite',
+              animation: 'marqai-scroll 25s linear infinite',
             }}
             onMouseEnter={(e) => { e.currentTarget.style.animationPlayState = 'paused'; }}
             onMouseLeave={(e) => { e.currentTarget.style.animationPlayState = 'running'; }}
@@ -1495,26 +1684,26 @@ export function HeroSection() {
               <button
                 key={`hero-${course.id}-${idx}`}
                 onClick={() => openCourse(course.id)}
-                className="group flex items-center gap-3 rounded-2xl border border-border/50 bg-card px-4 py-3 shadow-sm transition-all hover:shadow-md hover:border-emerald-400/40 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/30 hover:-translate-y-0.5"
+                className="group flex items-center gap-2.5 rounded-xl border border-border/50 bg-card px-3 py-2 shadow-sm transition-all hover:shadow-md hover:border-emerald-400/40 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/30 hover:-translate-y-0.5"
                 style={{ flexShrink: 0 }}
               >
-                <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${course.gradient} text-white shadow-sm transition-transform group-hover:scale-110`}>
-                  <CourseIcon name={course.icon} className="h-5 w-5" />
+                <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-gradient-to-br ${course.gradient} text-white shadow-sm transition-transform group-hover:scale-110`}>
+                  <CourseIcon name={course.icon} className="h-4 w-4" />
                 </span>
                 <div className="text-left min-w-0">
-                  <span className="text-sm font-semibold whitespace-nowrap block">{course.title}</span>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <Badge variant="secondary" className="text-[9px] shrink-0 px-1.5 py-0">{course.level}</Badge>
+                  <span className="text-xs font-semibold whitespace-nowrap block">{course.title}</span>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <Badge variant="secondary" className="text-[8px] shrink-0 px-1 py-0">{course.level}</Badge>
                     <div className="flex items-center gap-0.5 text-amber-500">
-                      <Star className="h-2.5 w-2.5 fill-amber-400" />
-                      <span className="text-[9px] font-medium">{course.rating}</span>
+                      <Star className="h-2 w-2 fill-amber-400" />
+                      <span className="text-[8px] font-medium">{course.rating}</span>
                     </div>
-                    <span className="text-[9px] text-muted-foreground">{course.lessonsCount} lessons</span>
                   </div>
                 </div>
-                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap ml-2">
+                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap ml-1">
                   {formatPrice(course.oneTimePrice, currency)}
                 </span>
+                <ShoppingCart className="h-3 w-3 text-amber-500 group-hover:text-emerald-600 transition-colors" />
               </button>
             ))}
           </div>
@@ -1705,7 +1894,7 @@ export function CoursesPage() {
             <h3 className="mt-4 text-lg font-semibold">Not sure where to start?</h3>
             <p className="mt-2 text-sm text-muted-foreground">Ask our AI tutor for a personalized recommendation.</p>
             <Button onClick={() => setTutorOpen(true)} className="mt-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700">
-              <Sparkles className="mr-1.5 h-4 w-4" /> Ask MarqAI
+              <Sparkles className="mr-1.5 h-4 w-4" /> Ask MayaAI
             </Button>
           </Card>
         </div>
