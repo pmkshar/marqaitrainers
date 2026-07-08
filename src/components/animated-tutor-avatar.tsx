@@ -8,15 +8,19 @@ import Image from 'next/image';
 // ============================================================
 // Uses AI-generated photorealistic image of a Korean woman
 // (20s, messy high bun, cosmetic ad lighting, classroom).
-// CSS animations simulate speaking, expressions, and micro-
-// movements for a lifelike feel.
 //
-// When speaking, a subtle mouth overlay animation makes the
-// tutor look like she is actively talking to the candidate.
+// Natural animation approach:
+//   - When speaking: gentle head bob, subtle face scaling that
+//     creates the illusion of lip movement through rhythmic
+//     vertical stretch/compress on the lower face region,
+//     periodic blinking, and slight head tilt shifts
+//   - When idle: slow breathing micro-movement, occasional
+//     blinks, gentle sway
+//   - Expression changes via CSS filters + very subtle
+//     gradient overlays that tint the face naturally
 //
-// All instances are named "Marq AI" — no gender variants needed.
-// The 'gender' prop is kept for backward compatibility but
-// ignored; everyone gets the same photorealistic avatar.
+// No crude mouth-overlay divs — all animations are CSS
+// transforms and filters on the image itself for a natural look.
 // ============================================================
 
 export interface Animated3DTutorAvatarProps {
@@ -48,7 +52,7 @@ class AvatarErrorBoundary extends Component<EBProps, EBState> {
   }
 }
 
-// ────────────── Photorealistic Avatar with CSS Animations ──────────────
+// ────────────── Photorealistic Avatar with Natural CSS Animations ──────────────
 
 function PhotorealisticAvatar({
   speaking,
@@ -57,70 +61,103 @@ function PhotorealisticAvatar({
 }: Animated3DTutorAvatarProps) {
   const [mounted, setMounted] = useState(false);
   const [imgError, setImgError] = useState(false);
-  const [talkFrame, setTalkFrame] = useState(0);
-  const breathPhase = useRef(0);
+  // Blink state — controlled by timer for natural random blinks
+  const [blinking, setBlinking] = useState(false);
+  // Speaking phase — drives the subtle lip/jaw animation cycle
+  const [speakPhase, setSpeakPhase] = useState(0);
 
   useEffect(() => {
     setMounted(true);
-    // Gentle breathing animation
-    let frame: number;
+  }, []);
+
+  // Natural blink timer — blinks every 2-5 seconds randomly
+  useEffect(() => {
+    if (!mounted) return;
+    const scheduleBlink = () => {
+      const delay = 2000 + Math.random() * 3000;
+      return setTimeout(() => {
+        setBlinking(true);
+        setTimeout(() => setBlinking(false), 150); // blink duration
+      }, delay);
+    };
+    let timer = scheduleBlink();
+    const interval = setInterval(() => {
+      clearTimeout(timer);
+      timer = scheduleBlink();
+    }, 100);
+    return () => { clearTimeout(timer); clearInterval(interval); };
+  }, [mounted]);
+
+  // Speaking animation cycle — drives the subtle transform rhythm
+  useEffect(() => {
+    if (!speaking) {
+      setSpeakPhase(0);
+      return;
+    }
+    // Use requestAnimationFrame for smooth 60fps mouth/jaw animation
+    let raf: number;
     let start: number | null = null;
     const animate = (ts: number) => {
       if (!start) start = ts;
-      breathPhase.current = Math.sin((ts - start) / 2000) * 0.5;
-      frame = requestAnimationFrame(animate);
+      // Create a natural speaking rhythm with mixed frequencies
+      // Primary cycle ~4Hz (mouth open/close), secondary ~1.5Hz (head bob)
+      const t = (ts - start) / 1000;
+      const phase = Math.round((t * 8) % 6); // 6 distinct positions at ~8 transitions/s
+      setSpeakPhase(phase);
+      raf = requestAnimationFrame(animate);
     };
-    frame = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(frame);
-  }, []);
-
-  // Animate the mouth when speaking — cycle through mouth shapes
-  useEffect(() => {
-    if (!speaking) {
-      setTalkFrame(0);
-      return;
-    }
-    const interval = setInterval(() => {
-      setTalkFrame(prev => (prev + 1) % 4);
-    }, 180); // ~5.5 mouth cycles per second — natural speaking rate
-    return () => clearInterval(interval);
+    raf = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(raf);
   }, [speaking]);
 
-  // Expression-based CSS filters and transforms
+  // Expression-based CSS filters — very subtle, natural shifts
   const expressionStyles: Record<string, React.CSSProperties> = {
     neutral: {
       filter: 'brightness(1) contrast(1) saturate(1)',
     },
     explaining: {
-      filter: 'brightness(1.03) contrast(1.02) saturate(1.05)',
+      filter: 'brightness(1.02) contrast(1.01) saturate(1.03)',
     },
     thinking: {
-      filter: 'brightness(0.97) contrast(1.03) saturate(0.95)',
+      filter: 'brightness(0.98) contrast(1.02) saturate(0.97)',
     },
     happy: {
-      filter: 'brightness(1.06) contrast(1) saturate(1.1)',
+      filter: 'brightness(1.04) contrast(1) saturate(1.06)',
     },
     curious: {
-      filter: 'brightness(1.02) contrast(1.04) saturate(1.05)',
+      filter: 'brightness(1.01) contrast(1.02) saturate(1.03)',
     },
   };
 
   const currentExpressionStyle = expressionStyles[expression] || expressionStyles.neutral;
 
-  // Mouth overlay positioning — the mouth area is roughly at 55-72% from top, 35-65% from left
-  // Different mouth shapes for talking animation
-  const mouthShapes = [
-    // Frame 0: closed/slight smile (rest)
-    { width: size * 0.18, height: size * 0.03, borderRadius: '50%', opacity: 0.7 },
-    // Frame 1: slightly open
-    { width: size * 0.2, height: size * 0.07, borderRadius: '45%', opacity: 0.85 },
-    // Frame 2: wide open
-    { width: size * 0.22, height: size * 0.12, borderRadius: '40%', opacity: 0.9 },
-    // Frame 3: medium open (oh shape)
-    { width: size * 0.16, height: size * 0.1, borderRadius: '50%', opacity: 0.85 },
-  ];
+  // Speaking transform — creates natural-looking facial movement
+  // Instead of overlaying a fake mouth, we use subtle scale transforms
+  // on the lower face region that mimic the jaw/lip movement
+  const getSpeakingTransform = (): React.CSSProperties => {
+    if (!speaking) return {};
 
-  const currentMouth = speaking ? mouthShapes[talkFrame] : mouthShapes[0];
+    // Map speakPhase to natural mouth/jaw positions
+    // Phase 0: rest, 1: slight open, 2: open, 3: wider, 4: medium, 5: closing
+    const jawShifts = [0, 0.003, 0.006, 0.008, 0.005, 0.002];
+    const lipScales = [1, 1.003, 1.006, 1.008, 1.005, 1.002];
+    const headTilts = [0, 0.1, -0.1, 0.15, -0.05, 0.1];
+
+    const jawShift = jawShifts[speakPhase] || 0;
+    const lipScale = lipScales[speakPhase] || 1;
+    const headTilt = headTilts[speakPhase] || 0;
+
+    return {
+      // Subtle vertical shift on lower face creates jaw movement illusion
+      transform: `
+        scale(${lipScale})
+        translateY(${jawShift * size}px)
+        rotate(${headTilt}deg)
+      `,
+      // Slightly warm tint when speaking (natural flush)
+      filter: `${currentExpressionStyle.filter} brightness(1.01)`,
+    };
+  };
 
   // If image fails to load, show a simple gradient avatar with "M" initial
   if (imgError) {
@@ -144,142 +181,128 @@ function PhotorealisticAvatar({
         <div
           className="absolute inset-0 rounded-full"
           style={{
-            background: 'radial-gradient(circle, rgba(16,185,129,0.3) 0%, transparent 70%)',
-            animation: 'avatarSpeakPulse 1.2s ease-in-out infinite',
+            background: 'radial-gradient(circle, rgba(16,185,129,0.25) 0%, transparent 70%)',
+            animation: 'avatarSpeakGlow 2s ease-in-out infinite',
           }}
         />
       )}
 
-      {/* Expression tint overlay — subtle color shifts */}
-      {mounted && expression !== 'neutral' && (
-        <div
-          className="absolute inset-0 rounded-full pointer-events-none"
-          style={{
-            background:
-              expression === 'happy'
-                ? 'radial-gradient(circle at 50% 40%, rgba(255,215,0,0.08) 0%, transparent 60%)'
-                : expression === 'thinking'
-                ? 'radial-gradient(circle at 50% 40%, rgba(100,149,237,0.06) 0%, transparent 60%)'
-                : 'transparent',
-            zIndex: 3,
-          }}
-        />
-      )}
-
-      {/* Main avatar image */}
+      {/* Main avatar image container */}
       <div
         className="relative w-full h-full rounded-full overflow-hidden shadow-xl"
         style={{
           ...currentExpressionStyle,
-          transition: 'filter 0.4s ease, transform 0.4s ease',
-          transform: speaking
-            ? `scale(${1 + Math.sin(Date.now() / 300) * 0.008})`
-            : 'scale(1)',
+          transition: 'filter 0.5s ease',
           animation: speaking
-            ? 'avatarBreathe 2s ease-in-out infinite'
-            : 'avatarIdle 4s ease-in-out infinite',
-          border: `3px solid ${speaking ? 'rgba(16,185,129,0.6)' : 'rgba(16,185,129,0.25)'}`,
+            ? 'avatarSpeakRhythm 0.8s ease-in-out infinite'
+            : 'avatarIdle 5s ease-in-out infinite',
+          border: `3px solid ${speaking ? 'rgba(16,185,129,0.5)' : 'rgba(16,185,129,0.2)'}`,
         }}
       >
-        <Image
-          src="/marq-ai-tutor-icon.png"
-          alt="Marq AI Tutor"
-          fill
-          className="object-cover object-top"
-          priority
-          sizes={`${size}px`}
-          onError={() => setImgError(true)}
-        />
+        {/* The actual image with natural speaking transforms */}
+        <div
+          className="w-full h-full"
+          style={{
+            transition: speaking ? 'transform 0.08s ease-out' : 'transform 0.5s ease',
+            ...getSpeakingTransform(),
+          }}
+        >
+          <Image
+            src="/marq-ai-tutor-icon.png"
+            alt="Marq AI Tutor"
+            fill
+            className="object-cover object-top"
+            priority
+            sizes={`${size}px`}
+            onError={() => setImgError(true)}
+          />
+        </div>
 
-        {/* ──── Talking mouth overlay ──── */}
-        {mounted && (
+        {/* Natural blink overlay — thin dark line across eye area */}
+        {mounted && blinking && (
           <div
             className="absolute pointer-events-none"
             style={{
-              // Position over the mouth area of the face
-              left: '38%',
-              top: speaking ? '62%' : '64%',
-              width: currentMouth.width,
-              height: currentMouth.height,
-              borderRadius: currentMouth.borderRadius,
-              background: speaking
-                ? 'radial-gradient(ellipse, rgba(180,60,80,0.65) 30%, rgba(120,30,50,0.45) 70%, transparent 100%)'
-                : 'radial-gradient(ellipse, rgba(180,60,80,0.35) 30%, rgba(120,30,50,0.2) 70%, transparent 100%)',
-              opacity: currentMouth.opacity,
-              transition: speaking ? 'all 0.12s ease' : 'all 0.4s ease',
+              left: '18%',
+              right: '18%',
+              top: '40%',
+              height: size * 0.025,
+              background: 'linear-gradient(180deg, transparent 0%, rgba(60,30,20,0.25) 30%, rgba(60,30,20,0.35) 50%, rgba(60,30,20,0.25) 70%, transparent 100%)',
+              borderRadius: '50%',
               zIndex: 2,
-              // Subtle inner highlight for lip realism
-              boxShadow: speaking
-                ? 'inset 0 -1px 2px rgba(255,255,255,0.15), inset 0 1px 2px rgba(0,0,0,0.2)'
-                : 'inset 0 -0.5px 1px rgba(255,255,255,0.1)',
+              animation: 'avatarBlink 0.15s ease-in-out',
             }}
           />
         )}
 
-        {/* ──── Cheek blush when speaking (subtle warmth) ──── */}
+        {/* Speaking: subtle lower-face shadow shift for lip/jaw illusion */}
         {mounted && speaking && (
-          <>
-            <div
-              className="absolute pointer-events-none"
-              style={{
-                left: '22%',
-                top: '52%',
-                width: size * 0.12,
-                height: size * 0.08,
-                borderRadius: '50%',
-                background: 'radial-gradient(ellipse, rgba(255,120,130,0.15) 0%, transparent 70%)',
-                zIndex: 2,
-              }}
-            />
-            <div
-              className="absolute pointer-events-none"
-              style={{
-                right: '22%',
-                top: '52%',
-                width: size * 0.12,
-                height: size * 0.08,
-                borderRadius: '50%',
-                background: 'radial-gradient(ellipse, rgba(255,120,130,0.15) 0%, transparent 70%)',
-                zIndex: 2,
-              }}
-            />
-          </>
-        )}
-
-        {/* ──── Eye blink when speaking (subtle) ──── */}
-        {mounted && speaking && talkFrame === 2 && (
           <div
             className="absolute pointer-events-none"
             style={{
               left: '25%',
-              top: '42%',
-              width: '50%',
-              height: size * 0.02,
-              background: 'linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.08) 20%, rgba(0,0,0,0.12) 50%, rgba(0,0,0,0.08) 80%, transparent 100%)',
+              right: '25%',
+              top: '58%',
+              height: size * 0.18,
+              background: 'linear-gradient(180deg, transparent 0%, rgba(180,60,80,0.04) 40%, rgba(180,60,80,0.06) 60%, transparent 100%)',
               borderRadius: '50%',
+              zIndex: 2,
+              animation: 'avatarLipShift 0.6s ease-in-out infinite alternate',
+            }}
+          />
+        )}
+
+        {/* Speaking: very subtle warmth/flush on cheeks */}
+        {mounted && speaking && (
+          <div
+            className="absolute inset-0 pointer-events-none rounded-full"
+            style={{
+              background: 'radial-gradient(ellipse at 50% 55%, rgba(255,150,160,0.06) 0%, transparent 50%)',
+              zIndex: 2,
+            }}
+          />
+        )}
+
+        {/* Expression: happy warm tint */}
+        {mounted && expression === 'happy' && (
+          <div
+            className="absolute inset-0 pointer-events-none rounded-full"
+            style={{
+              background: 'radial-gradient(circle at 50% 45%, rgba(255,220,100,0.05) 0%, transparent 50%)',
+              zIndex: 2,
+            }}
+          />
+        )}
+
+        {/* Expression: thinking cool tint */}
+        {mounted && expression === 'thinking' && (
+          <div
+            className="absolute inset-0 pointer-events-none rounded-full"
+            style={{
+              background: 'radial-gradient(circle at 50% 45%, rgba(100,149,237,0.04) 0%, transparent 50%)',
               zIndex: 2,
             }}
           />
         )}
       </div>
 
-      {/* Speaking indicator — animated sound waves */}
+      {/* Speaking indicator — animated sound waves (gentler) */}
       {speaking && (
         <>
           <div
-            className="absolute rounded-full border-2 border-emerald-400/50"
+            className="absolute rounded-full border border-emerald-400/30"
             style={{
-              width: size * 1.1,
-              height: size * 1.1,
-              animation: 'avatarSoundWave 1.5s ease-out infinite',
+              width: size * 1.12,
+              height: size * 1.12,
+              animation: 'avatarSoundWave 2s ease-out infinite',
             }}
           />
           <div
-            className="absolute rounded-full border-2 border-emerald-400/30"
+            className="absolute rounded-full border border-emerald-400/15"
             style={{
               width: size * 1.25,
               height: size * 1.25,
-              animation: 'avatarSoundWave 1.5s ease-out infinite 0.3s',
+              animation: 'avatarSoundWave 2s ease-out infinite 0.5s',
             }}
           />
         </>
@@ -289,9 +312,9 @@ function PhotorealisticAvatar({
       {mounted && expression !== 'neutral' && (
         <div
           className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center rounded-full bg-white dark:bg-zinc-800 shadow-md"
-          style={{ width: size * 0.22, height: size * 0.22, zIndex: 5 }}
+          style={{ width: size * 0.2, height: size * 0.2, zIndex: 5 }}
         >
-          <span style={{ fontSize: size * 0.12 }}>
+          <span style={{ fontSize: size * 0.1 }}>
             {expression === 'happy' && '😊'}
             {expression === 'thinking' && '🤔'}
             {expression === 'curious' && '💡'}
@@ -300,29 +323,51 @@ function PhotorealisticAvatar({
         </div>
       )}
 
-      {/* CSS Keyframes — injected inline for SSR compat */}
+      {/* CSS Keyframes — natural, subtle animations */}
       <style jsx global>{`
-        @keyframes avatarBreathe {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.012); }
-        }
         @keyframes avatarIdle {
-          0%, 100% { transform: scale(1); }
-          25% { transform: scale(1.003) rotate(0.3deg); }
-          75% { transform: scale(1.003) rotate(-0.3deg); }
+          0%, 100% { transform: scale(1) rotate(0deg); }
+          20% { transform: scale(1.002) rotate(0.15deg); }
+          50% { transform: scale(1.004) rotate(-0.1deg); }
+          80% { transform: scale(1.002) rotate(0.1deg); }
         }
-        @keyframes avatarSpeakPulse {
-          0%, 100% { opacity: 0.6; transform: scale(1); }
-          50% { opacity: 1; transform: scale(1.08); }
+        @keyframes avatarSpeakRhythm {
+          0%, 100% {
+            transform: scale(1) translateY(0px);
+          }
+          15% {
+            transform: scale(1.003) translateY(0.3px);
+          }
+          30% {
+            transform: scale(1.005) translateY(0.6px);
+          }
+          50% {
+            transform: scale(1.006) translateY(0.8px);
+          }
+          70% {
+            transform: scale(1.004) translateY(0.4px);
+          }
+          85% {
+            transform: scale(1.002) translateY(0.1px);
+          }
+        }
+        @keyframes avatarSpeakGlow {
+          0%, 100% { opacity: 0.4; transform: scale(1); }
+          50% { opacity: 0.8; transform: scale(1.04); }
         }
         @keyframes avatarSoundWave {
-          0% { opacity: 0.6; transform: scale(0.9); }
-          100% { opacity: 0; transform: scale(1.2); }
+          0% { opacity: 0.5; transform: scale(0.92); }
+          100% { opacity: 0; transform: scale(1.18); }
         }
-        @keyframes avatarMouthOpen {
-          0% { transform: scaleY(0.3); }
-          50% { transform: scaleY(1); }
-          100% { transform: scaleY(0.3); }
+        @keyframes avatarBlink {
+          0% { opacity: 0; }
+          30% { opacity: 1; }
+          70% { opacity: 1; }
+          100% { opacity: 0; }
+        }
+        @keyframes avatarLipShift {
+          0% { opacity: 0.5; transform: translateY(0) scaleY(0.8); }
+          100% { opacity: 1; transform: translateY(0.5px) scaleY(1.1); }
         }
       `}</style>
     </div>

@@ -404,7 +404,7 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
   const passedLessonTests = useAppStore((s) => s.passedLessonTests) ?? [];
   const markLessonTestPassed = useAppStore((s) => s.markLessonTestPassed);
   const [activeStep, setActiveStep] = useState(0);
-  const [lessonTab, setLessonTab] = useState<'video' | 'steps'>('video');
+  const [lessonTab, setLessonTab] = useState<'video' | 'ai-intro' | 'steps'>('ai-intro');
   const stepRef = useRef<HTMLDivElement>(null);
 
   // AI tutor state
@@ -767,6 +767,23 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
     window.speechSynthesis.addEventListener('voiceschanged', handler);
     return () => window.speechSynthesis.removeEventListener('voiceschanged', handler);
   }, []);
+
+  // ============================================================
+  // AUTO-START — When entering a lesson, auto-start the AI tutor
+  // ============================================================
+  const autoStartRef = useRef(false);
+  useEffect(() => {
+    if (autoStartRef.current) return;
+    autoStartRef.current = true;
+    // Auto-start the AI tutor class after a brief delay so the page settles
+    const timer = setTimeout(() => {
+      setFloatingTutorOpen(true);
+      setLessonTab('steps');
+      startVoiceOver();
+    }, 1200);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lessonId]);
 
   // ============================================================
   // VOICE-OVER MAIN FLOW
@@ -1357,10 +1374,20 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
         <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
         {/* Lesson Content */}
         <div ref={stepRef} className="min-w-0 space-y-5">
-          {/* Tabbed Lesson Content: Video / Steps */}
+          {/* Tabbed Lesson Content: AI Introduction / Video / Steps */}
           <Card className="overflow-hidden">
             {/* Tab header */}
             <div className="flex border-b" data-nodrag>
+              <button
+                onClick={() => setLessonTab('ai-intro')}
+                className={`flex items-center gap-2 px-5 py-3 text-sm font-medium transition-colors border-b-2 ${
+                  lessonTab === 'ai-intro'
+                    ? 'border-emerald-500 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/30'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Sparkles className="h-4 w-4" /> AI Introduction
+              </button>
               <button
                 onClick={() => setLessonTab('video')}
                 className={`flex items-center gap-2 px-5 py-3 text-sm font-medium transition-colors border-b-2 ${
@@ -1386,7 +1413,98 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
             </div>
 
             {/* Tab Content */}
-            {lessonTab === 'video' ? (
+            {lessonTab === 'ai-intro' ? (
+              /* AI Introduction Tab */
+              <CardContent className="p-0">
+                <div className="flex flex-col items-center justify-center gap-6 p-8 sm:p-10 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/20 min-h-[400px]">
+                  {/* Large avatar */}
+                  <div className="relative">
+                    <Animated3DTutorAvatar
+                      speaking={isSpeaking}
+                      expression={tutorExpression}
+                      size={140}
+                    />
+                    {isSpeaking && (
+                      <div className="absolute -bottom-2 left-1/2 -translate-x-1/2">
+                        <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 animate-pulse text-[10px]">
+                          <Volume2 className="mr-1 h-3 w-3" /> Speaking...
+                        </Badge>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Introduction content */}
+                  <div className="text-center max-w-2xl space-y-4">
+                    <div className="flex items-center justify-center gap-2">
+                      <h2 className="text-2xl font-bold text-foreground">{tutor.name}</h2>
+                      <CheckCircle2 className="h-5 w-5 text-blue-500" />
+                    </div>
+                    <p className="text-sm text-muted-foreground italic">{tutor.tagline}</p>
+
+                    <div className="space-y-3 text-left bg-white/60 dark:bg-zinc-900/40 rounded-xl p-5 border border-emerald-200/50 dark:border-emerald-800/30">
+                      <h3 className="font-semibold text-emerald-800 dark:text-emerald-200 flex items-center gap-2">
+                        <Sparkles className="h-4 w-4" /> About This Lesson
+                      </h3>
+                      <p className="text-sm text-foreground leading-relaxed">
+                        Welcome to <strong>{lesson.title}</strong> from the <strong>{mod.title}</strong> module of <strong>{c.title}</strong>. I am your AI tutor, Marq AI, and I will be guiding you through this lesson step by step.
+                      </p>
+                      <p className="text-sm text-foreground leading-relaxed">
+                        In this lesson, you will explore {lesson.steps.length} key topics. Each step includes a detailed explanation, real-world examples, common pitfalls to avoid, and a quick check question to test your understanding. I will explain each concept, walk you through code examples, and answer any questions you have along the way.
+                      </p>
+                      <div className="flex flex-wrap gap-2 pt-2">
+                        <Badge variant="outline" className="text-emerald-700 dark:text-emerald-300 border-emerald-500/30">
+                          <ListChecks className="mr-1 h-3 w-3" /> {lesson.steps.length} Steps
+                        </Badge>
+                        <Badge variant="outline" className="text-amber-700 dark:text-amber-300 border-amber-500/30">
+                          <Clock className="mr-1 h-3 w-3" /> {lesson.duration}
+                        </Badge>
+                        <Badge variant="outline" className="text-blue-700 dark:text-blue-300 border-blue-500/30">
+                          <FileQuestion className="mr-1 h-3 w-3" /> {lesson.quiz.length} Quiz Questions
+                        </Badge>
+                      </div>
+                    </div>
+
+                    {/* What you'll cover */}
+                    <div className="space-y-2 text-left bg-white/60 dark:bg-zinc-900/40 rounded-xl p-5 border border-emerald-200/50 dark:border-emerald-800/30">
+                      <h3 className="font-semibold text-emerald-800 dark:text-emerald-200 flex items-center gap-2">
+                        <ListChecks className="h-4 w-4" /> Topics We Will Cover
+                      </h3>
+                      <ul className="space-y-1.5">
+                        {lesson.steps.map((s, i) => (
+                          <li key={i} className="flex items-center gap-2 text-sm text-foreground">
+                            <span className="grid h-5 w-5 place-items-center rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 shrink-0">
+                              {i + 1}
+                            </span>
+                            {s.title}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Action buttons */}
+                    <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                      <Button
+                        onClick={() => {
+                          setLessonTab('steps');
+                          setFloatingTutorOpen(true);
+                          startVoiceOver();
+                        }}
+                        className="flex-1 bg-emerald-600 text-white hover:bg-emerald-700 h-11"
+                      >
+                        <Sparkles className="mr-2 h-4 w-4" /> Start AI Tutoring
+                      </Button>
+                      <Button
+                        onClick={() => setLessonTab('video')}
+                        variant="outline"
+                        className="flex-1 h-11 border-emerald-500/40 text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
+                      >
+                        <Video className="mr-2 h-4 w-4" /> Watch Video First
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            ) : lessonTab === 'video' ? (
               /* Video Tab */
               <CardContent className="p-0">
               <div className="relative aspect-video bg-black">
