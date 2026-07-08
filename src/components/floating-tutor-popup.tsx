@@ -450,6 +450,69 @@ export function FloatingTutorPopup({
               <p className="text-[11px] text-rose-600 dark:text-rose-400 text-center">{voiceError}</p>
             )}
 
+            {/* Voice Chat Section */}
+            <Card className="overflow-hidden border-2 border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/20">
+              <CardContent className="p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Voice Chat</p>
+                  {isVoiceChatting && (
+                    <Badge className="bg-rose-500/15 text-rose-700 dark:text-rose-300 animate-pulse text-[9px]">
+                      <Mic className="mr-1 h-2.5 w-2.5" /> Live
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={isVoiceChatting ? onStopVoiceChat : onStartVoiceChat}
+                    className={`flex-1 h-9 text-xs font-medium transition-all ${
+                      isVoiceChatting
+                        ? 'bg-rose-500 text-white hover:bg-rose-600'
+                        : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                    }`}
+                    disabled={!onStartVoiceChat}
+                  >
+                    {isVoiceChatting ? (
+                      <><MicOff className="mr-1.5 h-4 w-4" /> Stop Voice Chat</>
+                    ) : (
+                      <><Mic className="mr-1.5 h-4 w-4" /> Start Voice Chat</>
+                    )}
+                  </Button>
+                </div>
+                {isVoiceChatting && (
+                  <div className="flex items-center justify-center gap-1 py-1">
+                    {[...Array(5)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="w-1.5 bg-emerald-500 rounded-full animate-voice-bar"
+                        style={{
+                          height: `${8 + Math.random() * 16}px`,
+                          animationDelay: `${i * 0.1}s`,
+                          animationDuration: `${0.4 + Math.random() * 0.3}s`,
+                        }}
+                      />
+                    ))}
+                    <span className="text-[9px] text-emerald-600 dark:text-emerald-400 ml-1">Listening...</span>
+                    {[...Array(5)].map((_, i) => (
+                      <div
+                        key={`r-${i}`}
+                        className="w-1.5 bg-emerald-500 rounded-full animate-voice-bar"
+                        style={{
+                          height: `${8 + Math.random() * 16}px`,
+                          animationDelay: `${(5 + i) * 0.1}s`,
+                          animationDuration: `${0.4 + Math.random() * 0.3}s`,
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
+                <p className="text-[9px] text-muted-foreground text-center">
+                  {isVoiceChatting
+                    ? 'Speak naturally — Marq AI is listening'
+                    : 'Ask questions by voice during the lesson'}
+                </p>
+              </CardContent>
+            </Card>
+
             {/* Voice Controls */}
             <Card className="overflow-hidden">
               <CardContent className="p-3 space-y-2.5">

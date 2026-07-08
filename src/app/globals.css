@@ -248,6 +248,15 @@ video:focus {
   animation: voice-pulse 1.5s ease-out infinite;
 }
 
+/* Voice chat bar animation */
+@keyframes voice-bar {
+  0%, 100% { height: 4px; }
+  50% { height: 20px; }
+}
+.animate-voice-bar {
+  animation: voice-bar 0.5s ease-in-out infinite alternate;
+}
+
 /* ===== Enhanced 3D Tutor Avatar Animations ===== */
 
 /* Subtle idle float — very gentle up/down bob */
