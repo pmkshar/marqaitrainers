@@ -959,7 +959,7 @@ export function CtaSection() {
                 </Button>
               )}
               <Button onClick={() => setTutorOpen(true)} variant="outline" size="lg" className="border-white/40 bg-white/10 text-white hover:bg-white/20">
-                <Sparkles className="mr-2 h-4 w-4" /> Ask MayaAI
+                <Sparkles className="mr-2 h-4 w-4" /> Ask Marq AI
               </Button>
             </div>
           </div>
@@ -1556,7 +1556,7 @@ export function HeroSection() {
                 size="lg"
                 className="bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-lg hover:from-amber-500 hover:to-orange-600 font-bold text-base px-8"
               >
-                <Mic className="mr-2 h-4 w-4" /> Talk to MayaAI
+                <Mic className="mr-2 h-4 w-4" /> Talk to Marq AI
               </Button>
             </div>
 
@@ -1894,7 +1894,7 @@ export function CoursesPage() {
             <h3 className="mt-4 text-lg font-semibold">Not sure where to start?</h3>
             <p className="mt-2 text-sm text-muted-foreground">Ask our AI tutor for a personalized recommendation.</p>
             <Button onClick={() => setTutorOpen(true)} className="mt-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700">
-              <Sparkles className="mr-1.5 h-4 w-4" /> Ask MayaAI
+              <Sparkles className="mr-1.5 h-4 w-4" /> Ask Marq AI
             </Button>
           </Card>
         </div>

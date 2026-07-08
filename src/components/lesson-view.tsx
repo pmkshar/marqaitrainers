@@ -399,7 +399,6 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
   const result = findLesson(courseId, moduleId, lessonId);
   const openCourse = useAppStore((s) => s.openCourse);
   const openQuiz = useAppStore((s) => s.openQuiz);
-  const setTutorOpen = useAppStore((s) => s.setTutorOpen);
   const markLessonComplete = useAppStore((s) => s.markLessonComplete);
   const completedLessons = useAppStore((s) => s.completedLessons) ?? [];
   const passedLessonTests = useAppStore((s) => s.passedLessonTests) ?? [];
@@ -429,6 +428,9 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
   const [voiceChatLoading, setVoiceChatLoading] = useState(false);
   const [tutorExpression, setTutorExpression] = useState<'neutral' | 'explaining' | 'thinking' | 'happy' | 'curious'>('neutral');
   const speechRecognitionRef = useRef<any>(null);
+
+  // Floating tutor popup open state — default open in lesson view
+  const [floatingTutorOpen, setFloatingTutorOpen] = useState(true);
 
   // Teaching content state
   const [teachings, setTeachings] = useState<Record<number, SlideTeaching>>({});
@@ -1151,9 +1153,9 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
   const handleStayInChat = useCallback(() => {
     setShowContinuePrompt(false);
     // Keep the chat open, don't resume the chapter
-    setTutorOpen(true);
+    setFloatingTutorOpen(true);
     setChapterPausedAt(null);
-  }, [setTutorOpen]);
+  }, []);
 
   const handlePrevSlide = () => {
     stopVoice();
@@ -1507,7 +1509,7 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => setTutorOpen(true)}
+                          onClick={() => setFloatingTutorOpen(true)}
                         >
                           <Sparkles className="mr-1 h-4 w-4" /> Ask AI Tutor
                         </Button>
@@ -1831,7 +1833,7 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
                     <ArrowLeft className="mr-1.5 h-4 w-4" /> Back to lesson
                   </Button>
                   <div className="flex gap-2">
-                    <Button size="sm" variant="outline" onClick={() => setTutorOpen(true)}>
+                    <Button size="sm" variant="outline" onClick={() => setFloatingTutorOpen(true)}>
                       <Sparkles className="mr-1.5 h-4 w-4" /> Ask {tutor.name}
                     </Button>
                     {passed && nextLesson ? (
@@ -1857,7 +1859,7 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
         </DialogContent>
       </Dialog>
 
-      {/* Floating AI Tutor Popup — always visible, draggable, zoomable */}
+      {/* Floating AI Tutor Popup — always visible, draggable, zoomable with controls */}
       <FloatingTutorPopup
         tutor={tutor}
         courseId={courseId}
@@ -1888,6 +1890,9 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
         showContinuePrompt={showContinuePrompt}
         onContinueClass={handleContinueClass}
         onStayInChat={handleStayInChat}
+        isOpen={floatingTutorOpen}
+        onOpenChange={setFloatingTutorOpen}
+        defaultOpen={true}
       />
     </div>
   );

@@ -68,6 +68,10 @@ interface FloatingTutorPopupProps {
   showContinuePrompt?: boolean;
   onContinueClass?: () => void;
   onStayInChat?: () => void;
+  // External open/close control
+  defaultOpen?: boolean;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 // ============================================================
@@ -118,8 +122,16 @@ export function FloatingTutorPopup({
   showContinuePrompt,
   onContinueClass,
   onStayInChat,
+  defaultOpen = false,
+  isOpen: isOpenProp,
+  onOpenChange,
 }: FloatingTutorPopupProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalIsOpen, setInternalIsOpen] = useState(defaultOpen);
+  // Use external state if provided, otherwise internal
+  const isPopupOpen = onOpenChange ? (isOpenProp ?? internalIsOpen) : internalIsOpen;
+  const setPopupOpen = onOpenChange
+    ? (open: boolean) => { onOpenChange(open); }
+    : setInternalIsOpen;
   const [popupSize, setPopupSize] = useState<PopupSize>('medium');
   const [activeTab, setActiveTab] = useState<TabType>('tutor');
   const [isDragging, setIsDragging] = useState(false);
@@ -190,10 +202,10 @@ export function FloatingTutorPopup({
   }, [isDragging]);
 
   // If not open, show the floating chatbot icon
-  if (!isOpen) {
+  if (!isPopupOpen) {
     return (
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={() => setPopupOpen(true)}
         className="fixed bottom-6 right-6 z-50 group"
         aria-label="Open AI Tutor"
       >
@@ -305,7 +317,7 @@ export function FloatingTutorPopup({
               <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 text-white" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
             </button>
             <button
-              onClick={() => setIsOpen(false)}
+              onClick={() => setPopupOpen(false)}
               className="flex h-6 w-6 items-center justify-center rounded-md hover:bg-white/20 transition-colors ml-0.5"
               title="Minimize"
             >

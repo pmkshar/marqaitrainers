@@ -35,9 +35,9 @@ export interface TutorPersona {
 // ────────────── MayaAI — Female home page tutor ──────────────
 
 const MAYAAI_BASE: Omit<TutorPersona, 'title' | 'tagline' | 'introText' | 'avatarGradient'> = {
-  name: 'MayaAI',
+  name: 'Marq AI',
   voice: 'tongtong',
-  gender: 'female',
+  gender: 'male',
   initial: 'M',
   speed: 0.95,
 };
@@ -58,7 +58,7 @@ export const DEFAULT_TUTOR: TutorPersona = {
   title: 'Your AI Course Advisor',
   tagline: 'Here to help you find the right course.',
   avatarGradient: 'from-emerald-500 to-teal-600',
-  introText: `Hello! I am MayaAI, your AI Course Advisor. I can help you understand our courses, pricing, and learning paths. Feel free to ask me anything about our platform — from course details to career guidance. I am here to help you make the best choice for your learning journey!`,
+  introText: `Hello! I am Marq AI, your AI Course Advisor. I can help you understand our courses, pricing, and learning paths. Feel free to ask me anything about our platform — from course details to career guidance. I am here to help you make the best choice for your learning journey!`,
 };
 
 // Marq AI default for lesson view
@@ -76,37 +76,37 @@ const MAYAAI_TUTORS: Record<string, Omit<TutorPersona, 'gender' | 'voice' | 'spe
     title: 'AI & Machine Learning Advisor',
     tagline: 'I can help you understand our AI/ML course.',
     avatarGradient: 'from-emerald-500 to-teal-600',
-    introText: `Hello! I am MayaAI, your AI and Machine Learning Course Advisor. I can help you understand what this course covers, the career opportunities it opens up, and whether it is the right fit for you. Ask me anything!`,
+    introText: `Hello! I am Marq AI, your AI and Machine Learning Course Advisor. I can help you understand what this course covers, the career opportunities it opens up, and whether it is the right fit for you. Ask me anything!`,
   },
   'java-fullstack': {
     title: 'Full Stack Java Advisor',
     tagline: 'I can help you understand our Java course.',
     avatarGradient: 'from-orange-500 to-red-600',
-    introText: `Hello! I am MayaAI, your Full Stack Java Course Advisor. I can help you understand what this course covers, from JVM internals to enterprise Spring Boot applications. Ask me about the curriculum, prerequisites, or career outcomes!`,
+    introText: `Hello! I am Marq AI, your Full Stack Java Course Advisor. I can help you understand what this course covers, from JVM internals to enterprise Spring Boot applications. Ask me about the curriculum, prerequisites, or career outcomes!`,
   },
   'dotnet-fullstack': {
     title: '.NET & C# Advisor',
     tagline: 'I can help you understand our .NET course.',
     avatarGradient: 'from-violet-500 to-purple-600',
-    introText: `Hello! I am MayaAI, your .NET and C# Course Advisor. I can help you understand what this course covers, from ASP.NET Core to production-grade applications. Ask me anything about the curriculum or career paths!`,
+    introText: `Hello! I am Marq AI, your .NET and C# Course Advisor. I can help you understand what this course covers, from ASP.NET Core to production-grade applications. Ask me anything about the curriculum or career paths!`,
   },
   'mobile-dev': {
     title: 'Mobile App Dev Advisor',
     tagline: 'I can help you understand our Mobile Dev course.',
     avatarGradient: 'from-sky-500 to-indigo-600',
-    introText: `Hello! I am MayaAI, your Mobile App Development Course Advisor. I can help you understand what this course covers, from React Native to shipping apps to the stores. Ask me about the curriculum or career opportunities!`,
+    introText: `Hello! I am Marq AI, your Mobile App Development Course Advisor. I can help you understand what this course covers, from React Native to shipping apps to the stores. Ask me about the curriculum or career opportunities!`,
   },
   'flutter-dev': {
     title: 'Flutter & Dart Advisor',
     tagline: 'I can help you understand our Flutter course.',
     avatarGradient: 'from-cyan-500 to-blue-600',
-    introText: `Hello! I am MayaAI, your Flutter and Dart Course Advisor. I can help you understand what this course covers, from cross-platform UI to deploying beautiful apps. Ask me anything!`,
+    introText: `Hello! I am Marq AI, your Flutter and Dart Course Advisor. I can help you understand what this course covers, from cross-platform UI to deploying beautiful apps. Ask me anything!`,
   },
   'python-pro': {
     title: 'Python Programming Advisor',
     tagline: 'I can help you understand our Python course.',
     avatarGradient: 'from-yellow-500 to-amber-600',
-    introText: `Hello! I am MayaAI, your Python Programming Course Advisor. I can help you understand what this course covers, from basics to async programming and data science. Ask me about the curriculum or career paths!`,
+    introText: `Hello! I am Marq AI, your Python Programming Course Advisor. I can help you understand what this course covers, from basics to async programming and data science. Ask me about the curriculum or career paths!`,
   },
 };
 
