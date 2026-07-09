@@ -7,7 +7,7 @@ import {
   Loader2, CheckCircle2, Sparkles, BookOpen, ChevronDown,
   ChevronRight as ChevronRightIcon, Clock, ListChecks, PlayCircle,
   MessageSquare, PenTool, Circle, Folder, FolderOpen, Eraser,
-  Type, Trash2, Wand2, Phone, PhoneOff, Send,
+  Type, Trash2, Wand2, Phone, PhoneOff, Send, AlertTriangle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -699,6 +699,22 @@ export function FloatingTutorPopup({
                       <Play className="mr-1 h-3.5 w-3.5" /> Continue class
                     </Button>
                   </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Error display */}
+            {voiceError && (
+              <Card className="border-rose-500/40 bg-rose-50 dark:bg-rose-950/30">
+                <CardContent className="p-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-rose-600" />
+                    <p className="text-sm font-semibold text-rose-800 dark:text-rose-200">Voice Chat Error</p>
+                  </div>
+                  <p className="text-sm text-rose-700 dark:text-rose-300">{voiceError}</p>
+                  <Button size="sm" variant="outline" onClick={onStartVoiceChat} className="w-full border-rose-500/40 text-rose-700 dark:text-rose-300">
+                    <Mic className="mr-1.5 h-3.5 w-3.5" /> Try Again
+                  </Button>
                 </CardContent>
               </Card>
             )}

@@ -1120,49 +1120,53 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
           // Cancel any pending speech first
           window.speechSynthesis.cancel();
 
-          const utterance = new SpeechSynthesisUtterance(answer);
-          utterance.rate = 0.9;
-          utterance.pitch = 1.15;
-          // Try female voice
-          const voices = window.speechSynthesis.getVoices();
-          const femaleVoice = voices.find(v =>
-            v.lang.startsWith('en') && (
-              v.name.toLowerCase().includes('female') ||
-              v.name.toLowerCase().includes('samantha') ||
-              v.name.toLowerCase().includes('zira') ||
-              v.name.toLowerCase().includes('google us english')
-            )
-          );
-          if (femaleVoice) utterance.voice = femaleVoice;
+          // Small delay after cancel() — Chrome bug: speak() immediately
+          // after cancel() can silently fail
+          setTimeout(() => {
+            const utterance = new SpeechSynthesisUtterance(answer);
+            utterance.rate = 0.9;
+            utterance.pitch = 1.15;
+            // Try female voice
+            const voices = window.speechSynthesis!.getVoices();
+            const femaleVoice = voices.find(v =>
+              v.lang.startsWith('en') && (
+                v.name.toLowerCase().includes('female') ||
+                v.name.toLowerCase().includes('samantha') ||
+                v.name.toLowerCase().includes('zira') ||
+                v.name.toLowerCase().includes('google us english')
+              )
+            );
+            if (femaleVoice) utterance.voice = femaleVoice;
 
-          utterance.onend = () => {
-            // After answering, ask "Anything else?" if class was held
-            if (classWasHeld) {
-              const followUp = new SpeechSynthesisUtterance("Anything else you'd like to ask? If not, we can continue the class.");
-              followUp.rate = 0.9;
-              followUp.pitch = 1.15;
-              if (femaleVoice) followUp.voice = femaleVoice;
-              followUp.onend = () => {
-                setShowContinuePrompt(true);
+            utterance.onend = () => {
+              // After answering, ask "Anything else?" if class was held
+              if (classWasHeld) {
+                const followUp = new SpeechSynthesisUtterance("Anything else you'd like to ask? If not, we can continue the class.");
+                followUp.rate = 0.9;
+                followUp.pitch = 1.15;
+                if (femaleVoice) followUp.voice = femaleVoice;
+                followUp.onend = () => {
+                  setShowContinuePrompt(true);
+                  setTutorExpression('curious');
+                };
+                followUp.onerror = () => {
+                  setShowContinuePrompt(true);
+                  setTutorExpression('curious');
+                };
+                window.speechSynthesis!.speak(followUp);
                 setTutorExpression('curious');
-              };
-              followUp.onerror = () => {
+              } else {
                 setShowContinuePrompt(true);
-                setTutorExpression('curious');
-              };
-              window.speechSynthesis.speak(followUp);
-              setTutorExpression('curious');
-            } else {
+                setTutorExpression('neutral');
+              }
+            };
+            utterance.onerror = () => {
+              // TTS failed, still show the prompt
               setShowContinuePrompt(true);
               setTutorExpression('neutral');
-            }
-          };
-          utterance.onerror = () => {
-            // TTS failed, still show the prompt
-            setShowContinuePrompt(true);
-            setTutorExpression('neutral');
-          };
-          window.speechSynthesis.speak(utterance);
+            };
+            window.speechSynthesis!.speak(utterance);
+          }, 100);
         } else {
           setShowContinuePrompt(true);
           setTutorExpression('neutral');
@@ -1254,30 +1258,34 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
         setIsVoiceChatting(true);
         setTutorExpression('explaining');
 
-        const holdMsg = new SpeechSynthesisUtterance("I'm holding the class for you. Please share your doubts, I'm here to help.");
-        holdMsg.rate = 0.9;
-        holdMsg.pitch = 1.15; // Female voice pitch
-        // Try to pick a female voice
-        const voices = window.speechSynthesis.getVoices();
-        const femaleVoice = voices.find(v =>
-          v.lang.startsWith('en') && (
-            v.name.toLowerCase().includes('female') ||
-            v.name.toLowerCase().includes('samantha') ||
-            v.name.toLowerCase().includes('zira') ||
-            v.name.toLowerCase().includes('google us english')
-          )
-        );
-        if (femaleVoice) holdMsg.voice = femaleVoice;
+        // Small delay after cancel() — Chrome bug: speak() immediately
+        // after cancel() can silently fail
+        setTimeout(() => {
+          const holdMsg = new SpeechSynthesisUtterance("I'm holding the class for you. Please share your doubts, I'm here to help.");
+          holdMsg.rate = 0.9;
+          holdMsg.pitch = 1.15; // Female voice pitch
+          // Try to pick a female voice
+          const voices = window.speechSynthesis!.getVoices();
+          const femaleVoice = voices.find(v =>
+            v.lang.startsWith('en') && (
+              v.name.toLowerCase().includes('female') ||
+              v.name.toLowerCase().includes('samantha') ||
+              v.name.toLowerCase().includes('zira') ||
+              v.name.toLowerCase().includes('google us english')
+            )
+          );
+          if (femaleVoice) holdMsg.voice = femaleVoice;
 
-        holdMsg.onend = () => {
-          // After announcement, start listening
-          beginSpeechRecognition(true);
-        };
-        holdMsg.onerror = () => {
-          // Even if TTS fails, still start listening
-          beginSpeechRecognition(true);
-        };
-        window.speechSynthesis.speak(holdMsg);
+          holdMsg.onend = () => {
+            // After announcement, start listening
+            beginSpeechRecognition(true);
+          };
+          holdMsg.onerror = () => {
+            // Even if TTS fails, still start listening
+            beginSpeechRecognition(true);
+          };
+          window.speechSynthesis!.speak(holdMsg);
+        }, 100);
         return; // Don't start listening yet — wait for TTS to finish
       }
     } else if (voiceMode) {
