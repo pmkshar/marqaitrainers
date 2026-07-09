@@ -7,6 +7,7 @@ import {
   Pause, Play, Square, Volume2, Loader2, Bot, HelpCircle,
   AlertTriangle, MessageSquare, Send, MessagesSquare,
   Menu, PanelLeftClose, PanelLeftOpen, Mic, MicOff,
+  BookOpen, Headphones, GraduationCap, PenTool, ArrowRightCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -404,7 +405,7 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
   const passedLessonTests = useAppStore((s) => s.passedLessonTests) ?? [];
   const markLessonTestPassed = useAppStore((s) => s.markLessonTestPassed);
   const [activeStep, setActiveStep] = useState(0);
-  const [lessonTab, setLessonTab] = useState<'video' | 'ai-intro' | 'steps'>('ai-intro');
+  const [lessonTab, setLessonTab] = useState<'video' | 'ai-intro' | 'steps'>('steps');
   const stepRef = useRef<HTMLDivElement>(null);
 
   // AI tutor state
@@ -1045,7 +1046,7 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      setVoiceError('Voice recognition not supported in this browser.');
+      setVoiceError('Voice recognition not supported in this browser. Please try Chrome or Edge.');
       setIsVoiceChatting(false);
       setTutorExpression('neutral');
       return;
@@ -1055,8 +1056,35 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
     recognition.continuous = false;
     recognition.interimResults = false;
     recognition.lang = 'en-US';
+    recognition.maxAlternatives = 1;
+
+    // Timeout: if no speech detected in 15 seconds, stop listening
+    let timeoutId: ReturnType<typeof setTimeout> | null = setTimeout(() => {
+      recognition.stop();
+      setVoiceChatTranscript('(No speech detected — please try again)');
+      setIsVoiceChatting(false);
+      setTutorExpression('neutral');
+      if (classWasHeld) {
+        setShowContinuePrompt(true);
+      }
+    }, 15000);
+
+    recognition.onstart = () => {
+      // Clear timeout on successful start, set a new one for actual speech
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        recognition.stop();
+        setVoiceChatTranscript('(No speech detected — please try again)');
+        setIsVoiceChatting(false);
+        setTutorExpression('neutral');
+        if (classWasHeld) {
+          setShowContinuePrompt(true);
+        }
+      }, 15000);
+    };
 
     recognition.onresult = async (event: any) => {
+      if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
       const transcript = event.results[0][0].transcript;
       setVoiceChatTranscript(transcript);
       setIsVoiceChatting(false);
@@ -1089,14 +1117,36 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
 
         // Speak the answer via TTS, then ask "Anything else?"
         if (typeof window !== 'undefined' && window.speechSynthesis) {
+          // Cancel any pending speech first
+          window.speechSynthesis.cancel();
+
           const utterance = new SpeechSynthesisUtterance(answer);
           utterance.rate = 0.9;
+          utterance.pitch = 1.15;
+          // Try female voice
+          const voices = window.speechSynthesis.getVoices();
+          const femaleVoice = voices.find(v =>
+            v.lang.startsWith('en') && (
+              v.name.toLowerCase().includes('female') ||
+              v.name.toLowerCase().includes('samantha') ||
+              v.name.toLowerCase().includes('zira') ||
+              v.name.toLowerCase().includes('google us english')
+            )
+          );
+          if (femaleVoice) utterance.voice = femaleVoice;
+
           utterance.onend = () => {
             // After answering, ask "Anything else?" if class was held
             if (classWasHeld) {
               const followUp = new SpeechSynthesisUtterance("Anything else you'd like to ask? If not, we can continue the class.");
               followUp.rate = 0.9;
+              followUp.pitch = 1.15;
+              if (femaleVoice) followUp.voice = femaleVoice;
               followUp.onend = () => {
+                setShowContinuePrompt(true);
+                setTutorExpression('curious');
+              };
+              followUp.onerror = () => {
                 setShowContinuePrompt(true);
                 setTutorExpression('curious');
               };
@@ -1106,6 +1156,11 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
               setShowContinuePrompt(true);
               setTutorExpression('neutral');
             }
+          };
+          utterance.onerror = () => {
+            // TTS failed, still show the prompt
+            setShowContinuePrompt(true);
+            setTutorExpression('neutral');
           };
           window.speechSynthesis.speak(utterance);
         } else {
@@ -1121,13 +1176,26 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
       }
     };
 
-    recognition.onerror = () => {
+    recognition.onerror = (event: any) => {
+      if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
+      // Provide specific error messages
+      const errorMsg = event.error;
+      if (errorMsg === 'not-allowed') {
+        setVoiceError('Microphone access denied. Please allow microphone access in your browser settings and try again.');
+      } else if (errorMsg === 'no-speech') {
+        setVoiceChatTranscript('(No speech detected — please try again)');
+      } else if (errorMsg === 'network') {
+        setVoiceError('Network error during voice recognition. Please check your connection.');
+      } else if (errorMsg !== 'aborted') {
+        setVoiceError(`Voice recognition error: ${errorMsg}`);
+      }
       setIsVoiceChatting(false);
       setTutorExpression('neutral');
     };
 
     recognition.onend = () => {
-      // Only reset if we didn't get a result (user cancelled)
+      if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
+      // Only reset if we didn't get a result
       setVoiceChatTranscript(prev => {
         if (!prev) {
           setIsVoiceChatting(false);
@@ -1137,44 +1205,83 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
       });
     };
 
-    recognition.start();
-    speechRecognitionRef.current = recognition;
+    try {
+      recognition.start();
+      speechRecognitionRef.current = recognition;
+    } catch (err) {
+      setVoiceError('Failed to start voice recognition. Please try again.');
+      setIsVoiceChatting(false);
+      setTutorExpression('neutral');
+    }
   }, [course.id, course.title, course.subtitle, lesson.title, step.title, step.content, step.code, step.codeLanguage]);
 
   const startVoiceChat = useCallback(() => {
     if (typeof window === 'undefined') return;
 
+    // Check for SpeechRecognition support first
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setVoiceError('Voice recognition is not supported in this browser. Please try Chrome or Edge.');
+      return;
+    }
+
     const isClassActive = voiceMode && voicePlaying;
     let classWasHeld = false;
+
+    // Clear previous chat state
+    setVoiceChatTranscript('');
+    setVoiceChatResponse('');
+    setShowContinuePrompt(false);
 
     // Pause current chapter if playing — hold the class
     if (isClassActive) {
       setChapterPausedAt(activeStep);
-      // Pause the current TTS
+      // Cancel the current TTS entirely (pause() is unreliable in Chrome)
       if (window.speechSynthesis) {
-        window.speechSynthesis.pause();
+        window.speechSynthesis.cancel();
       }
-      setVoicePaused(true);
+      if (abortRef.current) {
+        abortRef.current.abort();
+        abortRef.current = null;
+      }
+      setVoicePaused(false);
       setVoicePlaying(false);
       setIsClassHeld(true);
       classWasHeld = true;
 
       // Announce "I'm holding the class" via TTS, then listen
       if (window.speechSynthesis) {
+        setIsVoiceChatting(true);
+        setTutorExpression('explaining');
+
         const holdMsg = new SpeechSynthesisUtterance("I'm holding the class for you. Please share your doubts, I'm here to help.");
         holdMsg.rate = 0.9;
+        holdMsg.pitch = 1.15; // Female voice pitch
+        // Try to pick a female voice
+        const voices = window.speechSynthesis.getVoices();
+        const femaleVoice = voices.find(v =>
+          v.lang.startsWith('en') && (
+            v.name.toLowerCase().includes('female') ||
+            v.name.toLowerCase().includes('samantha') ||
+            v.name.toLowerCase().includes('zira') ||
+            v.name.toLowerCase().includes('google us english')
+          )
+        );
+        if (femaleVoice) holdMsg.voice = femaleVoice;
+
         holdMsg.onend = () => {
           // After announcement, start listening
           beginSpeechRecognition(true);
         };
+        holdMsg.onerror = () => {
+          // Even if TTS fails, still start listening
+          beginSpeechRecognition(true);
+        };
         window.speechSynthesis.speak(holdMsg);
-        setTutorExpression('explaining');
-        setIsVoiceChatting(true);
-        setVoiceChatTranscript('');
-        setVoiceChatResponse('');
         return; // Don't start listening yet — wait for TTS to finish
       }
     } else if (voiceMode) {
+      // Voice mode active but not currently playing — still hold
       setChapterPausedAt(activeStep);
       setIsClassHeld(true);
       classWasHeld = true;
@@ -1186,8 +1293,6 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
     // Start listening directly if class wasn't actively playing
     setIsVoiceChatting(true);
     setTutorExpression('curious');
-    setVoiceChatTranscript('');
-    setVoiceChatResponse('');
     beginSpeechRecognition(classWasHeld);
   }, [voiceMode, voicePlaying, activeStep, beginSpeechRecognition]);
 
@@ -1207,16 +1312,9 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
     setVoiceChatResponse('');
     setIsClassHeld(false);
 
-    // Resume chapter from where it was paused
+    // Resume chapter — always restart voice over (pause/resume is unreliable)
     if (chapterPausedAt !== null) {
-      if (typeof window !== 'undefined' && window.speechSynthesis && window.speechSynthesis.paused) {
-        window.speechSynthesis.resume();
-        setVoicePlaying(true);
-        setVoicePaused(false);
-      } else {
-        // Restart voice over for the current slide
-        startVoiceOver();
-      }
+      startVoiceOver();
     }
     setChapterPausedAt(null);
   }, [chapterPausedAt]);
@@ -1372,6 +1470,61 @@ export function LessonView({ courseId, moduleId, lessonId }: { courseId: string;
 
         {/* Main layout: Full-width lesson content with floating AI tutor popup */}
         <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
+
+        {/* Workflow Diagram — Learning Flow */}
+        <div className="mb-5 flex items-center justify-center gap-1 sm:gap-2 overflow-x-auto py-2">
+          <div className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/20 rounded-xl px-3 sm:px-5 py-2.5 border border-emerald-200/50 dark:border-emerald-800/30">
+            {/* Step 1: Chapters */}
+            <div className={`flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-medium transition-all ${
+              lessonTab === 'steps' ? 'bg-emerald-500 text-white shadow-sm' : 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300'
+            }`}>
+              <BookOpen className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Chapters</span>
+              <span className="sm:hidden">Ch.</span>
+            </div>
+            <ArrowRightCircle className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+
+            {/* Step 2: AI Tutor */}
+            <div className={`flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-medium transition-all ${
+              voiceMode && voicePlaying ? 'bg-emerald-500 text-white shadow-sm' : 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300'
+            }`}>
+              <Sparkles className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">AI Tutor</span>
+              <span className="sm:hidden">AI</span>
+            </div>
+            <ArrowRightCircle className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+
+            {/* Step 3: Voice Chat */}
+            <div className={`flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-medium transition-all ${
+              isVoiceChatting ? 'bg-rose-500 text-white shadow-sm' : 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300'
+            }`}>
+              <Headphones className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Voice Chat</span>
+              <span className="sm:hidden">Voice</span>
+            </div>
+            <ArrowRightCircle className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+
+            {/* Step 4: Practice */}
+            <div className={`flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-medium transition-all ${
+              lessonTab === 'video' ? 'bg-blue-500 text-white shadow-sm' : 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300'
+            }`}>
+              <PenTool className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Practice</span>
+              <span className="sm:hidden">Prac.</span>
+            </div>
+            <ArrowRightCircle className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+
+            {/* Step 5: Test */}
+            <div className={`flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-medium transition-all ${
+              testSubmitted ? 'bg-amber-500 text-white shadow-sm' : 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300'
+            }`}>
+              <GraduationCap className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Test</span>
+              <span className="sm:hidden">Test</span>
+            </div>
+          </div>
+        </div>
+
         {/* Lesson Content */}
         <div ref={stepRef} className="min-w-0 space-y-5">
           {/* Tabbed Lesson Content: AI Introduction / Video / Steps */}
