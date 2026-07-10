@@ -168,12 +168,21 @@ export function FloatingTutorPopup({
     'neutral'
   );
 
-  // Size configurations
+  // Mobile detection
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
+  // Size configurations — mobile gets full-width bottom sheet
   const sizeConfig = {
-    mini: { width: 380, height: 480, avatarSize: 80 },
-    medium: { width: 440, height: 580, avatarSize: 100 },
-    large: { width: 520, height: 700, avatarSize: 130 },
-    fullscreen: { width: typeof window !== 'undefined' ? window.innerWidth - 48 : 1200, height: typeof window !== 'undefined' ? window.innerHeight - 80 : 800, avatarSize: 160 },
+    mini: isMobile ? { width: window.innerWidth - 16, height: 420, avatarSize: 60 } : { width: 380, height: 480, avatarSize: 80 },
+    medium: isMobile ? { width: window.innerWidth - 16, height: 520, avatarSize: 80 } : { width: 440, height: 580, avatarSize: 100 },
+    large: isMobile ? { width: window.innerWidth - 16, height: window.innerHeight * 0.85, avatarSize: 100 } : { width: 520, height: 700, avatarSize: 130 },
+    fullscreen: isMobile ? { width: window.innerWidth, height: window.innerHeight - 64, avatarSize: 120 } : { width: typeof window !== 'undefined' ? window.innerWidth - 48 : 1200, height: typeof window !== 'undefined' ? window.innerHeight - 80 : 800, avatarSize: 160 },
   };
 
   const currentSize = sizeConfig[popupSize];
@@ -225,7 +234,7 @@ export function FloatingTutorPopup({
     return (
       <button
         onClick={() => setPopupOpen(true)}
-        className="fixed bottom-6 right-6 z-50 group"
+        className={isMobile ? "fixed bottom-20 left-4 right-4 z-50 group" : "fixed bottom-6 right-6 z-50 group"}
         aria-label="Open AI Tutor"
       >
         <div className="relative">
@@ -272,9 +281,15 @@ export function FloatingTutorPopup({
     <div
       ref={popupRef}
       className={`fixed z-50 flex flex-col overflow-hidden bg-background shadow-2xl shadow-emerald-500/10 animate-popup-enter transition-all duration-200 ${
-        isFullscreen ? 'inset-6 rounded-2xl border-2 border-emerald-500/30' : 'rounded-2xl border-2 border-emerald-500/30'
+        isFullscreen ? (isMobile ? 'inset-0 rounded-none' : 'inset-6 rounded-2xl border-2 border-emerald-500/30') : (isMobile ? 'rounded-t-2xl border-2 border-emerald-500/30 border-b-0' : 'rounded-2xl border-2 border-emerald-500/30')
       }`}
-      style={isFullscreen ? undefined : {
+      style={isFullscreen ? undefined : isMobile ? {
+        width: currentSize.width,
+        height: currentSize.height,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        bottom: 64,
+      } : {
         width: currentSize.width,
         height: currentSize.height,
         right: position.x === 0 && position.y === 0 ? 24 : undefined,

@@ -94,6 +94,15 @@ export function GlobalTutorPopup() {
   const [isSending, setIsSending] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
 
+  // Mobile detection
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
   // Voice chat state (simple — only mic on/off for counsellor)
   const [isVoiceChatting, setIsVoiceChatting] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -107,10 +116,10 @@ export function GlobalTutorPopup() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const sizeConfig = {
-    mini: { width: 360, height: 500 },
-    medium: { width: 420, height: 600 },
-    large: { width: 500, height: 720 },
-    fullscreen: {
+    mini: isMobile ? { width: window.innerWidth - 16, height: 440 } : { width: 360, height: 500 },
+    medium: isMobile ? { width: window.innerWidth - 16, height: 520 } : { width: 420, height: 600 },
+    large: isMobile ? { width: window.innerWidth - 16, height: window.innerHeight * 0.85 } : { width: 500, height: 720 },
+    fullscreen: isMobile ? { width: window.innerWidth, height: window.innerHeight - 64 } : {
       width: typeof window !== 'undefined' ? window.innerWidth - 48 : 1200,
       height: typeof window !== 'undefined' ? window.innerHeight - 80 : 800,
     },
@@ -305,7 +314,7 @@ export function GlobalTutorPopup() {
     return (
       <button
         onClick={() => setTutorOpen(true)}
-        className="fixed bottom-6 right-6 z-50 group"
+        className={isMobile ? "fixed bottom-20 left-4 right-4 z-50 group" : "fixed bottom-6 right-6 z-50 group"}
         aria-label="Open Marq AI Advisor"
       >
         <div className="relative">
@@ -338,9 +347,15 @@ export function GlobalTutorPopup() {
     <div
       ref={popupRef}
       className={`fixed z-50 flex flex-col overflow-hidden bg-background shadow-2xl shadow-emerald-500/10 transition-all duration-200 ${
-        isFullscreen ? 'inset-6 rounded-2xl border-2 border-emerald-500/30' : 'rounded-2xl border-2 border-emerald-500/30'
+        isFullscreen ? (isMobile ? 'inset-0 rounded-none' : 'inset-6 rounded-2xl border-2 border-emerald-500/30') : (isMobile ? 'rounded-t-2xl border-2 border-emerald-500/30 border-b-0' : 'rounded-2xl border-2 border-emerald-500/30')
       }`}
-      style={isFullscreen ? undefined : {
+      style={isFullscreen ? undefined : isMobile ? {
+        width: currentSize.width,
+        height: currentSize.height,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        bottom: 64,
+      } : {
         width: currentSize.width,
         height: currentSize.height,
         right: position.x === 0 && position.y === 0 ? 24 : undefined,

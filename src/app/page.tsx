@@ -26,16 +26,16 @@ import { GlobalTutorPopup } from '@/components/global-tutor-popup';
 import { WelcomeOverlay } from '@/components/welcome-overlay';
 import { SettingsPage } from '@/components/settings-page';
 import { useAppStore } from '@/lib/store';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { MobileAppShell, DesktopAppShell } from '@/components/mobile-app-shell';
+import { MobileHome } from '@/components/mobile-home';
+import { MobileCourses } from '@/components/mobile-courses';
+import { MobileCourseDetail } from '@/components/mobile-course-detail';
+import { MobileMyLearning } from '@/components/mobile-my-learning';
 
 export default function Home() {
   const view = useAppStore((s) => s.view);
-  const currentUserId = useAppStore((s) => s.currentUserId);
-  const currentUser = useAppStore((s) => {
-    const uid = s.currentUserId;
-    if (!uid) return null;
-    return s.users.find((u) => u.id === uid) ?? null;
-  });
-  const isCorporateUser = !!currentUser?.corporateId || currentUser?.role === 'corporate_admin' || currentUser?.role === 'corporate_user';
+  const isMobile = useIsMobile();
 
   // Scroll to top whenever the view changes
   useEffect(() => {
@@ -58,57 +58,79 @@ export default function Home() {
     }
   }, []);
 
+  // ── Render the correct content for the current view ──
+  const renderContent = () => (
+    <ErrorBoundary label={`view:${view.name}`}>
+      {view.name === 'home' && (
+        isMobile ? <MobileHome /> : (
+          <>
+            <HeroSection />
+            <Features />
+            <CorporateTraining />
+            <CorporateClientsTicker />
+            <CorporateCTABanner />
+            <TrustedCompanies />
+            <MobileAppPromo />
+            <CtaSection />
+          </>
+        )
+      )}
+      {view.name === 'courses' && (
+        isMobile ? <MobileCourses /> : <CoursesPage />
+      )}
+      {view.name === 'course' && (
+        isMobile ? <MobileCourseDetail courseId={view.courseId!} /> : <CourseDetail courseId={view.courseId!} />
+      )}
+      {view.name === 'lesson' && (
+        <LessonView key={view.lessonId} courseId={view.courseId!} moduleId={view.moduleId!} lessonId={view.lessonId!} />
+      )}
+      {view.name === 'quiz' && (
+        <QuizView key={view.lessonId} courseId={view.courseId!} moduleId={view.moduleId!} lessonId={view.lessonId!} />
+      )}
+      {view.name === 'pricing' && <PricingPage />}
+      {view.name === 'tutors' && <TutorMarketplace />}
+      {view.name === 'tutor_portal' && <TutorPortal />}
+      {view.name === 'admin' && <AdminPortal />}
+      {view.name === 'corporate' && <CorporatePortal />}
+      {view.name === 'my_learning' && (
+        isMobile ? <MobileMyLearning /> : <MyLearning />
+      )}
+      {view.name === 'dashboard' && <Dashboard />}
+      {view.name === 'calendar' && <CalendarPage />}
+      {view.name === 'members' && <MembersPage />}
+      {view.name === 'groups' && <GroupsPage />}
+      {view.name === 'messages' && <MessagesPage />}
+      {view.name === 'certificates' && <CertificatesPage />}
+      {view.name === 'achievements' && <AchievementsPage />}
+      {view.name === 'features' && <FeaturesPage />}
+      {view.name === 'settings' && <SettingsPage />}
+      {view.name === 'resume_studio' && <ResumeStudio />}
+      {view.name === 'ai_interview' && <AIInterview />}
+    </ErrorBoundary>
+  );
+
+  // ── Mobile: App Shell with bottom tabs ──
+  if (isMobile) {
+    return (
+      <MobileAppShell>
+        {renderContent()}
+      </MobileAppShell>
+    );
+  }
+
+  // ── Desktop: Original layout with Navbar + Footer ──
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground">
-      {/* Wrap Navbar, Main, and Footer in a container that shifts when sidebar is visible */}
+    <DesktopAppShell>
       <div className="flex flex-col min-h-screen">
         <Navbar />
         <main className="flex-1">
-          <ErrorBoundary label={`view:${view.name}`}>
-            {view.name === 'home' && (
-              <>
-                <HeroSection />
-                <Features />
-                <CorporateTraining />
-                <CorporateClientsTicker />
-                <CorporateCTABanner />
-                <TrustedCompanies />
-                <MobileAppPromo />
-                <CtaSection />
-              </>
-            )}
-            {view.name === 'course' && <CourseDetail courseId={view.courseId!} />}
-            {view.name === 'lesson' && (
-              <LessonView key={view.lessonId} courseId={view.courseId!} moduleId={view.moduleId!} lessonId={view.lessonId!} />
-            )}
-            {view.name === 'quiz' && (
-              <QuizView key={view.lessonId} courseId={view.courseId!} moduleId={view.moduleId!} lessonId={view.lessonId!} />
-            )}
-            {view.name === 'pricing' && <PricingPage />}
-            {view.name === 'tutors' && <TutorMarketplace />}
-            {view.name === 'tutor_portal' && <TutorPortal />}
-            {view.name === 'admin' && <AdminPortal />}
-            {view.name === 'corporate' && <CorporatePortal />}
-            {view.name === 'my_learning' && <MyLearning />}
-            {view.name === 'dashboard' && <Dashboard />}
-            {view.name === 'calendar' && <CalendarPage />}
-            {view.name === 'members' && <MembersPage />}
-            {view.name === 'groups' && <GroupsPage />}
-            {view.name === 'messages' && <MessagesPage />}
-            {view.name === 'certificates' && <CertificatesPage />}
-            {view.name === 'achievements' && <AchievementsPage />}
-            {view.name === 'features' && <FeaturesPage />}
-            {view.name === 'settings' && <SettingsPage />}
-            {view.name === 'courses' && <CoursesPage />}
-            {view.name === 'resume_studio' && <ResumeStudio />}
-            {view.name === 'ai_interview' && <AIInterview />}
-          </ErrorBoundary>
+          {renderContent()}
         </main>
         <Footer />
       </div>
       <AuthModal />
       <GlobalTutorPopup />
       <WelcomeOverlay />
-    </div>
+    </DesktopAppShell>
   );
 }
