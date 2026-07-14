@@ -375,16 +375,15 @@ video:focus {
   padding-right: env(safe-area-inset-right, 0px);
 }
 
-/* Disable text selection on interactive elements for mobile app feel */
-button, [role="button"], nav, [role="tab"] {
+/* Disable tap highlight on interactive elements for mobile app feel */
+button, nav, [role="tab"] {
   -webkit-tap-highlight-color: transparent;
-  -webkit-user-select: none;
-  user-select: none;
 }
 
-/* Smooth overscroll for mobile */
-* {
+/* Smooth overscroll for mobile — only on body, not all elements */
+html {
   overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Mobile touch-friendly input sizing */
@@ -392,9 +391,10 @@ input, textarea, select {
   font-size: 16px !important; /* Prevents iOS zoom on focus */
 }
 
-/* Disable pull-to-refresh on mobile PWA */
-html {
-  overscroll-behavior: none;
+/* Enable smooth touch scrolling on all scrollable containers */
+.overflow-y-auto, .overflow-auto, [data-radix-scroll-area-viewport], main {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: auto;
 }
 
 /* Mobile bottom bar safe area */

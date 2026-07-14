@@ -68,7 +68,7 @@ export function MobileCourses() {
       </div>
 
       {/* Course list */}
-      <div className="px-4 space-y-3 pb-4">
+      <div className="px-4 space-y-3 pb-20">
         {filtered.length === 0 ? (
           <div className="text-center py-12">
             <BookOpen className="mx-auto h-10 w-10 text-muted-foreground" />

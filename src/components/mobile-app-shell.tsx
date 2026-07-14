@@ -119,11 +119,12 @@ export function MobileAppShell({ children }: { children: ReactNode }) {
   const activeTab = getActiveTabId(view.name);
   const unreadCount = notifications.filter(n => !n.read && n.userId === currentUserId).length;
 
-  // Listen for PWA install prompt
+  // Listen for PWA install prompt — store globally so other components can trigger it
   useEffect(() => {
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
+      (window as unknown as Record<string, unknown>)._deferredInstallPrompt = e as BeforeInstallPromptEvent;
       setShowInstallPrompt(true);
     };
     window.addEventListener('beforeinstallprompt', handler);
@@ -182,9 +183,9 @@ export function MobileAppShell({ children }: { children: ReactNode }) {
   const isDetailView = ['course', 'lesson', 'quiz', 'pricing', 'tutors', 'tutor_portal', 'admin', 'corporate', 'dashboard', 'calendar', 'members', 'groups', 'messages', 'certificates', 'achievements', 'features', 'settings', 'resume_studio', 'ai_interview'].includes(view.name);
 
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground md:hidden">
+    <div className="min-h-screen bg-background text-foreground md:hidden">
       {/* ── App Header ────────────────────── */}
-      <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-border/60 bg-background/90 px-4 backdrop-blur-lg safe-area-top">
+      <header className="fixed top-0 left-0 right-0 z-40 flex h-14 items-center gap-3 border-b border-border/60 bg-background/95 px-4 backdrop-blur-lg safe-area-top">
         {isDetailView && hasBackButton(view.name) && (
           <button
             onClick={() => {
@@ -245,7 +246,7 @@ export function MobileAppShell({ children }: { children: ReactNode }) {
       </header>
 
       {/* ── Main Content ─────────────────── */}
-      <main className="flex-1 overflow-y-auto pb-20 safe-area-content">
+      <main className="pt-14 pb-16 safe-area-content">
         {children}
       </main>
 

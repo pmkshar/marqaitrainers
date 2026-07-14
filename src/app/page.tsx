@@ -42,12 +42,19 @@ export default function Home() {
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'auto' });
   }, [view.name, (view as { courseId?: string }).courseId, (view as { lessonId?: string }).lessonId, (view as { adminTab?: string }).adminTab]);
 
-  // Register service worker for PWA on mount
+  // Register service worker for PWA on mount + capture install prompt globally
   useEffect(() => {
-    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {
-        // ignore — PWA is progressive enhancement only
-      });
+    if (typeof window !== 'undefined') {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+      }
+      // Capture beforeinstallprompt for PWA install buttons across the app
+      const handler = (e: Event) => {
+        e.preventDefault();
+        (window as unknown as Record<string, unknown>)._deferredInstallPrompt = e;
+      };
+      window.addEventListener('beforeinstallprompt', handler);
+      return () => window.removeEventListener('beforeinstallprompt', handler);
     }
   }, []);
 

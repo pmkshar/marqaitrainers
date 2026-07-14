@@ -185,7 +185,7 @@ export function MobileMyLearning() {
         </div>
       )}
 
-      <div className="h-4" />
+      <div className="h-20" />
     </div>
   );
 }

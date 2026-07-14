@@ -8,6 +8,12 @@ import {
   Building2, Target, ShoppingBag, Zap, TrendingUp, Award,
   Headphones, Smartphone
 } from 'lucide-react';
+
+// PWA install prompt event type
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -298,8 +304,39 @@ export function MobileHome() {
         </button>
       </div>
 
-      {/* Bottom spacer for tab bar */}
-      <div className="h-4" />
+      {/* ── Install App Banner ── */}
+      <div className="px-4 mb-6">
+        <button
+          onClick={() => {
+            const ev = (window as unknown as Record<string, unknown>)._deferredInstallPrompt as BeforeInstallPromptEvent | undefined;
+            if (ev) {
+              ev.prompt();
+            } else {
+              const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+              if (isIOS) {
+                alert('To install MarqAI Courses:\n\n1. Tap the Share button (⬆️) at the bottom of Safari\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to install the app\n\nThe app works like a native app with offline support!');
+              } else {
+                alert('To install MarqAI Courses:\n\n1. Tap the 3-dot menu (⋮) in Chrome\n2. Tap "Install app" or "Add to Home Screen"\n3. The app will install and work like a native app!\n\nYou can also tap the install banner if it appears.');
+              }
+            }
+          }}
+          className="w-full rounded-2xl bg-gradient-to-r from-purple-600 to-pink-500 p-5 text-white text-left active:scale-[0.98] transition-transform"
+        >
+          <div className="flex items-center gap-3">
+            <Smartphone className="h-8 w-8" />
+            <div>
+              <p className="font-bold">Install MarqAI App</p>
+              <p className="text-sm text-purple-100">Add to home screen for the best experience</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1 mt-2 text-sm font-medium">
+            Install Now <ArrowRight className="h-4 w-4" />
+          </div>
+        </button>
+      </div>
+
+      {/* Bottom spacer for fixed tab bar */}
+      <div className="h-20" />
     </div>
   );
 }
