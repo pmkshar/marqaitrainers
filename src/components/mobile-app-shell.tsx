@@ -114,13 +114,20 @@ export function MobileAppShell({ children }: { children: ReactNode }) {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [isStandalone, setIsStandalone] = useState(false);
 
   const user = currentUser();
   const activeTab = getActiveTabId(view.name);
   const unreadCount = notifications.filter(n => !n.read && n.userId === currentUserId).length;
 
-  // Listen for PWA install prompt — store globally so other components can trigger it
+  // Listen for PWA install prompt + detect standalone mode
   useEffect(() => {
+    // Check if already running as installed PWA (standalone mode)
+    const standalone = window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as unknown as { standalone?: boolean }).standalone === true;
+    setIsStandalone(standalone);
+
+    // Listen for beforeinstallprompt (Chrome/Android)
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
@@ -128,6 +135,20 @@ export function MobileAppShell({ children }: { children: ReactNode }) {
       setShowInstallPrompt(true);
     };
     window.addEventListener('beforeinstallprompt', handler);
+
+    // For iOS Safari (no beforeinstallprompt), show install prompt after 8 seconds
+    if (!standalone) {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isInBrowser = !window.matchMedia('(display-mode: standalone)').matches;
+      if (isIOS && isInBrowser) {
+        const timer = setTimeout(() => setShowInstallPrompt(true), 8000);
+        return () => {
+          window.removeEventListener('beforeinstallprompt', handler);
+          clearTimeout(timer);
+        };
+      }
+    }
+
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
@@ -183,9 +204,9 @@ export function MobileAppShell({ children }: { children: ReactNode }) {
   const isDetailView = ['course', 'lesson', 'quiz', 'pricing', 'tutors', 'tutor_portal', 'admin', 'corporate', 'dashboard', 'calendar', 'members', 'groups', 'messages', 'certificates', 'achievements', 'features', 'settings', 'resume_studio', 'ai_interview'].includes(view.name);
 
   return (
-    <div className="min-h-screen bg-background text-foreground md:hidden">
+    <div className="mobile-app-shell flex flex-col overflow-hidden bg-background text-foreground md:hidden">
       {/* ── App Header ────────────────────── */}
-      <header className="fixed top-0 left-0 right-0 z-40 flex h-14 items-center gap-3 border-b border-border/60 bg-background/95 px-4 backdrop-blur-lg safe-area-top">
+      <header className="shrink-0 z-40 flex h-14 items-center gap-3 border-b border-border/60 bg-background/95 px-4 backdrop-blur-lg safe-area-top">
         {isDetailView && hasBackButton(view.name) && (
           <button
             onClick={() => {
@@ -246,12 +267,12 @@ export function MobileAppShell({ children }: { children: ReactNode }) {
       </header>
 
       {/* ── Main Content ─────────────────── */}
-      <main className="pt-14 pb-16 safe-area-content">
+      <main className="mobile-main-scroll flex-1 overflow-y-auto safe-area-content overscroll-contain">
         {children}
       </main>
 
       {/* ── Bottom Tab Bar ───────────────── */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/60 bg-background/95 backdrop-blur-lg safe-area-bottom">
+      <nav className="shrink-0 z-50 border-t border-border/60 bg-background/95 backdrop-blur-lg safe-area-bottom">
         <div className="flex items-center justify-around px-2 py-1">
           {BOTTOM_TABS.map((tab) => {
             const isActive = activeTab === tab.id;
@@ -377,9 +398,9 @@ export function MobileAppShell({ children }: { children: ReactNode }) {
         </div>
       )}
 
-      {/* ── PWA Install Banner ───────────── */}
-      {showInstallPrompt && (
-        <div className="fixed bottom-20 left-4 right-4 z-40 rounded-2xl border bg-card p-4 shadow-2xl animate-slide-up">
+      {/* ── PWA Install Banner (shows on all platforms if not standalone) ───────────── */}
+      {showInstallPrompt && !isStandalone && (
+        <div className="fixed bottom-20 left-4 right-4 z-[60] rounded-2xl border bg-card p-4 shadow-2xl animate-slide-up">
           <button
             onClick={() => setShowInstallPrompt(false)}
             className="absolute right-3 top-3 grid h-6 w-6 place-items-center rounded-full bg-muted"
@@ -394,12 +415,33 @@ export function MobileAppShell({ children }: { children: ReactNode }) {
             </div>
           </div>
           <div className="mt-3 flex gap-2">
-            <Button size="sm" className="flex-1 bg-emerald-600 text-white hover:bg-emerald-700" onClick={handleInstallApp}>
-              Install App
-            </Button>
-            <Button size="sm" variant="ghost" onClick={() => setShowInstallPrompt(false)}>
-              Not now
-            </Button>
+            {deferredPrompt ? (
+              <>
+                <Button size="sm" className="flex-1 bg-emerald-600 text-white hover:bg-emerald-700" onClick={handleInstallApp}>
+                  Install App
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setShowInstallPrompt(false)}>
+                  Not now
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button size="sm" className="flex-1 bg-emerald-600 text-white hover:bg-emerald-700" onClick={() => {
+                  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                  if (isIOS) {
+                    alert('To install MarqAI Courses:\n\n1. Tap the Share button (\u2B06\uFE0F) at the bottom of Safari\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to install the app\n\nThe app works like a native app with offline support!');
+                  } else {
+                    alert('To install MarqAI Courses:\n\n1. Tap the 3-dot menu (\u22EE) in Chrome\n2. Tap "Install app" or "Add to Home Screen"\n3. The app will install and work like a native app!');
+                  }
+                  setShowInstallPrompt(false);
+                }}>
+                  Install App
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setShowInstallPrompt(false)}>
+                  Not now
+                </Button>
+              </>
+            )}
           </div>
         </div>
       )}

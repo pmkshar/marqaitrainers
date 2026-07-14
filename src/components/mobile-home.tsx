@@ -335,8 +335,8 @@ export function MobileHome() {
         </button>
       </div>
 
-      {/* Bottom spacer for fixed tab bar */}
-      <div className="h-20" />
+      {/* Bottom spacer for tab bar safe area */}
+      <div className="h-4" />
     </div>
   );
 }

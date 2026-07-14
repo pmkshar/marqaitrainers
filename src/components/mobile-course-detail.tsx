@@ -167,7 +167,7 @@ export function MobileCourseDetail({ courseId }: { courseId: string }) {
         </div>
       </div>
 
-      <div className="h-20" />
+      <div className="h-4" />
     </div>
   );
 }

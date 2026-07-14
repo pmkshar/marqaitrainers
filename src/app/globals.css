@@ -363,6 +363,19 @@ video:focus {
   animation: story-ring-spin 3s linear infinite;
 }
 
+/* ===== Mobile App Shell — viewport-constrained layout ===== */
+.mobile-app-shell {
+  height: 100vh;
+  height: 100dvh; /* Falls back to 100vh on unsupported browsers */
+}
+
+/* Main scroll area for mobile app shell */
+.mobile-main-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scroll-behavior: smooth;
+}
+
 /* iOS safe area padding utilities */
 .safe-area-top {
   padding-top: env(safe-area-inset-top, 0px);
@@ -400,4 +413,31 @@ input, textarea, select {
 /* Mobile bottom bar safe area */
 .pb-safe {
   padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* ===== Mobile/Desktop Shell Visibility ===== */
+/* Ensure hidden/md:flex pattern works correctly in Tailwind CSS v4.
+   The 'hidden' class sets display:none by default, and md:flex overrides
+   it at the md breakpoint. Without these rules, Tailwind v4 may not
+   generate the utilities in the correct order. */
+.hidden {
+  display: none;
+}
+@media (min-width: 768px) {
+  .md\:flex {
+    display: flex;
+  }
+  .md\:hidden {
+    display: none;
+  }
+}
+
+/* Prevent hydration flash — hide desktop shell on small screens before JS loads */
+@media (max-width: 767px) {
+  .md\:flex {
+    display: none !important;
+  }
+  .mobile-app-shell {
+    display: flex !important;
+  }
 }
