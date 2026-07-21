@@ -5,10 +5,10 @@ import {
   ArrowLeft, ShieldCheck, Users, BookOpen, CreditCard, Plug, KeyRound, ScrollText,
   LayoutDashboard, Check, X, Trash2, Edit3, Save, Plus,
   UserCheck, AlertTriangle, Award, FileText, Mail, BarChart3, Lock,
-  Building2, Zap,
+  Building2, Zap, FileBadge, Mic, Sparkles, ChevronLeft, ChevronRight, LogOut, Settings, Bell,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -26,21 +26,43 @@ import {
 } from './advanced-portal';
 import type { AdminTab, RoleKey, PermissionKey, Role, User, Integration, CorporateAccount } from '@/lib/types';
 
-const TABS: { key: AdminTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-  { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { key: 'users', label: 'Users', icon: Users },
-  { key: 'courses', label: 'Courses', icon: BookOpen },
-  { key: 'pricing', label: 'Pricing', icon: CreditCard },
-  { key: 'tutors', label: 'Tutors & Payments', icon: UserCheck },
-  { key: 'integrations', label: 'Integrations', icon: Plug },
-  { key: 'roles', label: 'Roles & Permissions', icon: KeyRound },
-  { key: 'audit', label: 'Audit Log', icon: ScrollText },
-  { key: 'corporate', label: 'Corporate', icon: Building2 },
-  { key: 'certificate_builder', label: 'Certificate Builder', icon: Award },
-  { key: 'registration_forms', label: 'Registration Forms', icon: FileText },
-  { key: 'email_scheduling', label: 'Email Scheduling', icon: Mail },
-  { key: 'analytics', label: 'Analytics', icon: BarChart3 },
-  { key: 'gdpr', label: 'GDPR', icon: Lock },
+const NAV_SECTIONS: { heading: string; items: { key: AdminTab; label: string; icon: React.ComponentType<{ className?: string }> }[] }[] = [
+  {
+    heading: 'Overview',
+    items: [
+      { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    ],
+  },
+  {
+    heading: 'Management',
+    items: [
+      { key: 'users', label: 'Users', icon: Users },
+      { key: 'courses', label: 'Courses', icon: BookOpen },
+      { key: 'pricing', label: 'Pricing', icon: CreditCard },
+      { key: 'tutors', label: 'Tutors & Payments', icon: UserCheck },
+      { key: 'corporate', label: 'Corporate', icon: Building2 },
+    ],
+  },
+  {
+    heading: 'AI Tools',
+    items: [
+      { key: 'resume_studio', label: 'Resume Studio', icon: FileBadge },
+      { key: 'ai_interview', label: 'AI Interview', icon: Mic },
+      { key: 'certificate_builder', label: 'Certificate Builder', icon: Award },
+    ],
+  },
+  {
+    heading: 'System',
+    items: [
+      { key: 'integrations', label: 'Integrations', icon: Plug },
+      { key: 'roles', label: 'Roles & Permissions', icon: KeyRound },
+      { key: 'audit', label: 'Audit Log', icon: ScrollText },
+      { key: 'registration_forms', label: 'Registration Forms', icon: FileText },
+      { key: 'email_scheduling', label: 'Email Scheduling', icon: Mail },
+      { key: 'analytics', label: 'Analytics', icon: BarChart3 },
+      { key: 'gdpr', label: 'GDPR', icon: Lock },
+    ],
+  },
 ];
 
 export function AdminPortal() {
@@ -70,122 +92,175 @@ export function AdminPortal() {
     );
   }
 
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  // Find the current tab label for the header
+  const currentTabLabel = NAV_SECTIONS.flatMap(s => s.items).find(t => t.key === activeTab)?.label ?? 'Dashboard';
+
   return (
-    <div className="bg-background">
-      {/* Pink/Rose Admin Header */}
-      <section className="bg-gradient-to-r from-rose-500 to-pink-600 text-white">
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          <button onClick={store.goHome} className="inline-flex items-center gap-1.5 text-sm text-white/70 hover:text-white">
-            <ArrowLeft className="h-4 w-4" /> Home
+    <div className="flex h-screen bg-background">
+      {/* ── Sidebar ── */}
+      <aside className={`shrink-0 flex flex-col border-r border-border/60 bg-card transition-all duration-200 ${sidebarCollapsed ? 'w-16' : 'w-60'}`}>
+        {/* Sidebar header */}
+        <div className={`flex items-center gap-2.5 border-b border-border/60 p-4 ${sidebarCollapsed ? 'justify-center' : ''}`}>
+          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-rose-500 to-pink-600 text-white">
+            <ShieldCheck className="h-5 w-5" />
+          </div>
+          {!sidebarCollapsed && (
+            <div className="min-w-0">
+              <p className="text-sm font-bold truncate">MarqAI Admin</p>
+              <p className="text-[10px] text-muted-foreground">Super Admin Portal</p>
+            </div>
+          )}
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto py-2">
+          {NAV_SECTIONS.map((section) => (
+            <div key={section.heading} className="mb-1">
+              {!sidebarCollapsed && (
+                <p className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                  {section.heading}
+                </p>
+              )}
+              {section.items.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.key;
+                return (
+                  <button
+                    key={item.key}
+                    onClick={() => setActiveTab(item.key)}
+                    className={`flex w-full items-center gap-2.5 px-3 py-2 text-sm transition-colors mx-1 rounded-md ${
+                      sidebarCollapsed ? 'justify-center px-0' : ''
+                    } ${
+                      isActive
+                        ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 font-medium'
+                        : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+                    }`}
+                    title={sidebarCollapsed ? item.label : undefined}
+                  >
+                    <Icon className={`h-4.5 w-4.5 shrink-0 ${isActive ? 'text-rose-600 dark:text-rose-400' : ''}`} />
+                    {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+        </nav>
+
+        {/* Sidebar footer */}
+        <div className="border-t border-border/60 p-2">
+          <button
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className="flex w-full items-center justify-center gap-2 rounded-md px-3 py-2 text-xs text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors"
+          >
+            {sidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <><ChevronLeft className="h-4 w-4" /> Collapse</>}
           </button>
-          <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-4">
-              <Avatar className="h-14 w-14 border-2 border-white/30">
-                <AvatarFallback className="bg-white/20 text-xl font-bold text-white">M</AvatarFallback>
+          {!sidebarCollapsed && (
+            <button
+              onClick={store.goHome}
+              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-xs text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors mt-1"
+            >
+              <ArrowLeft className="h-4 w-4" /> Back to site
+            </button>
+          )}
+        </div>
+      </aside>
+
+      {/* ── Main Content Area ── */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Top bar */}
+        <header className="shrink-0 flex items-center justify-between border-b border-border/60 bg-background/95 px-6 py-3 backdrop-blur">
+          <div>
+            <h1 className="text-lg font-semibold">{currentTabLabel}</h1>
+            <p className="text-xs text-muted-foreground">MarqAI Courses Administration</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button className="grid h-9 w-9 place-items-center rounded-full bg-muted/60 hover:bg-muted transition-colors" aria-label="Notifications">
+              <Bell className="h-4 w-4 text-muted-foreground" />
+            </button>
+            <button
+              onClick={() => store.openSettings()}
+              className="grid h-9 w-9 place-items-center rounded-full bg-muted/60 hover:bg-muted transition-colors"
+              aria-label="Settings"
+            >
+              <Settings className="h-4 w-4 text-muted-foreground" />
+            </button>
+            <div className="flex items-center gap-2 rounded-full border bg-card pl-1 pr-3 py-1">
+              <Avatar className="h-7 w-7">
+                <AvatarFallback className="bg-gradient-to-br from-rose-500 to-pink-600 text-white text-xs font-bold">{user.name.charAt(0)}</AvatarFallback>
               </Avatar>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-2xl font-bold tracking-tight">MARQ AI Admin</h1>
-                  <Badge className="border-white/30 bg-white/20 text-xs text-white">Super Admin</Badge>
-                </div>
-                <p className="mt-0.5 text-sm text-white/80">{user.email}</p>
-                <p className="text-xs text-white/60">Joined {new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</p>
+              <div className="min-w-0">
+                <p className="text-xs font-medium truncate">{user.name.split(' ')[0]}</p>
               </div>
             </div>
-            <Button className="border-white/30 bg-white/20 text-white hover:bg-white/30" onClick={() => store.openAdmin('dashboard')}>
-              <ShieldCheck className="mr-2 h-4 w-4" /> Admin Portal
-            </Button>
           </div>
-        </div>
-      </section>
+        </header>
 
-      {/* Admin Stats Cards */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 -mt-6">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Card className="border-rose-200 bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-950/30 dark:to-pink-950/30">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <span className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-br from-rose-500 to-pink-600 text-white">
-                  <Users className="h-5 w-5" />
+        {/* Stats bar (only on dashboard) */}
+        {activeTab === 'dashboard' && (
+          <div className="shrink-0 border-b border-border/40 bg-muted/20 px-6 py-3">
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <div className="flex items-center gap-2.5 rounded-lg border bg-card px-3 py-2">
+                <span className="grid h-8 w-8 place-items-center rounded-md bg-gradient-to-br from-emerald-500 to-teal-600 text-white">
+                  <Users className="h-4 w-4" />
                 </span>
                 <div>
-                  <p className="text-2xl font-bold">{store.users.filter((u) => u.role === 'candidate').length}</p>
-                  <p className="text-xs text-muted-foreground">Candidates</p>
+                  <p className="text-lg font-bold leading-none">{store.users.filter((u) => u.role === 'candidate').length}</p>
+                  <p className="text-[10px] text-muted-foreground">Candidates</p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-          <Card className="border-rose-200 bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-950/30 dark:to-pink-950/30">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <span className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-br from-rose-500 to-pink-600 text-white">
-                  <UserCheck className="h-5 w-5" />
+              <div className="flex items-center gap-2.5 rounded-lg border bg-card px-3 py-2">
+                <span className="grid h-8 w-8 place-items-center rounded-md bg-gradient-to-br from-sky-500 to-cyan-600 text-white">
+                  <UserCheck className="h-4 w-4" />
                 </span>
                 <div>
-                  <p className="text-2xl font-bold">{store.users.filter((u) => u.role === 'tutor').length}</p>
-                  <p className="text-xs text-muted-foreground">Tutors</p>
+                  <p className="text-lg font-bold leading-none">{store.users.filter((u) => u.role === 'tutor').length}</p>
+                  <p className="text-[10px] text-muted-foreground">Tutors</p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-          <Card className="border-rose-200 bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-950/30 dark:to-pink-950/30">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <span className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-br from-rose-500 to-pink-600 text-white">
-                  <Calendar2 className="h-5 w-5" />
+              <div className="flex items-center gap-2.5 rounded-lg border bg-card px-3 py-2">
+                <span className="grid h-8 w-8 place-items-center rounded-md bg-gradient-to-br from-violet-500 to-purple-600 text-white">
+                  <FileBadge className="h-4 w-4" />
                 </span>
                 <div>
-                  <p className="text-2xl font-bold">{store.bookings.filter((b) => b.status === 'upcoming').length}</p>
-                  <p className="text-xs text-muted-foreground">Live Sessions</p>
+                  <p className="text-lg font-bold leading-none">{store.users.filter((u) => u.role === 'candidate').reduce((c, u) => c + ((u as Record<string, unknown>).resumeData ? 1 : 0), 0)}</p>
+                  <p className="text-[10px] text-muted-foreground">Resumes Built</p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-          <Card className="border-rose-200 bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-950/30 dark:to-pink-950/30">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <span className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-br from-rose-500 to-pink-600 text-white">
-                  <Plug className="h-5 w-5" />
+              <div className="flex items-center gap-2.5 rounded-lg border bg-card px-3 py-2">
+                <span className="grid h-8 w-8 place-items-center rounded-md bg-gradient-to-br from-amber-500 to-orange-600 text-white">
+                  <Mic className="h-4 w-4" />
                 </span>
                 <div>
-                  <p className="text-2xl font-bold">{store.integrations.filter((i) => i.connected).length}</p>
-                  <p className="text-xs text-muted-foreground">Integrations</p>
+                  <p className="text-lg font-bold leading-none">{store.integrations.filter((i) => i.connected).length}</p>
+                  <p className="text-[10px] text-muted-foreground">Integrations</p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as AdminTab)} className="space-y-6">
-          <div className="overflow-x-auto">
-            <TabsList className="grid h-auto w-full grid-cols-4 lg:grid-cols-[repeat(14,minmax(0,1fr))]">
-              {TABS.map((t) => (
-                <TabsTrigger key={t.key} value={t.key} className="flex flex-col gap-1 py-2 text-[11px] sm:flex-row sm:text-sm">
-                  <t.icon className="h-4 w-4" />
-                  <span className="hidden lg:inline">{t.label.split(' ')[0]}</span>
-                </TabsTrigger>
-              ))}
-            </TabsList>
+            </div>
           </div>
+        )}
 
-          <TabsContent value="dashboard"><DashboardTab /></TabsContent>
-          <TabsContent value="users"><UsersTab /></TabsContent>
-          <TabsContent value="courses"><CoursesTab /></TabsContent>
-          <TabsContent value="pricing"><PricingTab /></TabsContent>
-          <TabsContent value="tutors"><TutorsTab /></TabsContent>
-          <TabsContent value="integrations"><IntegrationsTab /></TabsContent>
-          <TabsContent value="roles"><RolesTab /></TabsContent>
-          <TabsContent value="audit"><AuditTab /></TabsContent>
-          <TabsContent value="corporate"><CorporateTab /></TabsContent>
-          <TabsContent value="certificate_builder"><CertificateBuilderTab /></TabsContent>
-          <TabsContent value="registration_forms"><RegistrationFormsTab /></TabsContent>
-          <TabsContent value="email_scheduling"><EmailSchedulingTab /></TabsContent>
-          <TabsContent value="analytics"><AnalyticsTab /></TabsContent>
-          <TabsContent value="gdpr"><GdprTab /></TabsContent>
-        </Tabs>
-      </section>
+        {/* Scrollable content area */}
+        <main className="flex-1 overflow-y-auto p-6">
+          {activeTab === 'dashboard' && <DashboardTab />}
+          {activeTab === 'users' && <UsersTab />}
+          {activeTab === 'courses' && <CoursesTab />}
+          {activeTab === 'pricing' && <PricingTab />}
+          {activeTab === 'tutors' && <TutorsTab />}
+          {activeTab === 'integrations' && <IntegrationsTab />}
+          {activeTab === 'roles' && <RolesTab />}
+          {activeTab === 'audit' && <AuditTab />}
+          {activeTab === 'corporate' && <CorporateTab />}
+          {activeTab === 'resume_studio' && <AdminResumeStudioTab />}
+          {activeTab === 'ai_interview' && <AdminAIInterviewTab />}
+          {activeTab === 'certificate_builder' && <CertificateBuilderTab />}
+          {activeTab === 'registration_forms' && <RegistrationFormsTab />}
+          {activeTab === 'email_scheduling' && <EmailSchedulingTab />}
+          {activeTab === 'analytics' && <AnalyticsTab />}
+          {activeTab === 'gdpr' && <GdprTab />}
+        </main>
+      </div>
     </div>
   );
 }
@@ -1059,5 +1134,295 @@ function Calendar2(props: { className?: string }) {
       <rect width="18" height="18" x="3" y="4" rx="2" />
       <path d="M3 10h18M8 2v4M16 2v4" />
     </svg>
+  );
+}
+
+// ============================================================
+// Admin Resume Studio Tab
+// ============================================================
+function AdminResumeStudioTab() {
+  const { users } = useAppStore();
+  const candidates = users.filter((u) => u.role === 'candidate');
+  const resumesCreated = candidates.filter((u) => (u as Record<string, unknown>).resumeData);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Resume Studio</h2>
+          <p className="text-sm text-muted-foreground">Manage AI-powered resume builder settings and view candidate resumes</p>
+        </div>
+        <Button className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700">
+          <Sparkles className="mr-2 h-4 w-4" /> Configure AI Templates
+        </Button>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Card>
+          <CardContent className="p-5">
+            <div className="flex items-center gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 text-white">
+                <FileBadge className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-2xl font-bold">{resumesCreated.length}</p>
+                <p className="text-xs text-muted-foreground">Resumes Created</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-5">
+            <div className="flex items-center gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white">
+                <Users className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-2xl font-bold">{candidates.length}</p>
+                <p className="text-xs text-muted-foreground">Total Candidates</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-5">
+            <div className="flex items-center gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-br from-sky-500 to-cyan-600 text-white">
+                <Sparkles className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-2xl font-bold">4</p>
+                <p className="text-xs text-muted-foreground">AI Templates</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Template Configuration */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Resume Templates</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { name: 'Modern', desc: 'Clean, contemporary design with bold headings and smart sections', color: 'from-violet-500 to-purple-600', active: true },
+              { name: 'Classic', desc: 'Traditional professional format preferred by enterprise recruiters', color: 'from-emerald-500 to-teal-600', active: true },
+              { name: 'Tech', desc: 'Developer-focused layout highlighting skills and projects', color: 'from-sky-500 to-cyan-600', active: true },
+              { name: 'Minimal', desc: 'Distilled one-page format emphasizing key achievements', color: 'from-amber-500 to-orange-600', active: true },
+            ].map((template) => (
+              <div key={template.name} className="rounded-lg border p-4 hover:border-rose-300 transition-colors">
+                <div className={`grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-br ${template.color} text-white mb-3`}>
+                  <FileBadge className="h-5 w-5" />
+                </div>
+                <p className="font-medium text-sm">{template.name}</p>
+                <p className="text-xs text-muted-foreground mt-1">{template.desc}</p>
+                <div className="mt-3 flex items-center justify-between">
+                  <Badge variant="secondary" className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[10px]">Active</Badge>
+                  <Button size="sm" variant="ghost" className="h-7 text-xs">Edit</Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Candidate Resumes List */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Candidate Resumes</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {resumesCreated.length > 0 ? (
+            <div className="divide-y">
+              {resumesCreated.map((u) => (
+                <div key={u.id} className="flex items-center justify-between py-3">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-9 w-9">
+                      <AvatarFallback className={`bg-gradient-to-br ${u.avatarColor} text-white text-xs font-bold`}>{u.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-sm font-medium">{u.name}</p>
+                      <p className="text-xs text-muted-foreground">{u.email}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="text-[10px]">Resume Created</Badge>
+                    <Button size="sm" variant="outline" className="h-7 text-xs">View</Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-8 text-center">
+              <FileBadge className="mx-auto h-10 w-10 text-muted-foreground" />
+              <p className="mt-3 font-medium">No resumes created yet</p>
+              <p className="text-sm text-muted-foreground">Candidate resumes will appear here when they use the Resume Studio.</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ============================================================
+// Admin AI Interview Tab
+// ============================================================
+function AdminAIInterviewTab() {
+  const { users, courses } = useAppStore();
+  const candidates = users.filter((u) => u.role === 'candidate');
+  const interviewCourses = courses; // All courses can have AI interviews
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">AI Interview</h2>
+          <p className="text-sm text-muted-foreground">Configure AI-powered mock interviews with video proctoring and feedback</p>
+        </div>
+        <Button className="bg-gradient-to-r from-violet-500 to-purple-600 text-white hover:from-violet-600 hover:to-purple-700">
+          <Mic className="mr-2 h-4 w-4" /> Configure Interview AI
+        </Button>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Card>
+          <CardContent className="p-5">
+            <div className="flex items-center gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 text-white">
+                <Mic className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-2xl font-bold">{interviewCourses.length || courses.length}</p>
+                <p className="text-xs text-muted-foreground">Interview-Enabled Courses</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-5">
+            <div className="flex items-center gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white">
+                <Users className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-2xl font-bold">{candidates.length}</p>
+                <p className="text-xs text-muted-foreground">Eligible Candidates</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-5">
+            <div className="flex items-center gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 text-white">
+                <Award className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-2xl font-bold">92%</p>
+                <p className="text-xs text-muted-foreground">Completion Rate</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Interview Configuration */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Interview Configuration</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="rounded-lg border p-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium">Video Proctoring</p>
+                <Switch defaultChecked />
+              </div>
+              <p className="text-xs text-muted-foreground">AI-powered gaze detection and face presence monitoring during interviews</p>
+            </div>
+            <div className="rounded-lg border p-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium">Auto-Evaluation</p>
+                <Switch defaultChecked />
+              </div>
+              <p className="text-xs text-muted-foreground">Automatically score interview responses using AI analysis</p>
+            </div>
+            <div className="rounded-lg border p-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium">Question Bank</p>
+                <Switch defaultChecked />
+              </div>
+              <p className="text-xs text-muted-foreground">Dynamic question selection from course-specific question banks</p>
+            </div>
+            <div className="rounded-lg border p-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium">Detailed Reports</p>
+                <Switch defaultChecked />
+              </div>
+              <p className="text-xs text-muted-foreground">Generate comprehensive feedback with scores, proctoring data, and recommendations</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Course-wise Interview Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Course Interview Settings</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="divide-y">
+            {courses.slice(0, 6).map((course) => (
+              <div key={course.id} className="flex items-center justify-between py-3">
+                <div className="flex items-center gap-3">
+                  <span className={`grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br ${course.gradient} text-white`}>
+                    <CourseIcon name={course.icon} className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <p className="text-sm font-medium">{course.title}</p>
+                    <p className="text-xs text-muted-foreground">{course.studentsCount} enrolled</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="bg-violet-500/15 text-violet-700 dark:text-violet-300 text-[10px]">AI Interview</Badge>
+                  <Button size="sm" variant="outline" className="h-7 text-xs">Configure</Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Recent Interview Activity */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Recent Interview Activity</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="divide-y">
+            {candidates.slice(0, 5).map((u) => (
+              <div key={u.id} className="flex items-center justify-between py-3">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-9 w-9">
+                    <AvatarFallback className={`bg-gradient-to-br ${u.avatarColor} text-white text-xs font-bold`}>{u.name.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="text-sm font-medium">{u.name}</p>
+                    <p className="text-xs text-muted-foreground">Mock interview completed</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="text-[10px] border-emerald-500/40 text-emerald-700 dark:text-emerald-300">Score: 85%</Badge>
+                  <span className="text-xs text-muted-foreground">2d ago</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
