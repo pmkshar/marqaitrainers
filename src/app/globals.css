@@ -416,33 +416,19 @@ input, textarea, select {
 }
 
 /* ===== Mobile/Desktop Shell Visibility ===== */
-/* Ensure hidden/md:flex pattern works correctly in Tailwind CSS v4.
-   The 'hidden' class sets display:none by default, and md:flex overrides
-   it at the md breakpoint. Without these rules, Tailwind v4 may not
-   generate the utilities in the correct order. */
-.hidden {
+/* Dedicated classes for shell containers — avoids conflicting with Tailwind's
+   'hidden' / 'sm:inline-flex' / 'md:flex' utilities that the Navbar and
+   other components rely on. */
+.desktop-app-shell {
   display: none;
 }
+.mobile-app-shell {
+  display: flex;
+}
 @media (min-width: 768px) {
-  .md\:flex {
+  .desktop-app-shell {
     display: flex;
   }
-  .md\:hidden {
-    display: none;
-  }
-}
-
-/* Prevent hydration flash — hide desktop shell on small screens before JS loads,
-   and hide mobile shell on large screens */
-@media (max-width: 767px) {
-  .md\:flex {
-    display: none !important;
-  }
-  .mobile-app-shell {
-    display: flex !important;
-  }
-}
-@media (min-width: 768px) {
   .mobile-app-shell {
     display: none !important;
   }

@@ -1,111 +1,92 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#0f172a"/>
       <stop offset="100%" stop-color="#1e293b"/>
     </linearGradient>
-    <linearGradient id="emerald" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#34d399"/>
-      <stop offset="50%" stop-color="#10b981"/>
-      <stop offset="100%" stop-color="#059669"/>
+    <linearGradient id="emeraldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6ee7b7"/>
+      <stop offset="40%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#10b981"/>
     </linearGradient>
     <linearGradient id="emeraldV" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" stop-color="#6ee7b7"/>
       <stop offset="100%" stop-color="#10b981"/>
     </linearGradient>
-    <linearGradient id="gold" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#fbbf24"/>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fde68a"/>
       <stop offset="100%" stop-color="#f59e0b"/>
     </linearGradient>
-    <linearGradient id="aiGlow" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#10b981" stop-opacity="0.15"/>
-      <stop offset="100%" stop-color="#059669" stop-opacity="0.05"/>
+    <linearGradient id="sparkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a78bfa"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
     </linearGradient>
-    <filter id="shadow">
-      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.3"/>
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
     </filter>
-    <filter id="glow">
-      <feGaussianBlur stdDeviation="8" result="blur"/>
-      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#000" flood-opacity="0.25"/>
     </filter>
   </defs>
 
   <!-- Rounded square background -->
-  <rect x="16" y="16" width="480" height="480" rx="108" fill="url(#bg)"/>
-  <rect x="16" y="16" width="480" height="480" rx="108" fill="none" stroke="#1e293b" stroke-width="1.5"/>
-  <!-- Subtle top highlight -->
-  <rect x="16" y="16" width="480" height="240" rx="108" fill="white" opacity="0.03"/>
+  <rect x="16" y="16" width="480" height="480" rx="108" fill="url(#bgGrad)"/>
+  <!-- Subtle inner border -->
+  <rect x="16" y="16" width="480" height="480" rx="108" fill="none" stroke="#334155" stroke-width="1" opacity="0.5"/>
+  <!-- Top highlight -->
+  <rect x="16" y="16" width="480" height="240" rx="108" fill="white" opacity="0.025"/>
 
-  <!-- AI glow background -->
-  <ellipse cx="256" cy="280" rx="160" ry="140" fill="url(#aiGlow)"/>
+  <!-- Ambient glow behind main icon -->
+  <ellipse cx="256" cy="240" rx="130" ry="120" fill="#10b981" opacity="0.06"/>
 
-  <!-- === STYLIZED "M" WITH GRADUATION CAP === -->
+  <!-- === OPEN BOOK === -->
   <g filter="url(#shadow)">
-
-    <!-- Left leg of M -->
-    <path d="M100 370 L100 200 L160 170 L160 370 Z" fill="url(#emerald)"/>
-    <path d="M100 200 L160 170 L160 180 L100 210 Z" fill="url(#emeraldV)" opacity="0.6"/>
-
-    <!-- Right leg of M -->
-    <path d="M352 370 L352 170 L412 200 L412 370 Z" fill="url(#emerald)"/>
-    <path d="M352 170 L412 200 L412 210 L352 180 Z" fill="url(#emeraldV)" opacity="0.6"/>
-
-    <!-- Center V of M - left diagonal -->
-    <path d="M160 170 L256 270 L256 290 L160 195 Z" fill="url(#emerald)"/>
-    <path d="M160 170 L256 270 L256 276 L160 178 Z" fill="url(#emeraldV)" opacity="0.4"/>
-
-    <!-- Center V of M - right diagonal -->
-    <path d="M352 170 L256 270 L256 290 L352 195 Z" fill="#059669"/>
-    <path d="M352 170 L256 270 L256 276 L352 178 Z" fill="#6ee7b7" opacity="0.2"/>
-
-    <!-- Bottom bar connecting M legs -->
-    <rect x="100" y="355" width="312" height="18" rx="4" fill="url(#emerald)"/>
-    <rect x="100" y="355" width="312" height="5" rx="2" fill="url(#emeraldV)" opacity="0.25"/>
-
+    <!-- Left page -->
+    <path d="M256 160 L130 180 L130 330 L256 310 Z" fill="url(#emeraldGrad)" opacity="0.9"/>
+    <!-- Right page -->
+    <path d="M256 160 L382 180 L382 330 L256 310 Z" fill="url(#emeraldV)" opacity="0.75"/>
+    <!-- Spine -->
+    <line x1="256" y1="160" x2="256" y2="310" stroke="#059669" stroke-width="2.5" opacity="0.6"/>
+    <!-- Page lines left -->
+    <line x1="165" y1="215" x2="238" y2="203" stroke="#0f172a" stroke-width="2" opacity="0.15" stroke-linecap="round"/>
+    <line x1="165" y1="240" x2="238" y2="228" stroke="#0f172a" stroke-width="2" opacity="0.15" stroke-linecap="round"/>
+    <line x1="165" y1="265" x2="238" y2="253" stroke="#0f172a" stroke-width="2" opacity="0.15" stroke-linecap="round"/>
+    <!-- Page lines right -->
+    <line x1="274" y1="203" x2="347" y2="215" stroke="#0f172a" stroke-width="2" opacity="0.12" stroke-linecap="round"/>
+    <line x1="274" y1="228" x2="347" y2="240" stroke="#0f172a" stroke-width="2" opacity="0.12" stroke-linecap="round"/>
+    <line x1="274" y1="253" x2="347" y2="265" stroke="#0f172a" stroke-width="2" opacity="0.12" stroke-linecap="round"/>
   </g>
 
-  <!-- === GRADUATION CAP === -->
-  <g filter="url(#shadow)">
-    <!-- Cap board (diamond) -->
-    <polygon points="256,88 380,145 256,202 132,145" fill="url(#emerald)"/>
-    <!-- Top highlight -->
-    <polygon points="256,88 380,145 256,145 132,145" fill="url(#emeraldV)" opacity="0.35"/>
-    <!-- 3D edge left -->
-    <polygon points="132,145 256,202 256,210 132,152" fill="#047857"/>
-    <!-- 3D edge right -->
-    <polygon points="380,145 256,202 256,210 380,152" fill="#065f46"/>
-
-    <!-- Skull cap -->
-    <ellipse cx="256" cy="170" rx="50" ry="22" fill="url(#emerald)"/>
-    <ellipse cx="256" cy="165" rx="35" ry="10" fill="url(#emeraldV)" opacity="0.3"/>
-
-    <!-- Button -->
-    <circle cx="256" cy="145" r="7" fill="url(#gold)"/>
-    <circle cx="254" cy="143" r="2.5" fill="#fef3c7" opacity="0.7"/>
-
-    <!-- Tassel -->
-    <path d="M263,145 Q280,165 284,198 Q286,215 281,232" stroke="url(#gold)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-    <rect x="277" y="229" width="7" height="16" rx="3" fill="url(#gold)"/>
-    <rect x="278" y="229" width="3" height="16" rx="1.5" fill="#fde68a" opacity="0.5"/>
+  <!-- === AI SPARKLE (floating above book) === -->
+  <g filter="url(#softGlow)">
+    <!-- Main 4-point star -->
+    <path d="M256 95 L262 115 L282 121 L262 127 L256 147 L250 127 L230 121 L250 115 Z" fill="url(#sparkGrad)"/>
+    <!-- Small accent sparkle -->
+    <path d="M296 108 L299 116 L307 118 L299 120 L296 128 L293 120 L285 118 L293 116 Z" fill="url(#goldGrad)" opacity="0.8"/>
+    <!-- Tiny dot sparkles -->
+    <circle cx="222" cy="112" r="3" fill="#6ee7b7" opacity="0.5"/>
+    <circle cx="310" cy="135" r="2" fill="#a78bfa" opacity="0.4"/>
   </g>
 
-  <!-- === AI CIRCUIT DOTS (subtle) === -->
-  <g opacity="0.25">
-    <circle cx="130" cy="280" r="3" fill="#10b981"/>
-    <circle cx="382" cy="280" r="3" fill="#10b981"/>
-    <circle cx="200" cy="320" r="2" fill="#10b981"/>
-    <circle cx="312" cy="320" r="2" fill="#10b981"/>
-    <line x1="130" y1="280" x2="145" y2="290" stroke="#10b981" stroke-width="1"/>
-    <line x1="382" y1="280" x2="367" y2="290" stroke="#10b981" stroke-width="1"/>
-    <line x1="200" y1="320" x2="215" y2="310" stroke="#10b981" stroke-width="0.8"/>
-    <line x1="312" y1="320" x2="297" y2="310" stroke="#10b981" stroke-width="0.8"/>
+  <!-- === CIRCUIT NODES (subtle AI accent) === -->
+  <g opacity="0.18">
+    <circle cx="140" cy="290" r="3" fill="#10b981"/>
+    <circle cx="372" cy="290" r="3" fill="#10b981"/>
+    <line x1="140" y1="290" x2="155" y2="275" stroke="#10b981" stroke-width="1"/>
+    <line x1="372" y1="290" x2="357" y2="275" stroke="#10b981" stroke-width="1"/>
+    <circle cx="155" cy="275" r="2" fill="#10b981"/>
+    <circle cx="357" cy="275" r="2" fill="#10b981"/>
   </g>
 
   <!-- === TEXT === -->
-  <text x="256" y="430" text-anchor="middle" font-family="'Inter','SF Pro Display','Segoe UI',system-ui,sans-serif" font-size="52" font-weight="800" letter-spacing="1">
-    <tspan fill="#10b981">Marq</tspan><tspan fill="#f8fafc">AI</tspan>
+  <text x="256" y="400" text-anchor="middle" font-family="'Inter','SF Pro Display','Segoe UI',system-ui,sans-serif" font-size="56" font-weight="800" letter-spacing="1">
+    <tspan fill="#10b981">Marq</tspan><tspan fill="#f1f5f9">AI</tspan>
   </text>
-  <text x="256" y="460" text-anchor="middle" font-family="'Inter','SF Pro Display','Segoe UI',system-ui,sans-serif" font-size="16" font-weight="500" fill="#64748b" letter-spacing="8">
+  <text x="256" y="432" text-anchor="middle" font-family="'Inter','SF Pro Display','Segoe UI',system-ui,sans-serif" font-size="17" font-weight="600" fill="#64748b" letter-spacing="7">
     COURSES
   </text>
 </svg>

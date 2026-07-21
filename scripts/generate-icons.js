@@ -2,31 +2,33 @@ const sharp = require('sharp');
 const fs = require('fs');
 const path = require('path');
 
-async function generateIcons() {
-  const svgPath = path.join(__dirname, '../public/marqai-logo.svg');
-  const svg = fs.readFileSync(svgPath);
+const svgPath = path.join(__dirname, '..', 'public', 'marqai-logo.svg');
+const publicDir = path.join(__dirname, '..', 'public');
 
-  const sizes = [
-    { name: 'icon-192.png', size: 192 },
-    { name: 'icon-512.png', size: 512 },
-    { name: 'apple-touch-icon.png', size: 180 },
-    { name: 'favicon-32.png', size: 32 },
-    { name: 'favicon-16.png', size: 16 },
-  ];
+const svgBuffer = fs.readFileSync(svgPath);
 
+// Generate PNG icons at various sizes
+const sizes = [
+  { name: 'favicon-16.png', size: 16 },
+  { name: 'favicon-32.png', size: 32 },
+  { name: 'icon-192.png', size: 192 },
+  { name: 'icon-512.png', size: 512 },
+  { name: 'apple-touch-icon.png', size: 180 },
+];
+
+async function generate() {
   for (const { name, size } of sizes) {
-    const outputPath = path.join(__dirname, '../public', name);
-    await sharp(svg)
+    const outPath = path.join(publicDir, name);
+    await sharp(svgBuffer)
       .resize(size, size)
       .png()
-      .toFile(outputPath);
+      .toFile(outPath);
     console.log(`Generated ${name} (${size}x${size})`);
   }
-  
-  // Also generate favicon.ico (multi-size)
-  const ico32 = await sharp(svg).resize(32, 32).png().toBuffer();
-  const ico16 = await sharp(svg).resize(16, 16).png().toBuffer();
-  console.log('Icon files generated successfully!');
+  console.log('All icons generated!');
 }
 
-generateIcons().catch(console.error);
+generate().catch(err => {
+  console.error('Error generating icons:', err);
+  process.exit(1);
+});

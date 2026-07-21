@@ -208,7 +208,7 @@ export function MobileAppShell({ children }: { children: ReactNode }) {
   const isDetailView = ['course', 'lesson', 'quiz', 'pricing', 'tutors', 'tutor_portal', 'admin', 'corporate', 'dashboard', 'calendar', 'members', 'groups', 'messages', 'certificates', 'achievements', 'features', 'settings', 'resume_studio', 'ai_interview'].includes(view.name);
 
   return (
-    <div className="mobile-app-shell flex flex-col overflow-hidden bg-background text-foreground md:hidden">
+    <div className="mobile-app-shell flex flex-col overflow-hidden bg-background text-foreground">
       {/* ── App Header ────────────────────── */}
       <header className="shrink-0 z-40 flex h-14 items-center gap-3 border-b border-border/60 bg-background/95 px-4 backdrop-blur-lg safe-area-top">
         {isDetailView && hasBackButton(view.name) && (
@@ -456,7 +456,7 @@ export function MobileAppShell({ children }: { children: ReactNode }) {
 // Desktop shell — keeps original layout
 export function DesktopAppShell({ children }: { children: ReactNode }) {
   return (
-    <div className="hidden md:flex min-h-screen flex-col bg-background text-foreground">
+    <div className="desktop-app-shell min-h-screen flex-col bg-background text-foreground">
       {children}
     </div>
   );
