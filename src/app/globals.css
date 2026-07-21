@@ -432,12 +432,18 @@ input, textarea, select {
   }
 }
 
-/* Prevent hydration flash — hide desktop shell on small screens before JS loads */
+/* Prevent hydration flash — hide desktop shell on small screens before JS loads,
+   and hide mobile shell on large screens */
 @media (max-width: 767px) {
   .md\:flex {
     display: none !important;
   }
   .mobile-app-shell {
     display: flex !important;
+  }
+}
+@media (min-width: 768px) {
+  .mobile-app-shell {
+    display: none !important;
   }
 }

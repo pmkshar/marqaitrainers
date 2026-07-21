@@ -119,9 +119,14 @@ export default function Home() {
   // ── Mobile: App Shell with bottom tabs ──
   if (isMobile) {
     return (
-      <MobileAppShell>
-        {renderContent()}
-      </MobileAppShell>
+      <>
+        <MobileAppShell>
+          {renderContent()}
+        </MobileAppShell>
+        <AuthModal />
+        <GlobalTutorPopup />
+        <WelcomeOverlay />
+      </>
     );
   }
 

@@ -47,7 +47,8 @@ const PROFILE_MENU_ITEMS = [
   { icon: Building2, label: 'Corporate', viewName: 'corporate' },
   { icon: Award, label: 'Certificates', viewName: 'certificates' },
   { icon: BarChart3, label: 'Achievements', viewName: 'achievements' },
-  { icon: Bell, label: 'Notifications', viewName: '__notifications__' },
+  { icon: Mic, label: 'AI Interview', viewName: 'ai_interview' },
+  { icon: BookOpen, label: 'Resume Studio', viewName: 'resume_studio' },
   { icon: Settings, label: 'Settings', viewName: 'settings' },
 ];
 
@@ -170,9 +171,6 @@ export function MobileAppShell({ children }: { children: ReactNode }) {
 
   const handleProfileMenuItem = (viewName: string) => {
     setShowProfileMenu(false);
-    if (viewName === '__notifications__') {
-      return;
-    }
     const store = useAppStore.getState();
     const actionMap: Record<string, () => void> = {
       dashboard: store.openDashboard,
@@ -184,6 +182,12 @@ export function MobileAppShell({ children }: { children: ReactNode }) {
       achievements: store.openAchievements,
       settings: store.openSettings,
       features: store.openFeatures,
+      ai_interview: () => store.openAiInterview(),
+      resume_studio: store.openResumeStudio,
+      calendar: store.openCalendar,
+      members: store.openMembers,
+      groups: store.openGroups,
+      messages: () => store.openMessages(),
     };
     if (actionMap[viewName]) {
       actionMap[viewName]();
