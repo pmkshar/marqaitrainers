@@ -85,7 +85,7 @@ export function MobileHome() {
               {user ? 'Continue Learning' : 'Start Your Journey'}
             </h1>
           </div>
-          <img src="/marqai-logo.svg" alt="" className="h-12 w-12 rounded-xl bg-white/20 p-2" />
+          <img src="/marqai-logo.svg" alt="" className="h-12 w-12 bg-white/20 p-2" />
         </div>
 
         {/* Quick stats row */}

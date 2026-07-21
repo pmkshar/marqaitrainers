@@ -28,7 +28,7 @@ export function Navbar() {
           <img 
             src="/marqai-logo.svg" 
             alt="MarqAI Courses Logo" 
-            className="h-10 w-10 rounded-lg"
+            className="h-10 w-10"
           />
           <span className="flex flex-col leading-none">
             <span className="text-base font-bold tracking-tight">
@@ -162,11 +162,18 @@ export function Navbar() {
               <LanguageCurrencySwitcher />
               <Button
                 onClick={() => setAuthOpen(true, 'login')}
-                variant="outline"
+                variant="ghost"
                 size="sm"
-                className="hidden sm:inline-flex"
+                className="hidden sm:inline-flex text-muted-foreground hover:text-foreground"
               >
                 <LogIn className="mr-1.5 h-4 w-4" /> Sign in
+              </Button>
+              <Button
+                onClick={() => setAuthOpen(true, 'register', 'candidate')}
+                size="sm"
+                className="hidden sm:inline-flex bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-sm hover:from-emerald-600 hover:to-teal-700"
+              >
+                Get Started Free
               </Button>
             </>
           )}

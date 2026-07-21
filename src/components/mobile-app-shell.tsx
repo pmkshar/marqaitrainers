@@ -234,7 +234,7 @@ export function MobileAppShell({ children }: { children: ReactNode }) {
         <div className="flex-1 min-w-0">
           {!isDetailView ? (
             <div className="flex items-center gap-2">
-              <img src="/marqai-logo.svg" alt="MarqAI" className="h-8 w-8 rounded-lg" />
+              <img src="/marqai-logo.svg" alt="MarqAI" className="h-8 w-8" />
               <span className="text-base font-bold tracking-tight truncate">
                 MarqAI<span className="text-emerald-600">Courses</span>
               </span>
@@ -412,7 +412,7 @@ export function MobileAppShell({ children }: { children: ReactNode }) {
             <X className="h-3 w-3" />
           </button>
           <div className="flex items-center gap-3">
-            <img src="/marqai-logo.svg" alt="MarqAI" className="h-10 w-10 rounded-xl" />
+            <img src="/marqai-logo.svg" alt="MarqAI" className="h-10 w-10" />
             <div className="min-w-0 flex-1">
               <p className="font-semibold text-sm">Install MarqAI Courses</p>
               <p className="text-xs text-muted-foreground">Add to home screen for app-like experience</p>

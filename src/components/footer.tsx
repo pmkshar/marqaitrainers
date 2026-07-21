@@ -15,7 +15,7 @@ export function Footer() {
             <img 
               src="/marqai-logo.svg" 
               alt="MarqAI Courses Logo" 
-              className="h-9 w-9 rounded-lg"
+              className="h-9 w-9"
             />
             <span className="text-base font-bold">MarqAI<span className="text-emerald-600 dark:text-emerald-400">Courses</span></span>
           </div>
