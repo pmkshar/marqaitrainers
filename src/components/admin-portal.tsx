@@ -6,6 +6,7 @@ import {
   LayoutDashboard, Check, X, Trash2, Edit3, Save, Plus,
   UserCheck, AlertTriangle, Award, FileText, Mail, BarChart3, Lock,
   Building2, Zap, FileBadge, Mic, Sparkles, ChevronLeft, ChevronRight, LogOut, Settings, Bell,
+  Globe,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,12 +20,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAppStore } from '@/lib/store';
 import { COURSES } from '@/lib/courses';
 import { ALL_PERMISSIONS } from '@/lib/seed-data';
+import { SUPPORTED_LANGUAGES } from '@/lib/i18n';
+import { SUPPORTED_CURRENCIES, COUNTRY_TIMEZONES, USD_RATES } from '@/lib/currency';
 import { CourseIcon } from './navbar';
 import {
   CertificateBuilderTab, RegistrationFormsTab, EmailSchedulingTab,
   AnalyticsTab, GdprTab,
 } from './advanced-portal';
-import type { AdminTab, RoleKey, PermissionKey, Role, User, Integration, CorporateAccount } from '@/lib/types';
+import type { AdminTab, RoleKey, PermissionKey, Role, User, Integration, CorporateAccount, LanguageCode, CurrencyCode } from '@/lib/types';
 
 const NAV_SECTIONS: { heading: string; items: { key: AdminTab; label: string; icon: React.ComponentType<{ className?: string }> }[] }[] = [
   {
@@ -54,6 +57,7 @@ const NAV_SECTIONS: { heading: string; items: { key: AdminTab; label: string; ic
   {
     heading: 'System',
     items: [
+      { key: 'locale_config', label: 'Language & Currency', icon: Globe },
       { key: 'integrations', label: 'Integrations', icon: Plug },
       { key: 'roles', label: 'Roles & Permissions', icon: KeyRound },
       { key: 'audit', label: 'Audit Log', icon: ScrollText },
@@ -259,6 +263,7 @@ export function AdminPortal() {
           {activeTab === 'email_scheduling' && <EmailSchedulingTab />}
           {activeTab === 'analytics' && <AnalyticsTab />}
           {activeTab === 'gdpr' && <GdprTab />}
+          {activeTab === 'locale_config' && <AdminLocaleConfigTab />}
         </main>
       </div>
     </div>
@@ -1420,6 +1425,234 @@ function AdminAIInterviewTab() {
                 </div>
               </div>
             ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ============================================================
+// Admin Language & Currency Configuration Tab
+// ============================================================
+function AdminLocaleConfigTab() {
+  const store = useAppStore();
+  const language = useAppStore((s) => s.language);
+  const currency = useAppStore((s) => s.currency);
+  const timezone = useAppStore((s) => s.timezone);
+  const setLanguage = useAppStore((s) => s.setLanguage);
+  const setCurrency = useAppStore((s) => s.setCurrency);
+  const setLocale = useAppStore((s) => s.setLocale);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Language & Currency</h2>
+          <p className="text-sm text-muted-foreground">Configure platform-wide language, currency, and regional settings</p>
+        </div>
+        <div className="flex items-center gap-2 rounded-full border bg-card px-4 py-2">
+          <Globe className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm font-medium uppercase">{language}</span>
+          <span className="text-sm text-muted-foreground">·</span>
+          <span className="text-sm font-medium">{currency}</span>
+        </div>
+      </div>
+
+      {/* Current Settings Overview */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Card>
+          <CardContent className="p-5">
+            <div className="flex items-center gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-br from-sky-500 to-cyan-600 text-white">
+                <Globe className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-2xl font-bold uppercase">{language}</p>
+                <p className="text-xs text-muted-foreground">Active Language</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-5">
+            <div className="flex items-center gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white">
+                <CreditCard className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-2xl font-bold">{currency}</p>
+                <p className="text-xs text-muted-foreground">Active Currency</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-5">
+            <div className="flex items-center gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 text-white">
+                <BarChart3 className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-2xl font-bold">{SUPPORTED_LANGUAGES.length}</p>
+                <p className="text-xs text-muted-foreground">Languages Supported</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Language Configuration */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Platform Language</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground mb-4">
+            Select the default language for the platform. This affects all UI text, navigation labels, button text, and content labels across the entire application. Users can override this in their personal settings.
+          </p>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {SUPPORTED_LANGUAGES.map((lang) => (
+              <button
+                key={lang.code}
+                onClick={() => setLanguage(lang.code as LanguageCode)}
+                className={`flex items-center justify-between gap-3 rounded-lg border p-4 text-left transition-colors ${
+                  language === lang.code
+                    ? 'border-rose-500 bg-rose-500/5 ring-1 ring-rose-500/20'
+                    : 'hover:bg-muted/50 hover:border-muted-foreground/30'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">{lang.flag}</span>
+                  <div>
+                    <p className="font-medium text-sm">{lang.nativeName}</p>
+                    <p className="text-xs text-muted-foreground">{lang.label}</p>
+                  </div>
+                </div>
+                {language === lang.code && (
+                  <span className="grid h-6 w-6 place-items-center rounded-full bg-rose-500 text-white">
+                    <Check className="h-3.5 w-3.5" />
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Currency Configuration */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Platform Currency</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground mb-4">
+            Select the default currency for displaying prices across the platform. All course prices, subscription fees, and tutor rates will be converted using the current exchange rates. Prices shown to users will automatically reflect their selected currency.
+          </p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {SUPPORTED_CURRENCIES.map((cur) => (
+              <button
+                key={cur.code}
+                onClick={() => setCurrency(cur.code as CurrencyCode)}
+                className={`flex items-center justify-between gap-3 rounded-lg border p-4 text-left transition-colors ${
+                  currency === cur.code
+                    ? 'border-rose-500 bg-rose-500/5 ring-1 ring-rose-500/20'
+                    : 'hover:bg-muted/50 hover:border-muted-foreground/30'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="grid h-10 w-10 place-items-center rounded-lg bg-muted font-bold text-lg">
+                    {cur.symbol}
+                  </span>
+                  <div>
+                    <p className="font-medium text-sm">{cur.code}</p>
+                    <p className="text-xs text-muted-foreground">{cur.label}</p>
+                  </div>
+                </div>
+                {currency === cur.code && (
+                  <span className="grid h-6 w-6 place-items-center rounded-full bg-rose-500 text-white">
+                    <Check className="h-3.5 w-3.5" />
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Exchange Rates */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Exchange Rates (Base: USD)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground mb-4">
+            Current exchange rates used for currency conversion. In production, these would be fetched from a live FX API. Rates are approximate and for demonstration purposes.
+          </p>
+          <div className="overflow-x-auto rounded-lg border">
+            <table className="w-full text-sm">
+              <thead className="border-b bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
+                <tr>
+                  <th className="px-4 py-3 text-left">Currency</th>
+                  <th className="px-4 py-3 text-left">Symbol</th>
+                  <th className="px-4 py-3 text-right">Rate (1 USD =)</th>
+                  <th className="px-4 py-3 text-right">Inverse</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {SUPPORTED_CURRENCIES.map((cur) => (
+                  <tr key={cur.code} className="hover:bg-muted/20">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{cur.code}</span>
+                        <span className="text-xs text-muted-foreground">{cur.label}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-lg">{cur.symbol}</td>
+                    <td className="px-4 py-3 text-right font-mono">{USD_RATES[cur.code]?.toFixed(cur.code === 'JPY' ? 1 : 2) ?? '1.00'}</td>
+                    <td className="px-4 py-3 text-right font-mono text-muted-foreground">{(1 / (USD_RATES[cur.code] ?? 1)).toFixed(4)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Country / Timezone Quick Set */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Country / Timezone Quick Set</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground mb-4">
+            Quickly configure language, currency, and timezone together by selecting a country. This sets the most common defaults for each region.
+          </p>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {Object.entries(COUNTRY_TIMEZONES).map(([code, info]) => {
+              const isActive = timezone === info.timezone;
+              return (
+                <button
+                  key={code}
+                  onClick={() => setLocale({ country: code, timezone: info.timezone, currency: info.currency })}
+                  className={`flex items-center justify-between gap-2 rounded-lg border p-3 text-left text-sm transition-colors ${
+                    isActive
+                      ? 'border-rose-500 bg-rose-500/5 ring-1 ring-rose-500/20'
+                      : 'hover:bg-muted/50 hover:border-muted-foreground/30'
+                  }`}
+                >
+                  <div>
+                    <p className="font-medium">{info.country}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {info.timezone.split('/').pop()?.replace('_', ' ')} · {info.currency}
+                    </p>
+                  </div>
+                  {isActive && (
+                    <Check className="h-4 w-4 text-rose-500 shrink-0" />
+                  )}
+                </button>
+              );
+            })}
           </div>
         </CardContent>
       </Card>

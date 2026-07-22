@@ -519,6 +519,7 @@ export type AdminTab =
   | 'corporate'
   | 'resume_studio'
   | 'ai_interview'
+  | 'locale_config'
   | 'certificate_builder'
   | 'registration_forms'
   | 'email_scheduling'
