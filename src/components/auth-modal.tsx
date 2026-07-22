@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useAppStore } from '@/lib/store';
+import { useAppEnvironment } from '@/lib/app-env';
 
 export function AuthModal() {
   const { isAuthOpen, authMode, registerRole, setAuthOpen, login, register, loginAs } = useAppStore();
@@ -46,13 +47,29 @@ export function AuthModal() {
     setLocalRole(registerRole);
   }, [registerRole]);
 
+  const { showDemoFeatures, isLive } = useAppEnvironment();
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setTimeout(() => {
-      const ok = login(email || 'admin@marqai.dev');
-      if (!ok) {
-        loginAs('u-admin-1');
+      if (isLive) {
+        // Production: require real email, no fallback to demo accounts
+        if (!email) {
+          setLoading(false);
+          return;
+        }
+        const ok = login(email);
+        if (!ok) {
+          setLoading(false);
+          return;
+        }
+      } else {
+        // Demo/local: allow any email, fallback to admin demo account
+        const ok = login(email || 'admin@marqai.dev');
+        if (!ok) {
+          loginAs('u-admin-1');
+        }
       }
       setLoading(false);
       close();
@@ -161,46 +178,50 @@ export function AuthModal() {
                   </Button>
                 </form>
 
-                <div className="relative py-2">
-                  <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
-                  <div className="relative flex justify-center"><span className="bg-card px-2 text-xs uppercase tracking-wider text-muted-foreground">Or quick demo login</span></div>
-                </div>
+                {showDemoFeatures && (
+                  <>
+                    <div className="relative py-2">
+                      <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
+                      <div className="relative flex justify-center"><span className="bg-card px-2 text-xs uppercase tracking-wider text-muted-foreground">Or quick demo login</span></div>
+                    </div>
 
-                <div className="grid grid-cols-5 gap-2">
-                  <QuickLogin
-                    icon={ShieldCheck}
-                    label="Admin"
-                    color="from-rose-500 to-pink-600"
-                    onClick={() => quickLogin('u-admin-1')}
-                  />
-                  <QuickLogin
-                    icon={Users}
-                    label="Tutor"
-                    color="from-sky-500 to-cyan-600"
-                    onClick={() => quickLogin('u-tutor-3')}
-                  />
-                  <QuickLogin
-                    icon={GraduationCap}
-                    label="Candidate"
-                    color="from-emerald-500 to-teal-600"
-                    onClick={() => quickLogin('u-cand-1')}
-                  />
-                  <QuickLogin
-                    icon={Building2}
-                    label="Corp Admin"
-                    color="from-indigo-500 to-purple-600"
-                    onClick={() => quickLogin('u-corp-admin-1')}
-                  />
-                  <QuickLogin
-                    icon={UserCheck}
-                    label="Corp Emp"
-                    color="from-amber-500 to-orange-600"
-                    onClick={() => quickLogin('u-corp-emp-1')}
-                  />
-                </div>
-                <p className="text-center text-[10px] text-muted-foreground">
-                  Demo mode — any email/password works. Use quick login to explore each role.
-                </p>
+                    <div className="grid grid-cols-5 gap-2">
+                      <QuickLogin
+                        icon={ShieldCheck}
+                        label="Admin"
+                        color="from-rose-500 to-pink-600"
+                        onClick={() => quickLogin('u-admin-1')}
+                      />
+                      <QuickLogin
+                        icon={Users}
+                        label="Tutor"
+                        color="from-sky-500 to-cyan-600"
+                        onClick={() => quickLogin('u-tutor-3')}
+                      />
+                      <QuickLogin
+                        icon={GraduationCap}
+                        label="Candidate"
+                        color="from-emerald-500 to-teal-600"
+                        onClick={() => quickLogin('u-cand-1')}
+                      />
+                      <QuickLogin
+                        icon={Building2}
+                        label="Corp Admin"
+                        color="from-indigo-500 to-purple-600"
+                        onClick={() => quickLogin('u-corp-admin-1')}
+                      />
+                      <QuickLogin
+                        icon={UserCheck}
+                        label="Corp Emp"
+                        color="from-amber-500 to-orange-600"
+                        onClick={() => quickLogin('u-corp-emp-1')}
+                      />
+                    </div>
+                    <p className="text-center text-[10px] text-muted-foreground">
+                      Demo mode — any email/password works. Use quick login to explore each role.
+                    </p>
+                  </>
+                )}
               </TabsContent>
 
               {/* REGISTER */}

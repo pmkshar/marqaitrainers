@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAppStore } from '@/lib/store';
 import { NotificationsBell } from './notifications-bell';
 import { LanguageCurrencySwitcher } from './language-currency-switcher';
+import { useAppEnvironment } from '@/lib/app-env';
 
 export function Navbar() {
   const {
@@ -34,7 +35,10 @@ export function Navbar() {
             <span className="text-base font-bold tracking-tight">
               MarqAI<span className="text-emerald-600 dark:text-emerald-400">Courses</span>
             </span>
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">AI-Powered Learning</span>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              AI-Powered Learning
+              <EnvBadge />
+            </span>
           </span>
         </button>
 
@@ -300,4 +304,27 @@ export function CourseIcon({ name, className }: { name: string; className?: stri
   };
   const Cmp = map[name] ?? map.BrainCircuit;
   return <Cmp className={className ?? 'h-5 w-5'} />;
+}
+
+/**
+ * Small badge showing LIVE / DEMO / LOCAL next to the logo.
+ * Only visible when NOT on production (marqaicourses.com).
+ * On demo/local it shows a coloured badge so users know they're not on the live site.
+ */
+function EnvBadge() {
+  const { isLive, isDemo, isLocal, envLabel } = useAppEnvironment();
+
+  // On production, no badge needed — it's the real site
+  if (isLive) return null;
+
+  // On demo/local, show a badge so users know this is NOT the live site
+  const colors = isDemo
+    ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400'
+    : 'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-400';
+
+  return (
+    <span className={`ml-1.5 inline-flex items-center rounded px-1 py-0.5 text-[8px] font-bold uppercase tracking-wider ${colors}`}>
+      {envLabel}
+    </span>
+  );
 }
