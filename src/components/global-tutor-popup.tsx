@@ -22,9 +22,79 @@ import type { ChatMessage, Course } from '@/lib/types';
 // Acts as a counsellor — NO voice controls (play/pause/stop),
 // NO syllabus tab, NO whiteboard tab.
 //
+// Voice chat uses webkitSpeechRecognition for ASR, sends
+// transcript to /api/tutor, then speaks the AI response via
+// speechSynthesis (with Google Translate TTS fallback for
+// Indian languages).
+//
 // The lesson view uses FloatingTutorPopup which has all the
 // teaching controls (voice, syllabus, whiteboard).
 // ============================================================
+
+// ---- TTS Helpers (shared with lesson-view) ----
+
+function toSpokenText(md: string): string {
+  return md
+    .replace(/```[\s\S]*?```/g, ' (code block) ')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/^\s*[-*]\s+/gm, '')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/\*([^*]+)\*/g, '$1')
+    .replace(/\n{2,}/g, '. ')
+    .replace(/\n/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function browserHasVoiceForLang(lang: string): boolean {
+  if (typeof window === 'undefined' || !window.speechSynthesis) return false;
+  const voices = window.speechSynthesis.getVoices();
+  const prefix = lang.toLowerCase();
+  return voices.some(v => v.lang.toLowerCase().startsWith(prefix));
+}
+
+function playGoogleTTS(text: string, lang: string, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) { resolve(); return; }
+
+    const bcp47Map: Record<string, string> = {
+      en: 'en', hi: 'hi', ta: 'ta', te: 'te', kn: 'kn',
+      es: 'es', fr: 'fr', de: 'de', pt: 'pt', ar: 'ar', zh: 'zh-CN',
+    };
+    const ttsLang = bcp47Map[lang] ?? lang;
+
+    const MAX_LEN = 180;
+    const chunks: string[] = [];
+    let remaining = text;
+    while (remaining.length > 0) {
+      if (remaining.length <= MAX_LEN) {
+        chunks.push(remaining);
+        break;
+      }
+      let cutIdx = remaining.lastIndexOf('.', MAX_LEN);
+      if (cutIdx < MAX_LEN * 0.4) cutIdx = remaining.lastIndexOf(' ', MAX_LEN);
+      if (cutIdx < MAX_LEN * 0.4) cutIdx = MAX_LEN;
+      chunks.push(remaining.slice(0, cutIdx + 1));
+      remaining = remaining.slice(cutIdx + 1).trim();
+    }
+
+    let chunkIdx = 0;
+
+    function playNext() {
+      if (signal?.aborted) { resolve(); return; }
+      if (chunkIdx >= chunks.length) { resolve(); return; }
+      const chunk = chunks[chunkIdx];
+      const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(chunk)}&tl=${ttsLang}&client=tw-ob`;
+      const audio = new Audio(url);
+      audio.onended = () => { chunkIdx++; playNext(); };
+      audio.onerror = () => { resolve(); };
+      audio.play().catch(() => resolve());
+    }
+
+    playNext();
+  });
+}
 
 type PopupSize = 'mini' | 'medium' | 'large' | 'fullscreen';
 
@@ -103,9 +173,52 @@ export function GlobalTutorPopup() {
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  // Voice chat state (simple — only mic on/off for counsellor)
+  // Voice chat state — real ASR + AI response + TTS
   const [isVoiceChatting, setIsVoiceChatting] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+  const [voiceChatLoading, setVoiceChatLoading] = useState(false);
+  const [voiceTranscript, setVoiceTranscript] = useState<string>('');
+  const [voiceAiResponse, setVoiceAiResponse] = useState<string>('');
+  const speechRecognitionRef = useRef<any>(null);
+  const voiceAbortRef = useRef<AbortController | null>(null);
+
+  // Cleanup: stop voice recognition and TTS when popup closes or component unmounts
+  useEffect(() => {
+    return () => {
+      if (speechRecognitionRef.current) {
+        speechRecognitionRef.current.stop();
+        speechRecognitionRef.current = null;
+      }
+      if (voiceAbortRef.current) {
+        voiceAbortRef.current.abort();
+        voiceAbortRef.current = null;
+      }
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+  // Also cleanup when popup is closed
+  useEffect(() => {
+    if (!isTutorOpen) {
+      if (speechRecognitionRef.current) {
+        speechRecognitionRef.current.stop();
+        speechRecognitionRef.current = null;
+      }
+      if (voiceAbortRef.current) {
+        voiceAbortRef.current.abort();
+        voiceAbortRef.current = null;
+      }
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      setIsVoiceChatting(false);
+      setIsSpeaking(false);
+      setVoiceChatLoading(false);
+    }
+  }, [isTutorOpen]);
 
   const currentCourseId = view.name === 'course' ? (view as { courseId?: string }).courseId : view.name === 'lesson' ? (view as { courseId?: string }).courseId : undefined;
   const tutor = currentCourseId ? getTutorForCourse(currentCourseId) : defaultTutor;
@@ -250,21 +363,202 @@ export function GlobalTutorPopup() {
     }
   };
 
-  // Voice chat — simple toggle for counsellor mode
-  const handleVoiceChat = () => {
-    if (isVoiceChatting) {
-      setIsVoiceChatting(false);
-      setIsSpeaking(false);
-    } else {
-      setIsVoiceChatting(true);
-      setIsSpeaking(true);
-      // Simulate speaking for 3 seconds
-      setTimeout(() => {
-        setIsSpeaking(false);
-        setIsVoiceChatting(false);
-      }, 3000);
+  // Voice chat — real implementation with SpeechRecognition + /api/tutor + speechSynthesis
+  const handleStartVoiceChat = useCallback(() => {
+    if (typeof window === 'undefined') return;
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setVoiceError('Voice recognition is not supported in this browser. Please try Chrome or Edge.');
+      return;
     }
-  };
+
+    // Reset state
+    setVoiceError(null);
+    setVoiceTranscript('');
+    setVoiceAiResponse('');
+    setVoiceChatLoading(false);
+    setIsVoiceChatting(true);
+    setIsSpeaking(false);
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+    recognition.maxAlternatives = 1;
+
+    // Timeout: if no speech detected in 15 seconds, stop listening
+    let timeoutId: ReturnType<typeof setTimeout> | null = setTimeout(() => {
+      recognition.stop();
+      setVoiceTranscript('(No speech detected — please try again)');
+      setIsVoiceChatting(false);
+    }, 15000);
+
+    recognition.onstart = () => {
+      // Clear timeout on successful start, set a new one for actual speech
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        recognition.stop();
+        setVoiceTranscript('(No speech detected — please try again)');
+        setIsVoiceChatting(false);
+      }, 15000);
+    };
+
+    recognition.onresult = async (event: any) => {
+      if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
+      const transcript = event.results[0][0].transcript;
+      setVoiceTranscript(transcript);
+      setIsVoiceChatting(false);
+      setVoiceChatLoading(true);
+
+      // Add user's voice message to chat
+      const userMsg: LocalMessage = { id: `u-${Date.now()}`, role: 'user', content: transcript, timestamp: Date.now() };
+      setMessages((prev) => [...prev, userMsg]);
+      setIsTyping(true);
+
+      // Send to AI tutor
+      try {
+        const history = [...messages, userMsg]
+          .filter((m) => m.id !== 'greeting')
+          .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content }));
+
+        const res = await fetch('/api/tutor', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: history }),
+        });
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const aiResponse = data.content;
+        setVoiceAiResponse(aiResponse);
+        setVoiceChatLoading(false);
+        setIsTyping(false);
+
+        // Add AI response to chat
+        setMessages((prev) => [...prev, { id: `a-${Date.now()}`, role: 'assistant', content: aiResponse, timestamp: Date.now() }]);
+
+        // Speak the AI response via TTS
+        if (typeof window !== 'undefined' && window.speechSynthesis) {
+          window.speechSynthesis.cancel();
+          const spokenText = toSpokenText(aiResponse);
+          const lang = 'en';
+
+          // Small delay after cancel() — Chrome bug: speak() immediately after cancel() can silently fail
+          setTimeout(() => {
+            setIsSpeaking(true);
+
+            if (!browserHasVoiceForLang(lang)) {
+              // Fallback to Google Translate TTS for languages without browser voices
+              const ac = new AbortController();
+              voiceAbortRef.current = ac;
+              playGoogleTTS(spokenText, lang, ac.signal)
+                .then(() => setIsSpeaking(false))
+                .catch(() => setIsSpeaking(false));
+            } else {
+              const utterance = new SpeechSynthesisUtterance(spokenText);
+              utterance.rate = 0.95;
+              utterance.pitch = 1.15;
+
+              // Try to pick a female voice
+              const voices = window.speechSynthesis!.getVoices();
+              const femaleVoice = voices.find(v =>
+                v.lang.startsWith('en') && (
+                  v.name.toLowerCase().includes('female') ||
+                  v.name.toLowerCase().includes('samantha') ||
+                  v.name.toLowerCase().includes('zira') ||
+                  v.name.toLowerCase().includes('google us english')
+                )
+              );
+              if (femaleVoice) utterance.voice = femaleVoice;
+
+              utterance.onend = () => setIsSpeaking(false);
+              utterance.onerror = () => setIsSpeaking(false);
+              window.speechSynthesis!.speak(utterance);
+            }
+          }, 100);
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Failed to get AI response';
+        setVoiceAiResponse(`Sorry, I couldn't process that. ${msg}`);
+        setVoiceChatLoading(false);
+        setIsTyping(false);
+
+        // Fall back to simulated reply
+        const reply = generateSimulatedReply(transcript);
+        setMessages((prev) => [...prev, { id: `a-${Date.now()}`, role: 'assistant', content: reply, timestamp: Date.now() }]);
+
+        // Speak the fallback reply
+        if (typeof window !== 'undefined' && window.speechSynthesis) {
+          window.speechSynthesis.cancel();
+          const spokenText = toSpokenText(reply);
+          setTimeout(() => {
+            setIsSpeaking(true);
+            const utterance = new SpeechSynthesisUtterance(spokenText);
+            utterance.rate = 0.95;
+            utterance.pitch = 1.15;
+            const voices = window.speechSynthesis!.getVoices();
+            const femaleVoice = voices.find(v =>
+              v.lang.startsWith('en') && (
+                v.name.toLowerCase().includes('female') ||
+                v.name.toLowerCase().includes('samantha') ||
+                v.name.toLowerCase().includes('zira') ||
+                v.name.toLowerCase().includes('google us english')
+              )
+            );
+            if (femaleVoice) utterance.voice = femaleVoice;
+            utterance.onend = () => setIsSpeaking(false);
+            utterance.onerror = () => setIsSpeaking(false);
+            window.speechSynthesis!.speak(utterance);
+          }, 100);
+        }
+      }
+    };
+
+    recognition.onerror = (event: any) => {
+      if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
+      const errorMsg = event.error;
+      if (errorMsg === 'not-allowed') {
+        setVoiceError('Microphone access denied. Please allow microphone access in your browser settings and try again.');
+      } else if (errorMsg === 'no-speech') {
+        setVoiceTranscript('(No speech detected — please try again)');
+      } else if (errorMsg === 'network') {
+        setVoiceError('Network error during voice recognition. Please check your connection.');
+      } else if (errorMsg !== 'aborted') {
+        setVoiceError(`Voice recognition error: ${errorMsg}`);
+      }
+      setIsVoiceChatting(false);
+    };
+
+    recognition.onend = () => {
+      if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
+    };
+
+    try {
+      recognition.start();
+      speechRecognitionRef.current = recognition;
+    } catch (err) {
+      setVoiceError('Failed to start voice recognition. Please try again.');
+      setIsVoiceChatting(false);
+    }
+  }, [messages]);
+
+  const handleStopVoiceChat = useCallback(() => {
+    if (speechRecognitionRef.current) {
+      speechRecognitionRef.current.stop();
+      speechRecognitionRef.current = null;
+    }
+    if (voiceAbortRef.current) {
+      voiceAbortRef.current.abort();
+      voiceAbortRef.current = null;
+    }
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    setIsVoiceChatting(false);
+    setIsSpeaking(false);
+    setVoiceChatLoading(false);
+  }, []);
 
   // Render message content with basic markdown support
   const renderContent = (content: string) => {
@@ -523,7 +817,7 @@ export function GlobalTutorPopup() {
             </div>
             {/* Voice Chat Button */}
             <button
-              onClick={handleVoiceChat}
+              onClick={isVoiceChatting ? handleStopVoiceChat : handleStartVoiceChat}
               className={`flex h-8 w-8 items-center justify-center rounded-full shrink-0 shadow-md transition-all ${
                 isVoiceChatting
                   ? 'bg-rose-500 text-white hover:bg-rose-600 animate-pulse'
@@ -538,8 +832,19 @@ export function GlobalTutorPopup() {
               {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </Button>
           </div>
+          {voiceError && (
+            <p className="text-[9px] text-rose-600 dark:text-rose-400 text-center mt-1">
+              {voiceError}
+            </p>
+          )}
+          {voiceTranscript && !voiceError && (
+            <p className="text-[9px] text-muted-foreground text-center mt-1">
+              <span className="font-semibold">You said: </span>{voiceTranscript}
+              {voiceAiResponse && <><br /><span className="font-semibold text-emerald-600">AI: </span>{toSpokenText(voiceAiResponse).slice(0, 60)}...</>}
+            </p>
+          )}
           <p className="text-[9px] text-muted-foreground text-center mt-1">
-            {isVoiceChatting ? '🎙️ Voice chat active — speak now' : 'Type or tap 🎙️ for voice chat • Enter to send'}
+            {isVoiceChatting ? '🎙️ Listening — speak now...' : isSpeaking ? '🔊 Speaking AI response...' : voiceChatLoading ? '⏳ Processing...' : 'Type or tap 🎙️ for voice chat • Enter to send'}
           </p>
         </div>
       </div>
