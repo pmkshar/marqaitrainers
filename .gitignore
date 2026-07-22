@@ -54,3 +54,5 @@ server.log
 # Skills and tool-results directories (internal, not part of the app)
 /skills/
 /tool-results/
+.env.local
+.env.production
