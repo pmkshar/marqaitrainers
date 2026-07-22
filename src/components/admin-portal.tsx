@@ -1271,9 +1271,9 @@ function AdminResumeStudioTab() {
 // Admin AI Interview Tab
 // ============================================================
 function AdminAIInterviewTab() {
-  const { users, courses } = useAppStore();
+  const { users } = useAppStore();
   const candidates = users.filter((u) => u.role === 'candidate');
-  const interviewCourses = courses; // All courses can have AI interviews
+  const courses = COURSES;
 
   return (
     <div className="space-y-6">
@@ -1295,7 +1295,7 @@ function AdminAIInterviewTab() {
                 <Mic className="h-5 w-5" />
               </span>
               <div>
-                <p className="text-2xl font-bold">{interviewCourses.length || courses.length}</p>
+                <p className="text-2xl font-bold">{courses.length}</p>
                 <p className="text-xs text-muted-foreground">Interview-Enabled Courses</p>
               </div>
             </div>
