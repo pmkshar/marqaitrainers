@@ -1,18 +1,21 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// Prisma schema for MarqAI Courses
+// Supports: SQLite (local dev) / PostgreSQL (Vercel Postgres for demo & production)
+// The provider is driven by the DATABASE_URL environment variable.
+// - Local dev:  file:./dev.db  (SQLite)
+// - Vercel:     postgres://... (Vercel Postgres — separate DB per environment)
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
+// ──────────────────────────────────────────────
+// Core user model (used by API routes)
+// ──────────────────────────────────────────────
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
